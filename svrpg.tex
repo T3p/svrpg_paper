@@ -64,17 +64,21 @@
 \newcommand{\vtheta}{\boldsymbol{\theta}}
 \newcommand{\Aspace}{\mathcal{A}}
 \newcommand{\Sspace}{\mathcal{S}}
-\newcommand{\stationary}{d_{\mu}^{\pi_{\vtheta}}(s)}
+\newcommand{\Tspace}{\mathcal{T}}
+\newcommand{\Transition}{\mathcal{P}}
+\newcommand{\Reward}{\mathcal{R}}
+\newcommand{\stationary}{d_{\rho}^{\pi_{\vtheta}}(s)}
 \newcommand{\policy}{\pi_{\vtheta}(a \mid s)}
 \newcommand{\pol}{\pi_{\vtheta}}
-\newcommand{\score}[1]{\nabla_{#1}\log\policy}
+\newcommand{\score}[2]{\nabla_{#1}\log\pi_{#1}(#2)}
 \newcommand{\Qfun}{Q^{\pi_{\vtheta}}(s,a)}
 \newcommand{\Vfun}{V^{\pi_{\vtheta}}(s)}
 \newcommand{\vTheta}{\boldsymbol{\Theta}}
 \newcommand{\vphi}{\boldsymbol{\phi}}
-\newcommand{\gradJ}[1]{\nabla_{#1}J_\mu(\vtheta)}
-\newcommand{\gradApp}[1]{\hat{\nabla}_{#1}J_{\mu}(\vtheta)}
+\newcommand{\gradJ}[1]{\nabla_{#1}J(\vtheta)}
+\newcommand{\gradApp}[1]{\hat{\nabla}_{#1}J(\vtheta)}
 \newcommand{\eqdef}{\mathrel{\mathop:}=}
+\newcommand{\Dataset}{\mathcal{D}}
 %%%%%%
 
 % The \icmltitle you define below is probably too long as a header.
@@ -140,6 +144,35 @@
 \section{Introduction}
 
 \section{Preliminaries}
+In this section we provide essential background on policy gradient methods for Reinforcement Learning and variance-reduced stochastic gradient methods for finite sum optimization. In the next section we will show how these methods can be combined to solve Reinforcement Learning tasks.
+
+\subsection{Policy Gradient for Reinforcement Learning}
+A Reinforcement Learning task can be modeled with a discrete-time continuous Markov Decision Process (MDP) $\langle\Sspace,\Aspace,\Transition,\Reward,\gamma,\rho\rangle$, where $\Sspace$ is a continuous state space, $\Aspace$ is a continuous action space, $\Transition$ is a Markovian transition model, where $\Transition(s'\mid s,a)$ defines the transition density from state $s$ to $s'$ under action $a$, $\Reward$ is the reward function, where $\Reward(s,a) \in [-R,R]$ is the expected reward for state-action pair $(s,a)$ and $R$ is the maximum absolute-value reward, $\gamma\in[0,1)$ is the discount factor and $\rho$ is the initial state distribution.
+The agent's behavior is modeled as a policy $\pi$, where $\pi(a\mid s)$ is the density distribution over $\Aspace$ of the action to take in state $s$.
+We consider episodic tasks, \ie, tasks composed of episodes of length $H$, also called time horizon. In this setting, a trajectory $\tau$ is the sequence of states and actions $(s_0,a_0,s_1,a_1,\dots,s_{H-1},a_{H-1})$ observed by following some stationary policy in a given episode, where $s_0$ is always sampled from the initial state distribution $\rho$. With abuse of notation, we denote with $\pi(\tau)$ the density distribution induced by policy $\pi$ on the set $\Tspace$ of all possible trajectories, and with $\Reward(\tau)$ the total discounted reward provided by trajectory $\tau$:
+\begin{align*}
+\Reward(\tau) = \sum_{t=0}^{H-1}\gamma^t\Reward(s_t,a_t).
+\end{align*}
+Performance $J$ allows to rank policies in terms of expected reward:
+\begin{align*}
+	J(\pi) = \int_{\Tspace}\pi(\tau)\Reward(\tau)\de \tau.
+\end{align*}
+Solving an MDP means finding a policy $\pi^*$ maximizing $J$.
+\par
+Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol : \vtheta \in \realspace^m\}$, with the only constraint that $\pol$ is differentiable in the $m$-dimensional parameter vector $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity. The search for a locally optimal policy is performed by means of gradient ascent, where the gradient of $J(\vtheta)$ \wrt the policy parameters is:
+\begin{align*}
+\gradJ{\vtheta} = \int_{\Tspace}\pol(\tau)\score{\vtheta}{\tau}\Reward(\tau)\de \tau.
+\end{align*}
+We consider the on-line learning problem, where trajectories must be sampled directly by interacting with the environment. In this setting, stochastic gradient descent is typically employed: after sampling a trajectory $\tau$ or a batch of $N$ trajectories $\Dataset_{N}$,
+policy parameters are updated as $\vtheta\gets\vtheta + \alpha\gradApp{\vtheta}$, where $\alpha$ is a step size and $\gradApp{\vtheta}$ is an estimate of the true gradient. The REINFORCE gradient estimator provides a simple, unbiased way of estimating the gradient:
+\begin{align*}
+\gradApp{\vtheta} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
+\end{align*}
+where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline, provided it is constant \wrt to actions.
+The G(PO)MDP gradient estimator is a refinement of REINFORCE which is subject to less variance while preserving the unbiasedness:
+\begin{align*}
+\gradApp{\vtheta} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\gamma^h r_h^n - b\right).
+\end{align*}
 
 \section{Algorithm}
 
