@@ -147,7 +147,7 @@
 In this section we provide essential background on policy gradient methods for Reinforcement Learning and stochastic variance-reduced gradient methods for finite sum optimization. In the next section we will show how these methods can be combined to solve Reinforcement Learning tasks.
 
 \subsection{Policy Gradient}
-A Reinforcement Learning task can be modeled with a discrete-time continuous Markov Decision Process (MDP) $\langle\Sspace,\Aspace,\Transition,\Reward,\gamma,\rho\rangle$, where $\Sspace$ is a continuous state space, $\Aspace$ is a continuous action space, $\Transition$ is a Markovian transition model, where $\Transition(s'\mid s,a)$ defines the transition density from state $s$ to $s'$ under action $a$, $\Reward$ is the reward function, where $\Reward(s,a) \in [-R,R]$ is the expected reward for state-action pair $(s,a)$ and $R$ is the maximum absolute-value reward, $\gamma\in[0,1)$ is the discount factor and $\rho$ is the initial state distribution.
+A Reinforcement Learning task \cite{sutton2011reinforcement} can be modeled with a discrete-time continuous Markov Decision Process (MDP) $\langle\Sspace,\Aspace,\Transition,\Reward,\gamma,\rho\rangle$, where $\Sspace$ is a continuous state space; $\Aspace$ is a continuous action space; $\Transition$ is a Markovian transition model, where $\Transition(s'\mid s,a)$ defines the transition density from state $s$ to $s'$ under action $a$; $\Reward$ is the reward function, where $\Reward(s,a) \in [-R,R]$ is the expected reward for state-action pair $(s,a)$ and $R$ is the maximum absolute-value reward; $\gamma\in[0,1)$ is the discount factor; and $\rho$ is the initial state distribution.
 The agent's behavior is modeled as a policy $\pi$, where $\pi(a\mid s)$ is the density distribution over $\Aspace$ of the action to take in state $s$.
 We consider episodic tasks, \ie, tasks composed of episodes of length $H$, also called time horizon. In this setting, a trajectory $\tau$ is the sequence of states and actions $(s_0,a_0,s_1,a_1,\dots,s_{H-1},a_{H-1})$ observed by following some stationary policy in a given episode, where $s_0$ is always sampled from the initial state distribution $\rho$. With abuse of notation, we denote with $\pi(\tau)$ the density distribution induced by policy $\pi$ on the set $\Tspace$ of all possible trajectories, and with $\Reward(\tau)$ the total discounted reward provided by trajectory $\tau$:
 \begin{align*}
@@ -159,17 +159,17 @@ Performance $J$ allows to rank policies in terms of expected reward:
 \end{align*}
 Solving an MDP means finding a policy $\pi^*$ maximizing $J$.
 \par
-Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol : \vtheta \in \realspace^m\}$, with the only constraint that $\pol$ is differentiable in the $m$-dimensional parameter vector $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity. The search for a locally optimal policy is performed by means of gradient ascent, where the gradient of $J(\vtheta)$ \wrt the policy parameters is:
+Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol : \vtheta \in \realspace^m\}$, with the only constraint that $\pol$ is differentiable in the $m$-dimensional parameter vector $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity. The search for a locally optimal policy is performed by means of gradient ascent, where the gradient of $J(\vtheta)$ \wrt the policy parameters is \cite{sutton2000policy}:
 \begin{align*}
 \gradJ{\vtheta} = \int_{\Tspace}\pol(\tau)\score{\vtheta}{\tau}\Reward(\tau)\de \tau.
 \end{align*}
 We consider the on-line learning problem, where trajectories must be sampled directly by interacting with the environment. In this setting, stochastic gradient descent is typically employed: after sampling a trajectory $\tau$ or a batch of $N$ trajectories $\Dataset_{N}$,
-policy parameters are updated as $\vtheta\gets\vtheta + \alpha\gradApp{\vtheta}$, where $\alpha$ is a step size and $\gradApp{\vtheta}$ is an estimate of the true gradient. The REINFORCE gradient estimator provides a simple, unbiased way of estimating the gradient:
+policy parameters are updated as $\vtheta\gets\vtheta + \alpha\gradApp{\vtheta}$, where $\alpha$ is a step size and $\gradApp{\vtheta}$ is an estimate of the true gradient. The REINFORCE gradient estimator \cite{williams1992simple} provides a simple, unbiased way of estimating the gradient:
 \begin{align*}
 \gradApp{\vtheta} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
 \end{align*}
 where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline, provided it is constant \wrt to actions.
-The G(PO)MDP gradient estimator is a refinement of REINFORCE which is subject to less variance while preserving the unbiasedness:
+The G(PO)MDP gradient estimator \cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance while preserving the unbiasedness:
 \begin{align*}
 \gradApp{\vtheta} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\gamma^h r_h^n - b\right).
 \end{align*}
@@ -183,7 +183,7 @@ This kind of optimization is very common in machine learning, where each $g_i$ m
 \begin{align*}
 \max_{\vtheta} f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}g_{\vtheta}(x_i).
 \end{align*}
-A common requirement is that $g$ must be smooth and convex in $\vtheta$. Under this hypothesis, full gradient ascent with a constant step size achieves a convergence rate of $O(\nicefrac{1}{k})$, \ie $f(\vtheta^*) - f(\vtheta_k) = O(\nicefrac{1}{k})$, where $\vtheta^*$ is the optimal parameter and $\vtheta_k$ is the parameter after $k$ gradient updates. The problem with full gradient is that each update can be very expensive, especially when $N$ is large. Stochastic gradient ascent overcomes this problem, at the cost introducing some variance. As a result, the (expected) convergence rate drops to $O(\nicefrac{1}{\sqrt{k}})$.
+A common requirement is that $g$ must be smooth and convex in $\vtheta$. Under this hypothesis, full gradient ascent \cite{cauchy1847methode} with a constant step size achieves an IFO complexity \cite{agarwal2014lower} of $O(\nicefrac{N}{\epsilon})$, \ie it requires $k = O(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$. This can be too expensive for large values of $N$. Stochastic gradient ascent \cite{robbins1951stochastic} \cite{bottou2004large} overcomes this problem, at the cost introducing some variance. The IFO complexity is $O(\nicefrac{1}{\epsilon^2})$ in expectation: it does not depend on $N$, but it has a worse dependency on $\epsilon$.
 
 
 \section{Algorithm}
@@ -198,7 +198,7 @@ A common requirement is that $g$ must be smooth and convex in $\vtheta$. Under t
 
 \section{Discussion}
 
-\bibliography{paper}
+\bibliography{svrpg}
 \bibliographystyle{icml2018}
 
 
