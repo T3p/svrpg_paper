@@ -1,0 +1,166 @@
+
+\documentclass{article}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{booktabs} % for professional tables
+
+% hyperref makes hyperlinks in the resulting PDF.
+% If your build breaks (sometimes temporarily if a hyperlink spans a page)
+% please comment out the following usepackage line and replace
+% \usepackage{icml2018} with \usepackage[nohyperref]{icml2018} above.
+\usepackage{hyperref}
+
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Use the following line for the initial blind version submitted for review:
+\usepackage{icml2018}
+
+% If accepted, instead use the following line for the camera-ready submission:
+%\usepackage[accepted]{icml2018}
+
+%%%USEFUL PACKAGES%%%
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{amsmath,amssymb}
+\usepackage{mathtools}
+%%Theorems
+\usepackage{amsthm}
+\theoremstyle{remark}
+\newtheorem*{rem}{Remark}
+\newtheorem*{note}{Note}
+\newtheorem{case}{Case}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{conj}{Conjecture}
+\newtheorem{example}{Example}
+%Restatable
+\usepackage{thmtools, thm-restate}
+\declaretheorem[numberwithin=section]{thm}
+\declaretheorem[sibling=thm]{lemma}
+\declaretheorem[sibling=thm]{corollary}
+\declaretheorem[sibling=thm]{assumption}
+\declaretheorem[sibling=thm]{theorem}
+%e.g. ...
+\usepackage{xspace}
+\DeclareRobustCommand{\eg}{e.g.,\@\xspace}
+\DeclareRobustCommand{\ie}{i.e.,\@\xspace}
+\DeclareRobustCommand{\wrt}{w.r.t.\@\xspace}
+%%%%%%
+
+%%%CUSTOM COMMANDS%%%
+%Math
+\newcommand{\realspace}{\mathbb R}      % realspace
+\newcommand{\transpose}[1]{{#1}^\texttt{T}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\EV}{\mathbb{E}}
+\newcommand{\EVV}[2][\ppvect \in \ppspace]{\EV_{#1}\left[{#2}\right]}
+\newcommand{\norm}[2][\infty]{\left\|#2\right\|_{#1}}
+\newcommand{\Dij}[2]{\frac{\partial^{2}{#1}}{\partial{#2}_i\partial{#2}_j}}
+\newcommand{\de}{\,\mathrm{d}}
+%RL
+\newcommand{\vtheta}{\boldsymbol{\theta}}
+\newcommand{\Aspace}{\mathcal{A}}
+\newcommand{\Sspace}{\mathcal{S}}
+\newcommand{\Tspace}{\mathcal{T}}
+\newcommand{\Transition}{\mathcal{P}}
+\newcommand{\Reward}{\mathcal{R}}
+\newcommand{\stationary}{d_{\rho}^{\pi_{\vtheta}}(s)}
+\newcommand{\policy}{\pi_{\vtheta}(a \mid s)}
+\newcommand{\pol}{\pi_{\vtheta}}
+\newcommand{\score}[2]{\nabla_{#1}\log\pi_{#1}(#2)}
+\newcommand{\Qfun}{Q^{\pi_{\vtheta}}(s,a)}
+\newcommand{\Vfun}{V^{\pi_{\vtheta}}(s)}
+\newcommand{\vTheta}{\boldsymbol{\Theta}}
+\newcommand{\vphi}{\boldsymbol{\phi}}
+\newcommand{\gradJ}[1]{\nabla_{#1}J(\vtheta)}
+\newcommand{\gradApp}[1]{\hat{\nabla}_{#1}J(\vtheta)}
+\newcommand{\eqdef}{\mathrel{\mathop:}=}
+\newcommand{\Dataset}{\mathcal{D}}
+%%%%%%
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+\icmltitlerunning{SVRPG}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{Stochastic Variance Reduced Policy Gradient}
+
+% It is OKAY to include author information, even for blind
+% submissions: the style file will automatically remove it for you
+% unless you've provided the [accepted] option to the icml2018
+% package.
+
+% List of affiliations: The first argument should be a (short)
+% identifier you will use later to specify author affiliations
+% Academic affiliations should list Department, University, City, Region, Country
+% Industry affiliations should list Company, City, Region, Country
+
+% You can specify symbols, otherwise they are numbered in order.
+% Ideally, you should not use this facility. Affiliations will be numbered
+% in order of appearance and this is the preferred way.
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Damiano Binaghi}{equal,polimi}
+\icmlauthor{Giuseppe Canonaco}{equal,polimi}
+\icmlauthor{Matteo Papini}{polimi}
+\icmlauthor{Matteo Pirotta}{inria}
+\icmlauthor{Marcello Restelli}{polimi}
+\end{icmlauthorlist}
+
+\icmlaffiliation{polimi}{Politecnico di Milano, Milano, Italy}
+\icmlaffiliation{inria}{Inria, Lille, France}
+
+\icmlcorrespondingauthor{Matteo Papini}{matteo.papini@polimi.it}
+
+% You may provide any keywords that you
+% find helpful for describing your paper; these are used to populate
+% the "keywords" metadata in the PDF but will not be shown in the document
+\icmlkeywords{Machine Learning, ICML}
+
+\vskip 0.3in
+]
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+
+% This command actually creates the footnote in the first column
+% listing the affiliations and the copyright notice.
+% The command takes one argument, which is text to display at the start of the footnote.
+% The \icmlEqualContribution command is standard text for equal contribution.
+% Remove it (just {}) if you do not need this facility.
+
+%\printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
+\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+
+\begin{abstract}
+
+\end{abstract}
+
+Correctness of estimator: 
+\begin{displaymath}\mathbf{E}_{\tau \sim \pi_{\tilde{\theta}}}[\nabla_\theta J_{SVRG}(\theta)] = \end{displaymath}\begin{displaymath}=\mathbf{E}_{\tau \sim \pi_{\tilde{\theta}}}[\frac{1}{N}\sum_{j=1}^N\nabla_{\tilde{\theta}} \log \pi_{\tilde{\theta}}(\tau_j) R(\tau_j) + \end{displaymath}\begin{displaymath}+\frac{\pi_{\theta}(\tau_i)}{\pi_{\tilde{\theta}}(\tau_i)}\nabla_{\theta} \log \pi_{\theta}(\tau_i) R(\tau_i) - \nabla_{\tilde{\theta}} \log \pi_{\tilde{\theta}}(\tau_i) R(\tau_i)]=\end{displaymath}\begin{displaymath}= \mathbf{E}_{\tau \sim \pi_{\tilde{\theta}}}[\nabla_{\tilde{\theta}} \log \pi_{\tilde{\theta}}(\tau) R(\tau)]+\end{displaymath}\begin{displaymath} + \mathbf{E}_{\tau \sim \pi_{\tilde{\theta}}}[\frac{\pi_{\theta}(\tau)}{\pi_{\tilde{\theta}}(\tau)}\nabla_{\theta} \log \pi_{\theta}(\tau) R(\tau)]-\end{displaymath}\begin{displaymath}- \mathbf{E}_{\tau \sim \pi_{\tilde{\theta}}}[\nabla_{\tilde{\theta}} \log \pi_{\tilde{\theta}}(\tau) R(\tau)] =\end{displaymath}
+\begin{displaymath}=\mathbf{E}_{\tau \sim \pi_{\tilde{\theta}}}[\frac{\pi_{\theta}(\tau)}{\pi_{\tilde{\theta}}(\tau)}\nabla_{\theta} \log \pi_{\theta}(\tau) R(\tau)]=\end{displaymath}\begin{displaymath}=\mathbf{E}_{\tau \sim \pi_{\theta}}[\nabla_{\theta}\log \pi_{\theta}(\tau) R(\tau)]=\mathbf{E}_{\tau \sim \pi_{\theta}}[\nabla_\theta J(\theta)]\end{displaymath}
+
+For simplicity we define:
+\begin{displaymath}\Gamma_t := (\eta_t - \frac{c_{t+1}\eta_t}{\beta_t}-\frac{3}{2}\eta_t^2L-3c_{t+1}\eta_t^2)\end{displaymath}
+\begin{displaymath}b_t := 3(\eta_t\frac{L}{2} + c_{t+1}\eta_t^2)\end{displaymath}
+\newtheorem{thm8}{Theorem}
+\begin{thm8} Suppose $c_m=0$, $\eta_t=\eta>0$,$\beta_t=\beta>0$ and $c_t=c_{t+1}(1 + \eta_{t}\beta_{t} + 3\eta^{2}_{t}L^2)+\frac{3\eta^2L^3}{2}$ such that $\Gamma_t>0$ for all $0\leq t \leq m-1$,  $\gamma_n:=min_t \Gamma_t$ and $b_n := max_t b_t$, $p_i=0$ for all $0 \leq i < m$ e $p_m=1$, also suppose T a multiple of m, then the output of Algoritmo 1 is defined as:
+\begin{displaymath}\mathbf{E}[\|\nabla J(\theta_a)\|] \leq \frac{J(\theta_a)-J(\theta^*)}{T\gamma_n} + \frac{b_n}{\gamma_n}e_n\end{displaymath}
+Dove $\theta^*$ è la soluzione ottima, mentre l'errore è definito come segue: \begin{displaymath}e_n:=max_s e_s =max_s\mathbf{E}\left[\|J_N(\tilde{\theta^s})-\mathbf{E}[J_N(\tilde{\theta^s})]\|\right]\end{displaymath}
+\end{thm8}
+
+
+\bibliography{paper}
+\bibliographystyle{icml2018}
+
+
+\appendix
+
+
+\end{document}
