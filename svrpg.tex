@@ -186,7 +186,7 @@ This kind of optimization is very common in machine learning, where each $g_i$ m
 A common requirement is that $g$ must be smooth and convex in $\vtheta$. Under this hypothesis, full gradient ascent \cite{cauchy1847methode} with a constant step size achieves an IFO complexity \cite{agarwal2014lower} of $O(\nicefrac{N}{\epsilon})$, \ie it requires $k = O(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$. This can be too expensive for large values of $N$. Stochastic gradient ascent \cite{robbins1951stochastic} \cite{bottou2004large} overcomes this problem by sampling a single $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $O(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$. 
 Starting from SAG \cite{roux2012stochastic}, a series of variations to stochastic gradient ascent have been proposed to achieve a better trade-off between convergence speed and cost per iteration. This family of algorithms includes SAG, SVRG \cite{johnson2013accelerating}, SAGA \cite{defazio2014saga} and Finito \cite{defazio2014finito}, the common intuition being the reuse of previous gradient computations to reduce the variance of the current one. In particular, Stochastic Variance Reduced Gradient (SVRG) is often preferred to other similar methods for its limited storage requirements, which can become a problem when neural networks with several parameters are employed.  
 
-The idea of SVRG is to alternate full and stochastic gradient updates. Each $m$ iterations, a snapshot $\tilde{\vtheta}$ of the current parameter is saved together with its full gradient $\nabla f(\tilde{\vtheta})$.
+The idea of SVRG is to alternate full and stochastic gradient updates. Each $m = O(N)$ iterations, a snapshot $\tilde{\vtheta}$ of the current parameter is saved together with its full gradient $\nabla f(\tilde{\vtheta})$.
 Otherwise, the parameter is updated with a corrected stochastic gradient estimate of the form:
 \begin{align*}
 \widehat{\nabla}_{SVRG}f(\vtheta) = 
@@ -194,7 +194,34 @@ Otherwise, the parameter is updated with a corrected stochastic gradient estimat
 	\nabla g_{\vtheta}(x_i) -
 	\nabla g_{\tilde{\vtheta}}(x_i),
 \end{align*} 
-where $x_i$ is sampled uniformly at random from $\mathcal{D}_N$. The corrected gradient is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, without resorting to plain full gradient. The resulting IFO complexity is $O(N+\nicefrac{\sqrt{N}}{\epsilon})$ \cite{reddi2016stochastic}.
+where $x_i$ is sampled uniformly at random from $\mathcal{D}_N$. The corrected gradient $\widehat{\nabla}_{SVRG}f(\vtheta)$ is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, without resorting to plain full gradient. The resulting IFO complexity is $O(N+\nicefrac{\sqrt{N}}{\epsilon})$ \cite{reddi2016stochastic}.
+
+More recently, some extensions of variance reduction algorithms to the non-convex objectives have been proposed \cite{reddi2016stochastic} \cite{allen2016variance} \cite{reddi2016stochastic} \cite{reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the IFO complexity of full gradient  and of stochastic gradient ascent are the same as in the convex case \cite{nesterov2013introductory} \cite{ghadimi2013stochastic}. Also in this case, SVRG yields an advantageous trade-off, with an IFO complexity of $O(N + \nicefrac{N^{\nicefrac{2}{3}}}{N})$ \cite{reddi2016stochastic}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value. Pseudocode of SVRG for both the convex and the non-convex case is provided in Algorithm \ref{alg:svrg}. 
+
+
+\begin{algorithm}[tb]
+	\caption{SVRG}
+	\label{alg:svrg}
+	\begin{algorithmic}
+		\STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_0$
+		\FOR{$s=0$ {\bfseries to} $S-1$}
+		\STATE $\vtheta_{s+1}^0 = \tilde{\vtheta} = \vtheta_s$
+		\FOR{$t=0$ {\bfseries to} $m-1$}
+		\STATE Pick $i$ uniformly at random from $[1,N]$
+		\STATE $\nabla_{SVRG} = 
+					\nabla f(\tilde{\vtheta}) + 
+					\nabla g_{\vtheta_{s+1}^t}(x_i) -
+					\nabla g_{\tilde{\vtheta}}(x_i)$
+		\STATE $\vtheta_{s+1}^{t+1} = \vtheta_{s+1}^{t} + \alpha\nabla_{SVRG}$
+		\ENDFOR
+		\STATE $\vtheta_{s+1} = \vtheta_{s+1}^m$
+		\ENDFOR
+		\STATE {\bfseries Convex case: return} $\vtheta_S$
+		\STATE {\bfseries Non-Convex case: return} $\vtheta_s^t$ with $(s,t)$ picked uniformly at random from $[0,S)\times[0,m)$
+	\end{algorithmic}
+\end{algorithm}
+
+
 \section{Algorithm}
 
 \section{Convergence Guarantees}
