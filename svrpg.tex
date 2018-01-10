@@ -70,13 +70,14 @@
 \newcommand{\stationary}{d_{\rho}^{\pi_{\vtheta}}(s)}
 \newcommand{\policy}{\pi_{\vtheta}(a \mid s)}
 \newcommand{\pol}{\pi_{\vtheta}}
+\newcommand{\trajdistr}{\pi_{\vtheta}(\tau)}
 \newcommand{\score}[2]{\nabla_{#1}\log\pi_{#1}(#2)}
 \newcommand{\Qfun}{Q^{\pi_{\vtheta}}(s,a)}
 \newcommand{\Vfun}{V^{\pi_{\vtheta}}(s)}
 \newcommand{\vTheta}{\boldsymbol{\Theta}}
 \newcommand{\vphi}{\boldsymbol{\phi}}
 \newcommand{\gradJ}[1]{\nabla_{#1}J(\vtheta)}
-\newcommand{\gradApp}[1]{\hat{\nabla}_{#1}J(\vtheta)}
+\newcommand{\gradApp}[2]{\hat{\nabla}_{#2}J(#1)}
 \newcommand{\eqdef}{\mathrel{\mathop:}=}
 \newcommand{\Dataset}{\mathcal{D}}
 %%%%%%
@@ -159,19 +160,19 @@ Performance $J$ allows to rank policies in terms of expected reward:
 \end{align*}
 Solving an MDP means finding a policy $\pi^*$ maximizing $J$.
 \par
-Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol : \vtheta \in \realspace^m\}$, with the only constraint that $\pol$ is differentiable in the $m$-dimensional parameter vector $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity. The search for a locally optimal policy is performed by means of gradient ascent, where the gradient of $J(\vtheta)$ \wrt the policy parameters is \cite{sutton2000policy}:
+Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^m\}$, with the only constraint that $\pol$ is differentiable in the $m$-dimensional parameter vector $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity, while in some occasions we denote $\pol(\tau)$ with $\pi(\tau\mid\vtheta)$ for the sake of readability. The search for a locally optimal policy is performed by means of gradient ascent, where the gradient of $J(\vtheta)$ \wrt the policy parameters is \cite{sutton2000policy}:
 \begin{align*}
-\gradJ{\vtheta} = \int_{\Tspace}\pol(\tau)\score{\vtheta}{\tau}\Reward(\tau)\de \tau.
+\gradJ{} = \int_{\Tspace}\pol(\tau)\score{}{\tau}\Reward(\tau)\de \tau.
 \end{align*}
 We consider the on-line learning problem, where trajectories must be sampled directly by interacting with the environment. In this setting, stochastic gradient descent is typically employed: after sampling a trajectory $\tau$ or a batch of $N$ trajectories $\Dataset_{N}$,
-policy parameters are updated as $\vtheta\gets\vtheta + \alpha\gradApp{\vtheta}$, where $\alpha$ is a step size and $\gradApp{\vtheta}$ is an estimate of the true gradient. The REINFORCE gradient estimator \cite{williams1992simple} provides a simple, unbiased way of estimating the gradient:
+policy parameters are updated as $\vtheta\gets\vtheta + \alpha\gradApp{\vtheta}{N}$, where $\alpha$ is a step size and $\gradApp{\vtheta}{N}$ is an estimate of the true gradient. The REINFORCE gradient estimator \cite{williams1992simple} provides a simple, unbiased way of estimating the gradient:
 \begin{align*}
-\gradApp{\vtheta} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
+\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{}{a_h^n\mid s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
 \end{align*}
 where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline, provided it is constant \wrt to actions.
 The G(PO)MDP gradient estimator \cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance while preserving the unbiasedness:
 \begin{align*}
-\gradApp{\vtheta} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\gamma^h r_h^n - b\right).
+\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\gamma^h r_h^n - b\right).
 \end{align*}
 
 \subsection{Stochastic Variance-Reduced Gradient}
@@ -181,7 +182,7 @@ Finite sum optimization is the problem of maximizing an objective function $f(\v
 \end{align*}
 This kind of optimization is very common in machine learning, where each $g_i$ may correspond to a data sample $x_i$ from a dataset $\mathcal{D}_N$ of size $N$. In this case, we adopt the following, more meaningful notation:
 \begin{align*}
-\max_{\vtheta} f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}g_{\vtheta}(x_i).
+\max_{\vtheta} f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}g(x_i \mid \vtheta).
 \end{align*}
 A common requirement is that $g$ must be smooth and convex in $\vtheta$. Under this hypothesis, full gradient ascent \cite{cauchy1847methode} with a constant step size achieves an IFO complexity \cite{agarwal2014lower} of $O(\nicefrac{N}{\epsilon})$, \ie it requires $k = O(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$. This can be too expensive for large values of $N$. Stochastic gradient ascent \cite{robbins1951stochastic} \cite{bottou2004large} overcomes this problem by sampling a single $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $O(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$. 
 Starting from SAG \cite{roux2012stochastic}, a series of variations to stochastic gradient ascent have been proposed to achieve a better trade-off between convergence speed and cost per iteration. This family of algorithms includes SAG, SVRG \cite{johnson2013accelerating}, SAGA \cite{defazio2014saga} and Finito \cite{defazio2014finito}, the common intuition being the reuse of previous gradient computations to reduce the variance of the current one. In particular, Stochastic Variance Reduced Gradient (SVRG) is often preferred to other similar methods for its limited storage requirements, which can become a problem when neural networks with several parameters are employed.  
@@ -189,12 +190,12 @@ Starting from SAG \cite{roux2012stochastic}, a series of variations to stochasti
 The idea of SVRG is to alternate full and stochastic gradient updates. Each $m = O(N)$ iterations, a snapshot $\tilde{\vtheta}$ of the current parameter is saved together with its full gradient $\nabla f(\tilde{\vtheta})$.
 Otherwise, the parameter is updated with a corrected stochastic gradient estimate of the form:
 \begin{align*}
-\widehat{\nabla}_{SVRG}f(\vtheta) = 
+\blacktriangledown f(\vtheta) = 
 	\nabla f(\tilde{\vtheta}) + 
-	\nabla g_{\vtheta}(x_i) -
-	\nabla g_{\tilde{\vtheta}}(x_i),
+	\nabla g(x_i\mid\vtheta) -
+	\nabla g(x_i \mid \tilde{\vtheta}),
 \end{align*} 
-where $x_i$ is sampled uniformly at random from $\mathcal{D}_N$. The corrected gradient $\widehat{\nabla}_{SVRG}f(\vtheta)$ is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, without resorting to plain full gradient. The resulting IFO complexity is $O(N+\nicefrac{\sqrt{N}}{\epsilon})$ \cite{reddi2016stochastic}.
+where $x_i$ is sampled uniformly at random from $\mathcal{D}_N$. The corrected gradient $\blacktriangledown f(\vtheta)$ is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, without resorting to plain full gradient. The resulting IFO complexity is $O(N+\nicefrac{\sqrt{N}}{\epsilon})$ \cite{reddi2016stochastic}.
 
 More recently, some extensions of variance reduction algorithms to the non-convex objectives have been proposed \cite{reddi2016stochastic} \cite{allen2016variance} \cite{reddi2016stochastic} \cite{reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the IFO complexity of full gradient  and of stochastic gradient ascent are the same as in the convex case \cite{nesterov2013introductory} \cite{ghadimi2013stochastic}. Also in this case, SVRG yields an advantageous trade-off, with an IFO complexity of $O(N + \nicefrac{N^{\nicefrac{2}{3}}}{N})$ \cite{reddi2016stochastic}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value. Pseudocode of SVRG for both the convex and the non-convex case is provided in Algorithm \ref{alg:svrg}. 
 
@@ -208,11 +209,11 @@ More recently, some extensions of variance reduction algorithms to the non-conve
 		\STATE $\vtheta_{s+1}^0 = \tilde{\vtheta} = \vtheta_s$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
 		\STATE Pick $i$ uniformly at random from $[1,N]$
-		\STATE $\nabla_{SVRG} = 
+		\STATE $\blacktriangledown f(\vtheta_{s+1}^t) = 
 					\nabla f(\tilde{\vtheta}) + 
-					\nabla g_{\vtheta_{s+1}^t}(x_i) -
-					\nabla g_{\tilde{\vtheta}}(x_i)$
-		\STATE $\vtheta_{s+1}^{t+1} = \vtheta_{s+1}^{t} + \alpha\nabla_{SVRG}$
+					\nabla g(x_i\mid\vtheta_{s+1}^t) -
+					\nabla g(x_i \mid \tilde{\vtheta})$
+		\STATE $\vtheta_{s+1}^{t+1} = \vtheta_{s+1}^{t} + \alpha\blacktriangledown f(\vtheta_{s+1}^t)$
 		\ENDFOR
 		\STATE $\vtheta_{s+1} = \vtheta_{s+1}^m$
 		\ENDFOR
@@ -223,6 +224,27 @@ More recently, some extensions of variance reduction algorithms to the non-conve
 
 
 \section{Algorithm}
+In on-line policy gradient problems, stochastic gradient ascent (SGA) is not really a choice, but is dictated by the necessity of interacting with an unknown environment. We would like to apply SVRG to the policy gradient framework in order to limit the variance introduced by sampling trajectories, which would ultimately lead to faster convergence. In this scenario, the function $f(\vtheta)$ to optimize is $J(\vtheta)$ and the (implicit) dataset $\mathcal{D}$ is the set of all possible trajectories $\mathcal{T}$. Compared to the typical finite sum optimization scenario, we have the following additional challenges:
+\begin{itemize}
+	\item The objective $J(\vtheta)$ is typically non-convex;
+	\item The dataset $\mathcal{T}$ can be infinite;
+	\item The value of the parameter $\vtheta$ influences the sampling of trajectories;
+\end{itemize}
+To deal with non-convexity, we require $J(\vtheta)$ to be L-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and Softmax [appendix?]. Because of the infinite dataset, we can only rely on an estimate of the full gradient. Finally, we employ importance weighting \cite{rubinstein1981simulation} \cite{precup2000eligibility} to guarantee proper sampling of trajectories. We focus on the REINFORCE gradient estimator for simplicity, but the extension to G(PO)MDP is straightforward. The proposed SVRG-like gradient estimate, which we call Stochastic Variance Reduced Policy Gradient (SVRPG), is the following:
+\begin{align*}
+	\blacktriangledown J(\vtheta) = &\frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \mid \tilde{\vtheta}) \\
+		&+ \omega(\tau_i)\nabla\log\pi(\tau_i \mid \vtheta) 
+		- \nabla\log\pi(\tau_i \mid \tilde{\vtheta}),
+\end{align*}
+where trajectories $\tau_j$ for $j=1,\dots,N$ and $\tau_i$ are all sampled independently from the snapshot policy $\pi_{\tilde{\vtheta}}$, and $\omega(\tau) = \frac{\pi(\tau\mid\vtheta)}{\pi(\tau\mid\tilde{\vtheta})}$ is an importance weight from $\pi_{\tilde{\vtheta}}$ to the current policy $\pol$. We immediately have the following (proof in the Appendix):
+\begin{restatable}{lemma}{unbias}\label{lemma:unbias}
+The SVRPG gradient estimator is unbiased:
+\[
+\mathop{E}_{\tau\sim\pi(\cdot\mid\tilde{\vtheta})}\left[\blacktriangledown J(\vtheta)\right] = \gradJ{}.
+\]
+\end{restatable}
+The resulting SVRPG algorithm is detailed in [todo:pseudocode].
+[Next: explain which details are left open and briefly outline next sections; deeper explanation of algorithm?]
 
 \section{Convergence Guarantees}
 
