@@ -244,8 +244,8 @@ The SVRPG gradient estimator is unbiased:
 \mathop{E}_{\tau\sim\pi(\cdot\mid\tilde{\vtheta})}\left[\blacktriangledown J(\vtheta)\right] = \gradJ{}.
 \]
 \end{restatable}
-The resulting SVRPG algorithm is detailed in Algorithm \ref{alg:svrpg}.
-[Next: explain which details are left open and briefly outline next sections; deeper explanation of algorithm?]
+The resulting SVRPG policy optimization method is detailed in Algorithm \ref{alg:svrpg}.
+To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient and the step size $\alpha$. Adaptive selection of these meta-parameters is also possible. However, the next section will focus on providing converge guarantees for the plain SVRPG algorithm.
 
 \begin{algorithm}[tb]
 	\caption{SVRPG}
