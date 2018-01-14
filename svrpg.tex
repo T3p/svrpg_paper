@@ -233,9 +233,9 @@ In on-line policy gradient problems, stochastic gradient ascent (SGA) is not rea
 \end{itemize}
 To deal with non-convexity, we require $J(\vtheta)$ to be L-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and Softmax [appendix?]. Because of the infinite dataset, we can only rely on an estimate of the full gradient. Finally, we employ importance weighting \cite{rubinstein1981simulation} \cite{precup2000eligibility} to guarantee proper sampling of trajectories. We focus on the REINFORCE gradient estimator for simplicity, but the extension to G(PO)MDP is straightforward. The proposed SVRG-like gradient estimate, which we call Stochastic Variance Reduced Policy Gradient (SVRPG), is the following:
 \begin{align*}
-	\blacktriangledown J(\vtheta) = &\frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \mid \tilde{\vtheta}) \\
-		&+ \omega(\tau_i)\nabla\log\pi(\tau_i \mid \vtheta) 
-		- \nabla\log\pi(\tau_i \mid \tilde{\vtheta}),
+	\blacktriangledown J(\vtheta) &= \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \mid \tilde{\vtheta})\Reward(\tau_j) \\
+		&+ \omega(\tau_i)\nabla\log\pi(\tau_i \mid \vtheta)\Reward(\tau_i) 
+		- \nabla\log\pi(\tau_i \mid \tilde{\vtheta})\Reward(\tau_i),
 \end{align*}
 where trajectories $\tau_j$ for $j=1,\dots,N$ and $\tau_i$ are all sampled independently from the snapshot policy $\pi_{\tilde{\vtheta}}$, and $\omega(\tau) = \frac{\pi(\tau\mid\vtheta)}{\pi(\tau\mid\tilde{\vtheta})}$ is an importance weight from $\pi_{\tilde{\vtheta}}$ to the current policy $\pol$. We immediately have the following (proof in the Appendix):
 \begin{restatable}{lemma}{unbias}\label{lemma:unbias}
@@ -254,7 +254,7 @@ To obtain a method that can be used in practice, a number of additional details 
 		\STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{m-1}^0$, batch size $N$
 		\FOR{$s=0$ {\bfseries to} $S-1$}
 		\STATE Sample N trajectories $\tau_j$ from $\pi(\cdot\mid\tilde{\vtheta}^{s})$
-		\STATE $\gradApp{\tilde{\vtheta}^{s}}{N} = \frac{1}{N}\sum_{j=0}^{N-1}\score{}{\tau_j\mid\tilde{\vtheta}^{s}}$
+		\STATE $\gradApp{\tilde{\vtheta}^{s}}{N} = \frac{1}{N}\sum_{j=0}^{N-1}\score{}{\tau_j\mid\tilde{\vtheta}^{s}}\Reward(\tau_j)$
 		\STATE $\vtheta_0^{s+1} = \tilde{\vtheta}^s = \vtheta_{m-1}^s$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
 		\STATE Sample trajectory $\tau_i$ from 				$\pi(\cdot\mid\tilde{\vtheta}^{s})$
@@ -262,8 +262,8 @@ To obtain a method that can be used in practice, a number of additional details 
 		\begin{align*}
 		\blacktriangledown J(\vtheta_t^{s+1}) = 
 		&\gradApp{\tilde{\vtheta}^s}{N}
-		+ \omega(\tau_i)\score{}{t_i\mid\vtheta_t^{s+1}} \\
-		& - \score{}{\tau_i \mid \tilde{\vtheta}^{s+1}}
+		+ \omega(\tau_i)\score{}{t_i\mid\vtheta_t^{s+1}}\Reward(\tau_i) \\
+		& - \score{}{\tau_i \mid \tilde{\vtheta}^{s+1}}\Reward(\tau_i)
 		\end{align*}
 		\STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha\blacktriangledown J(\vtheta_t^{s+1})$
 		\ENDFOR
