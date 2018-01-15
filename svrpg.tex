@@ -56,6 +56,8 @@
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\EV}{\mathbb{E}}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator*{\Cov}{\mathbb{C}ov}
 \newcommand{\EVV}[2][\ppvect \in \ppspace]{\EV_{#1}\left[{#2}\right]}
 \newcommand{\norm}[2][\infty]{\left\|#2\right\|_{#1}}
 \newcommand{\Dij}[2]{\frac{\partial^{2}{#1}}{\partial{#2}_i\partial{#2}_j}}
@@ -237,12 +239,13 @@ To deal with non-convexity, we require $J(\vtheta)$ to be L-smooth, which is a r
 		&+ \nabla\log\pi(\tau_i \mid \vtheta)\Reward(\tau_i) 
 		- \omega(\tau_i)\nabla\log\pi(\tau_i \mid \tilde{\vtheta})\Reward(\tau_i),
 \end{align*}
-where trajectories $\tau_j$ for $j=1,\dots,N$ are sampled from the snapshot policy $\pi_{\tilde{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pol$, and $\omega(\tau) = \frac{\pi(\tau\mid\tilde{\vtheta})}{\pi(\tau\mid\vtheta)}$ is an importance weight from $\pol$ to the snapshot policy $\pi_{\tilde{\vtheta}}$. We immediately have the following (proof in Appendix \ref{app:proofs}):
+where trajectories $\tau_j$ for $j=1,\dots,N$ are sampled from a snapshot policy $\pi_{\tilde{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pol$, and $\omega(\tau) = \frac{\pi(\tau\mid\tilde{\vtheta})}{\pi(\tau\mid\vtheta)}$ is an importance weight from $\pol$ to the snapshot policy $\pi_{\tilde{\vtheta}}$. We immediately have the following (proof in Appendix \ref{app:proofs}):
 
 \begin{restatable}{lemma}{unbias}\label{lemma:unbias}
 The SVRPG gradient estimator is unbiased:
 \[
-\mathop{E}_{\tau\sim\pi(\cdot\mid\tilde{\vtheta})}\left[\blacktriangledown J(\vtheta)\right] = \gradJ{}.
+\mathop{E}_{\tau_j\sim\pi(\cdot\mid\tilde{\vtheta}),\tau_i\sim\pi(\cdot\mid\vtheta)}
+\left[\blacktriangledown J(\vtheta)\right] = \gradJ{}.
 \]
 \end{restatable}
 
@@ -277,6 +280,23 @@ To obtain a method that can be used in practice, a number of additional details 
 
 \section{Convergence Guarantees}
 
+\begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
+The parameter vector $\vtheta_A$ returned by Algorithm \ref{alg:svrpg} after $T=m\times S$ iterations has, for some constants $\psi>0, b>0$ and $c_{t}>0$ for $t=1,\dots,m$, the following property:
+\[
+	\EVV[]
+	{\norm[]{\nabla J(\vtheta_A)}^2} \leq
+		\frac{J(\vtheta^*)-J(\vtheta_0)}{\psi T} +
+		\frac{Z}{N},
+\]
+where
+\begin{align*}
+	Z &= b\max_{s}\EVV[]{\norm[]{\gradApp{\tilde{\vtheta^s}}{1}}^2} \\
+	&+ \max_{s,t}\left|\Tr\Cov\left[
+		\gradApp{\tilde{\vtheta^s}}{1},
+		c_{t+1}\vtheta_t^{s+1} + \alpha_t\nabla J(\vtheta_t^{s+1})\right]\right|
+\end{align*}
+\end{restatable}
+
 \section{Practical Variants}
 
 \section{Related Work}
@@ -298,5 +318,8 @@ To obtain a method that can be used in practice, a number of additional details 
 	...
 \end{proof}
 
-
+\convergence*
+\begin{proof}
+	...
+\end{proof}
 \end{document}
