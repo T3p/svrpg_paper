@@ -237,13 +237,15 @@ To deal with non-convexity, we require $J(\vtheta)$ to be L-smooth, which is a r
 		&+ \nabla\log\pi(\tau_i \mid \vtheta)\Reward(\tau_i) 
 		- \omega(\tau_i)\nabla\log\pi(\tau_i \mid \tilde{\vtheta})\Reward(\tau_i),
 \end{align*}
-where trajectories $\tau_j$ for $j=1,\dots,N$ are sampled from the snapshot policy $\pi_{\tilde{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pol$, and $\omega(\tau) = \frac{\pi(\tau\mid\tilde{\vtheta})}{\pi(\tau\mid\vtheta)}$ is an importance weight from $\pol$ to the snapshot policy $\pi_{\tilde{\vtheta}}$. We immediately have the following (proof in the Appendix):
+where trajectories $\tau_j$ for $j=1,\dots,N$ are sampled from the snapshot policy $\pi_{\tilde{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pol$, and $\omega(\tau) = \frac{\pi(\tau\mid\tilde{\vtheta})}{\pi(\tau\mid\vtheta)}$ is an importance weight from $\pol$ to the snapshot policy $\pi_{\tilde{\vtheta}}$. We immediately have the following (proof in Appendix \ref{app:proofs}):
+
 \begin{restatable}{lemma}{unbias}\label{lemma:unbias}
 The SVRPG gradient estimator is unbiased:
 \[
 \mathop{E}_{\tau\sim\pi(\cdot\mid\tilde{\vtheta})}\left[\blacktriangledown J(\vtheta)\right] = \gradJ{}.
 \]
 \end{restatable}
+
 [May also add Lemma about convergence of the variance to zero, since it provides an intuitive justification of some design choices]
 The resulting SVRPG policy optimization method is detailed in Algorithm \ref{alg:svrpg}.
 To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient and the step size $\alpha$. Adaptive selection of these meta-parameters is also possible. However, the next section will focus on providing converge guarantees for the plain SVRPG algorithm.
@@ -288,6 +290,13 @@ To obtain a method that can be used in practice, a number of additional details 
 
 
 \appendix
+
+\section{Proofs}\label{app:proofs}
+
+\unbias*
+\begin{proof}
+	...
+\end{proof}
 
 
 \end{document}
