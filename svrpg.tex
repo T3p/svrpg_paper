@@ -315,11 +315,25 @@ where
 
 \unbias*
 \begin{proof}
-	...
+...
 \end{proof}
 
 \convergence*
 \begin{proof}
-	...
+We will prove the theorem for the following values of the open constants:
+\begin{align*}
+& \psi = \min_t\Psi_t, \\
+& b = \max_t b_t.
+& c_m = 0 \\
+& c_t \coloneqq c_{t+1}(1+\alpha_t\beta+3\alpha_t^2L^2) \\
+\end{align*}
+where:
+\begin{align*}
+	& \beta > 0 \\
+	& \psi_t \coloneqq (\alpha_t - \frac{c_{t+1}\alpha_t}{\beta} - \frac{3}{2}\alpha_t^2L - 3c_{t+1}\alpha_t^2) \\
+	& b_t \coloneqq 3(\alpha_t\frac{L}{2} + c_{t+1}\alpha_t^2), \\
+\end{align*}
+and $\beta,\alpha_t$ are chosen so that $\psi_t > 0$ for $t=1,\dots,m$.
+
 \end{proof}
 \end{document}
