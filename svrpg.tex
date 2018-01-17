@@ -25,6 +25,7 @@
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{amsmath,amssymb}
 \usepackage{mathtools}
+\usepackage{pifont}
 %%Theorems
 \usepackage{amsthm}
 \theoremstyle{remark}
@@ -62,6 +63,7 @@
 \newcommand{\norm}[2][\infty]{\left\|#2\right\|_{#1}}
 \newcommand{\Dij}[2]{\frac{\partial^{2}{#1}}{\partial{#2}_i\partial{#2}_j}}
 \newcommand{\de}{\,\mathrm{d}}
+\newcommand{\dotprod}[2]{\left\langle#1,#2\right\rangle}
 %RL
 \newcommand{\vtheta}{\boldsymbol{\theta}}
 \newcommand{\Aspace}{\mathcal{A}}
@@ -78,10 +80,16 @@
 \newcommand{\Vfun}{V^{\pi_{\vtheta}}(s)}
 \newcommand{\vTheta}{\boldsymbol{\Theta}}
 \newcommand{\vphi}{\boldsymbol{\phi}}
-\newcommand{\gradJ}[1]{\nabla_{#1}J(\vtheta)}
+\newcommand{\gradJ}[1]{\nabla J(#1)}
 \newcommand{\gradApp}[2]{\hat{\nabla}_{#2}J(#1)}
 \newcommand{\eqdef}{\mathrel{\mathop:}=}
 \newcommand{\Dataset}{\mathcal{D}}
+%Specific
+\newcommand{\Ets}[2][t]{\mathbb{E}_{#1\mid s}\left[#2\right]}
+\newcommand{\Covts}[3][t]{{\mathbb{C}\text{ov}}_{#1\mid s}\left(#2,#3\right)}
+\newcommand{\Varts}[2][t]{{\mathbb{V}\text{ar}}_{#1\mid s}\left[#2\right]}
+\newcommand{\gradBlack}[1]{\blacktriangledown J(#1)}
+\newcommand{\gradIdeal}[1]{\overline{\blacktriangledown} J(#1)}
 %%%%%%
 
 % The \icmltitle you define below is probably too long as a header.
@@ -164,7 +172,7 @@ Solving an MDP means finding a policy $\pi^*$ maximizing $J$.
 \par
 Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^m\}$, with the only constraint that $\pol$ is differentiable in the $m$-dimensional parameter vector $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity, while in some occasions we denote $\pol(\tau)$ with $\pi(\tau\mid\vtheta)$ for the sake of readability. The search for a locally optimal policy is performed by means of gradient ascent, where the gradient of $J(\vtheta)$ \wrt the policy parameters is \cite{sutton2000policy}:
 \begin{align*}
-\gradJ{} = \int_{\Tspace}\pol(\tau)\score{}{\tau}\Reward(\tau)\de \tau.
+\gradJ{\vtheta} = \int_{\Tspace}\pol(\tau)\score{}{\tau}\Reward(\tau)\de \tau.
 \end{align*}
 We consider the on-line learning problem, where trajectories must be sampled directly by interacting with the environment. In this setting, stochastic gradient descent is typically employed: after sampling a trajectory $\tau$ or a batch of $N$ trajectories $\Dataset_{N}$,
 policy parameters are updated as $\vtheta\gets\vtheta + \alpha\gradApp{\vtheta}{N}$, where $\alpha$ is a step size and $\gradApp{\vtheta}{N}$ is an estimate of the true gradient. The REINFORCE gradient estimator \cite{williams1992simple} provides a simple, unbiased way of estimating the gradient:
@@ -244,7 +252,7 @@ where trajectories $\tau_j$ for $j=1,\dots,N$ are sampled from a snapshot policy
 \begin{restatable}{lemma}{unbias}\label{lemma:unbias}
 The SVRPG gradient estimator is unbiased:
 \[
-\mathop{E}_{\tau_j\sim\pi(\cdot\mid\tilde{\vtheta}),\tau_i\sim\pi(\cdot\mid\vtheta)}
+\mathop{\mathbb{E}}
 \left[\blacktriangledown J(\vtheta)\right] = \gradJ{}.
 \]
 \end{restatable}
@@ -281,7 +289,7 @@ To obtain a method that can be used in practice, a number of additional details 
 \section{Convergence Guarantees}
 
 \begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
-The parameter vector $\vtheta_A$ returned by Algorithm \ref{alg:svrpg} after $T=m\times S$ iterations has, for some constants $\psi>0, b>0$ and $c_{t}>0$ for $t=1,\dots,m$, the following property:
+Provided $J(\vtheta)$ is L-smooth with Lipschitz constant $L$ and step sizes are sufficiently small, the parameter vector $\vtheta_A$ returned by Algorithm \ref{alg:svrpg} after $T=m\times S$ iterations has, for some constants $\psi>0, D>0$ and $c_{t}>0$ for $t=1,\dots,m$, the following property:
 \[
 	\EVV[]
 	{\norm[]{\nabla J(\vtheta_A)}^2} \leq
@@ -290,7 +298,7 @@ The parameter vector $\vtheta_A$ returned by Algorithm \ref{alg:svrpg} after $T=
 \]
 where
 \begin{align*}
-	Z &= b\max_{s}\EVV[]{\norm[]{\gradApp{\tilde{\vtheta^s}}{1}}^2} \\
+	Z &= D\max_{s}\EVV[]{\norm[]{\gradApp{\tilde{\vtheta^s}}{1}}^2} \\
 	&+ \max_{s,t}\left|\Tr\Cov\left[
 		\gradApp{\tilde{\vtheta^s}}{1},
 		c_{t+1}\vtheta_t^{s+1} + \alpha_t\nabla J(\vtheta_t^{s+1})\right]\right|
@@ -308,8 +316,50 @@ where
 \bibliography{svrpg}
 \bibliographystyle{icml2018}
 
-
+\newpage
+\mbox{}
+\newpage
+\onecolumn
 \appendix
+
+\section{Definitions}
+We give some additional definitions which will be useful in the proofs of Appendix \ref{app:proofs}.
+\begin{definition}
+For a random variable $X$:
+\begin{align*}
+	&\mathbb{E}_{t\mid s}\left[X\right] \coloneqq 
+		\mathop{\mathbb{E}}_{\substack{\tau_j\sim\pi(\cdot\mid\tilde{\vtheta}^s) \\ \tau_i\sim\pi(\cdot\mid\vtheta^{s+1}_i)\text{ for $i=0,\dots,t-1$}}}{\left[X \mid \tilde{\vtheta^s}\right]} \\
+	&\coloneqq \EVV[\tau_j\sim\pi(\cdot\mid\tilde{\vtheta}^s)]{
+			\EVV[\tau_0\sim\pi(\cdot\mid\vtheta_0^{s+1})]
+				{\dots
+					\EVV[\tau_t\sim\pi(\cdot\mid\vtheta_t^{s+1})]
+						{X\mid\vtheta_t^{s+1}}
+				 \dots
+			\mid\vtheta_0^{s+1}}
+		\mid\tilde{\vtheta}^s},
+\end{align*}
+where the sequence $\tilde{\vtheta}^s,\vtheta_0^{s+1},\dots,\vtheta_t^{s+1}$ is defined in Algorithm \ref{alg:svrpg}. 
+\end{definition}
+Intuitively, the $\Ets{\cdot}$ operator computes the expected value with respect to the sampling of trajectories from the snapshot $\tilde{\vtheta}^s$ up to the $t$-th iteration included. Note that the order in which expected values are taken is important since each $\vtheta_{t}^{s+1}$ is function of previously sampled trajectories and is used to sample new ones.
+
+\begin{definition}
+The full gradient estimation error is:
+\[
+	e_s \coloneqq \gradApp{\tilde{\vtheta}^s}{N} - \gradJ{\tilde{\vtheta}^s} 
+\]
+\end{definition}
+
+\begin{definition}\label{def:ideal}
+The ideal SVRPG gradient estimate is:
+\begin{align*}
+	\overline{\blacktriangledown}J(\vtheta_t^{s+1}) &\coloneqq 
+	\gradJ{\tilde{\vtheta}^s}
+	+ \nabla\log\pi(\tau_i \mid \vtheta_t^{s+1})\Reward(\tau_i) 
+	- \omega(\tau_i)\nabla\log\pi(\tau_i \mid \tilde{\vtheta}^s)\Reward(\tau_i) \\
+	&= \gradBlack{\vtheta_t^{s+1}} - \gradApp{\tilde{\vtheta}^s}{N} + \gradJ{\tilde{\vtheta}^s} \\
+	&= \gradBlack{\vtheta_t^{s+1}} - e_s
+\end{align*}
+\end{definition}
 
 \section{Proofs}\label{app:proofs}
 
@@ -320,20 +370,62 @@ where
 
 \convergence*
 \begin{proof}
-We will prove the theorem for the following values of the open constants:
+We prove the theorem for the following values of the constants:
 \begin{align*}
-& \psi = \min_t\Psi_t, \\
-& b = \max_t b_t.
-& c_m = 0 \\
-& c_t \coloneqq c_{t+1}(1+\alpha_t\beta+3\alpha_t^2L^2) \\
+& \psi \coloneqq \min_t\Psi_t, \\
+& D \coloneqq \max_t d_t \\
+& c_m \coloneqq 0 \\
+& c_t \coloneqq c_{t+1}(1+\alpha_t\beta+3\alpha_t^2L^2), \\
 \end{align*}
 where:
 \begin{align*}
 	& \beta > 0 \\
-	& \psi_t \coloneqq (\alpha_t - \frac{c_{t+1}\alpha_t}{\beta} - \frac{3}{2}\alpha_t^2L - 3c_{t+1}\alpha_t^2) \\
-	& b_t \coloneqq 3(\alpha_t\frac{L}{2} + c_{t+1}\alpha_t^2), \\
+	& \Psi_t \coloneqq (\alpha_t - \frac{c_{t+1}\alpha_t}{\beta} - \frac{3}{2}\alpha_t^2L - 3c_{t+1}\alpha_t^2) \\
+	& d_t \coloneqq 3(\alpha_t\frac{L}{2} + c_{t+1}\alpha_t^2), \\
 \end{align*}
 and $\beta,\alpha_t$ are chosen so that $\psi_t > 0$ for $t=1,\dots,m$.
+We use two auxiliary lemmas, whose proofs are provided later on:
+%Lemma 1
+\begin{restatable}[]{lemma}{auxone}\label{lemma:aux1}
+\[
+	\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \leq
+	\frac{R_{t+1}^{s+1} - R_t^{s+1} + Z_t}{\Psi_t},
+\]
+where
+\[
+	R_t^{s+1}\coloneqq \Ets{J(\vtheta_t^{s+1}) + c_t\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+\]
+\end{restatable}
+%Lemma 2
+\begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
+	...
+\end{restatable}
+
 
 \end{proof}
+
+
+%Proof of Lemma 1
+\auxone*
+\begin{proof}
+We have:
+\begin{align}
+	\Ets{J(\vtheta_{t+1}^{s+1})} 
+	&\geq \Ets{J(\vtheta_t^{s+1})+\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}} - \frac{L}{2}\norm[]{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}}^2} \\
+	&= \Ets{J(\vtheta_t^{s+1})+\alpha_t\dotprod{\gradJ{\vtheta_t^{s+1}}}{\gradBlack{\vtheta_t^{s+1}}} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \\
+	&\geq \Ets{J(\vtheta_t^{s+1})+\alpha_t\dotprod{\gradJ{\vtheta_t^{s+1}}}{\gradIdeal{\vtheta_t^{s+1}}+e_s} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \\
+	&= \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2}  + \alpha_t\Ets[t-1]{\dotprod{e_s}{\gradJ{\vtheta_t^{s+1}}}} \\
+	&= \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} +
+	\alpha_t\Covts[t-1]{e_s}{\gradJ{\vtheta_t^{s+1}}} \\
+	&\geq  \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} -
+	\alpha_t\left|\Covts[t-1]{e_s}{\gradJ{\vtheta_t^{s+1}}}\right| \\
+	&\geq  \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \\
+	&+
+	\alpha_t\frac{\sqrt{\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}\Varts{\gradJ{\vtheta_t^{s+1}}}}}{\sqrt{N}}
+\end{align}
+where (1) is from the L-smoothness of $J(\vtheta)$, (2) is from the SVRPG gradient ascent update, (3) is from Definition \ref{def:ideal}, (4) is from the fact that $\EVV[\tau_t\sim\pi(\cdot\mid \vtheta_t^{s+1})]{\gradBlack{\vtheta_t^{s+1}}\mid\vtheta_t^{s+1}} = \EVV[\tau_t\sim\pi(\cdot\mid \vtheta_t^{s+1})]{\gradIdeal{\vtheta_t^{s+1}}\mid\vtheta_t^{s+1}}$, (5) is from the fact that $\Ets[t-1]{e_s} = 0$, and (7)+(8) is from the definition of $\gradApp{\vtheta}{N}$.
+
+...
+\end{proof}
+
 \end{document}
