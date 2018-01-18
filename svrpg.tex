@@ -322,8 +322,10 @@ where
 \onecolumn
 \appendix
 
-\section{Definitions}
-We give some additional definitions which will be useful in the proofs of Appendix \ref{app:proofs}.
+\section{Proofs}\label{app:proofs}
+
+\subsection*{Definitions}
+We give some additional definitions which will be useful in the proofs.
 \begin{definition}
 For a random variable $X$:
 \begin{align*}
@@ -361,12 +363,69 @@ The ideal SVRPG gradient estimate is:
 \end{align*}
 \end{definition}
 
-\section{Proofs}\label{app:proofs}
+
+\subsection*{Lemmas}
+Before addressing the main convergence theorem, we prove some useful lemmas.
 
 \unbias*
 \begin{proof}
 ...
 \end{proof}
+
+%Lemma 1
+\begin{restatable}[]{lemma}{auxone}\label{lemma:aux1}
+	\[
+	\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \leq
+	\frac{R_{t+1}^{s+1} - R_t^{s+1} + Z_t}{\Psi_t},
+	\]
+	where
+	\[
+	R_t^{s+1}\coloneqq \Ets{J(\vtheta_t^{s+1}) + c_t\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	\]
+\end{restatable}
+\begin{proof}
+	We have:
+	\begin{align}
+	\Ets{J(\vtheta_{t+1}^{s+1})} 
+	&\geq \Ets{J(\vtheta_t^{s+1})+\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}} - \frac{L}{2}\norm[]{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}}^2} \\
+	&= \Ets{J(\vtheta_t^{s+1})+\alpha_t\dotprod{\gradJ{\vtheta_t^{s+1}}}{\gradBlack{\vtheta_t^{s+1}}} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \\
+	&\geq \Ets{J(\vtheta_t^{s+1})+\alpha_t\dotprod{\gradJ{\vtheta_t^{s+1}}}{\gradIdeal{\vtheta_t^{s+1}}+e_s} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \\
+	&= \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2}  + \alpha_t\Ets[t-1]{\dotprod{e_s}{\gradJ{\vtheta_t^{s+1}}}} \nonumber\\
+	&= \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \\
+	&\qquad+
+	\alpha_t\Tr\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{\gradJ{\vtheta_t^{s+1}}} \\
+	&\geq  \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
+	&\qquad-
+	\alpha_t\Tr\left|\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{\gradJ{\vtheta_t^{s+1}}}\right| \nonumber \\
+	%
+	&\geq  \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
+	&\qquad-\alpha_t \Tr\left(\sqrt{\Varts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}}\circ\sqrt{\Varts[t-1]{\gradJ{\vtheta_t^{s+1}}}}\right) \nonumber \\
+	%
+	&\geq  \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
+	&\qquad-\frac{\alpha_t}{N} \Tr\left(\sqrt{\Varts[t-1]{\gradApp{\tilde{\vtheta}^s}{1}}}\circ\sqrt{\Varts[t-1]{\gradJ{\vtheta_t^{s+1}}}}\right) \\
+	%
+	&=
+	\Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
+	&\qquad-\frac{\alpha_t}{2N}\left(\Tr\Varts[t-1]{\gradApp{\tilde{\vtheta}^s}{1}} + \Tr\Varts[t-1]{\gradJ{\vtheta_t^{s+1}}}\right) \\
+	%
+	&\geq  \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
+	&\qquad-\frac{\alpha_t}{2N}\left(\Tr\Varts[t-1]{\gradApp{\tilde{\vtheta}^s}{1}} + \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1} - \gradJ{\tilde{\vtheta}^s}}}^2}\right) \nonumber\\
+	%
+	&\geq  \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
+	&\qquad-\frac{\alpha_tL^2}{2N}\left(\Tr\Varts[t-1]{\gradApp{\tilde{\vtheta}^s}{1}} + \Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2}\right)
+\end{align}
+where (1) is from the L-smoothness of $J(\vtheta)$, (2) is from the SVRPG gradient ascent update, (3) is from Definition \ref{def:ideal}, (4) is from the fact that $\EVV[\tau_t\sim\pi(\cdot\mid \vtheta_t^{s+1})]{\gradBlack{\vtheta_t^{s+1}}\mid\vtheta_t^{s+1}} = \EVV[\tau_t\sim\pi(\cdot\mid \vtheta_t^{s+1})]{\gradIdeal{\vtheta_t^{s+1}}\mid\vtheta_t^{s+1}}$, (5) is from the fact that $\Ets[t-1]{e_s} = 0$, (6) is from the definition of $\gradApp{\vtheta}{N}$, (7) is from Young's inequality and (8) is again from L-smoothness.
+
+	...
+\end{proof}
+
+%Lemma 2
+\begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
+	...
+\end{restatable}
+
+
+\subsection*{Main theorem}
 
 \convergence*
 \begin{proof}
@@ -384,48 +443,6 @@ where:
 	& d_t \coloneqq 3(\alpha_t\frac{L}{2} + c_{t+1}\alpha_t^2), \\
 \end{align*}
 and $\beta,\alpha_t$ are chosen so that $\psi_t > 0$ for $t=1,\dots,m$.
-We use two auxiliary lemmas, whose proofs are provided later on:
-%Lemma 1
-\begin{restatable}[]{lemma}{auxone}\label{lemma:aux1}
-\[
-	\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \leq
-	\frac{R_{t+1}^{s+1} - R_t^{s+1} + Z_t}{\Psi_t},
-\]
-where
-\[
-	R_t^{s+1}\coloneqq \Ets{J(\vtheta_t^{s+1}) + c_t\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-\]
-\end{restatable}
-%Lemma 2
-\begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
-	...
-\end{restatable}
-
-
-\end{proof}
-
-
-%Proof of Lemma 1
-\auxone*
-\begin{proof}
-We have:
-\begin{align}
-	\Ets{J(\vtheta_{t+1}^{s+1})} 
-	&\geq \Ets{J(\vtheta_t^{s+1})+\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}} - \frac{L}{2}\norm[]{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}}^2} \\
-	&= \Ets{J(\vtheta_t^{s+1})+\alpha_t\dotprod{\gradJ{\vtheta_t^{s+1}}}{\gradBlack{\vtheta_t^{s+1}}} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \\
-	&\geq \Ets{J(\vtheta_t^{s+1})+\alpha_t\dotprod{\gradJ{\vtheta_t^{s+1}}}{\gradIdeal{\vtheta_t^{s+1}}+e_s} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \\
-	&= \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2}  + \alpha_t\Ets[t-1]{\dotprod{e_s}{\gradJ{\vtheta_t^{s+1}}}} \\
-	&= \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} +
-	\alpha_t\Covts[t-1]{e_s}{\gradJ{\vtheta_t^{s+1}}} \\
-	&\geq  \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} -
-	\alpha_t\left|\Covts[t-1]{e_s}{\gradJ{\vtheta_t^{s+1}}}\right| \\
-	&\geq  \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}^2} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \\
-	&+
-	\alpha_t\frac{\sqrt{\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}\Varts{\gradJ{\vtheta_t^{s+1}}}}}{\sqrt{N}}
-\end{align}
-where (1) is from the L-smoothness of $J(\vtheta)$, (2) is from the SVRPG gradient ascent update, (3) is from Definition \ref{def:ideal}, (4) is from the fact that $\EVV[\tau_t\sim\pi(\cdot\mid \vtheta_t^{s+1})]{\gradBlack{\vtheta_t^{s+1}}\mid\vtheta_t^{s+1}} = \EVV[\tau_t\sim\pi(\cdot\mid \vtheta_t^{s+1})]{\gradIdeal{\vtheta_t^{s+1}}\mid\vtheta_t^{s+1}}$, (5) is from the fact that $\Ets[t-1]{e_s} = 0$, and (7)+(8) is from the definition of $\gradApp{\vtheta}{N}$.
-
-...
 \end{proof}
 
 \end{document}
