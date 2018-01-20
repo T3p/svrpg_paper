@@ -75,7 +75,7 @@
 \newcommand{\policy}{\pi_{\vtheta}(a \mid s)}
 \newcommand{\pol}{\pi_{\vtheta}}
 \newcommand{\trajdistr}{\pi_{\vtheta}(\tau)}
-\newcommand{\score}[2]{\nabla_{#1}\log\pi_{#1}(#2)}
+\newcommand{\score}[2]{\nabla\log\pi_{#1}(#2)}
 \newcommand{\Qfun}{Q^{\pi_{\vtheta}}(s,a)}
 \newcommand{\Vfun}{V^{\pi_{\vtheta}}(s)}
 \newcommand{\vTheta}{\boldsymbol{\Theta}}
@@ -374,8 +374,83 @@ Before addressing the main convergence theorem, we prove some useful lemmas.
 
 %Lemma 2
 \begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
-	...
+The expected squared norm of the SVRPG gradient can be bounded as follows:
+\[
+\Ets{\gradBlack{\vtheta_t^{s+1}}} \leq
+\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
++L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
++\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+\nonumber 
++dG^2R^2\left(M_2-1\right)
+\]
 \end{restatable}
+\begin{proof}
+	
+	\begin{align}
+	\Ets{\gradBlack{\vtheta_t^{s+1}}} 
+	&= \Ets{\norm[]{\gradApp{\tilde{\vtheta}^s}{N}
+			+ \score{\vtheta_t^{s+1}}{\tau_i} -
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}^2} \nonumber\\
+	&= \Ets{\norm[]{\gradApp{\tilde{\vtheta}^s}{N}
+			+ \score{\vtheta_t^{s+1}}{\tau_i} -
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}-\gradJ{\vtheta_t^{s+1}} + \gradJ{\tilde{\vtheta}^s}
+			+\gradJ{\vtheta_t^{s+1}} - \gradJ{\tilde{\vtheta}^s}}^2} \nonumber\\
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
+	+\Ets[]{\norm[]{\gradApp{\tilde{\vtheta}^s}{N} - \Ets[]{\gradApp{\tilde{\vtheta}^s}{N}}}^2} \nonumber\\
+	&\qquad+ 
+	\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i} -
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}- \Ets{\score{\vtheta_t^{s+1}}{\tau_i} -
+				\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}}^2} \nonumber\\
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\\
+	&\qquad+ 
+	\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i} -
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}- \Ets{\score{\vtheta_t^{s+1}}{\tau_i} -
+				\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}}^2} \nonumber\\
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
+	&\qquad+\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i} -
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}^2} \\
+	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\nonumber\\
+	&\qquad+\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i}
+			-\score{\tilde{\vtheta}^s}{\tau_i}
+			+\score{\tilde{\vtheta}^s}{\tau_i} 
+			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}^2} \nonumber\\
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\nonumber\\
+	&\qquad+\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i}
+			-\score{\tilde{\vtheta}^s}{\tau_i}}^2} \nonumber
+	+\Ets{\norm[]{\score{\tilde{\vtheta}^s}{\tau_i} 
+			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}^2} \nonumber\\
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\nonumber\\
+	&\qquad+L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	+\Ets{\norm[]{\score{\tilde{\vtheta}^s}{\tau_i} 
+			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}^2} \\
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\nonumber\\
+	&\qquad+L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	+dG^2R^2\Ets{(\omega(\tau_i)-1)^2} \\
+	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\nonumber\\
+	&\qquad+L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	+dG^2R^2\left(\Ets{\omega^2(\tau_i)}-1\right) \nonumber\\
+	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\nonumber\\
+	&\qquad+L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	+dG^2R^2\left(M_2-1\right),
+\end{align}
+where (1) is from the definition of $\gradApp{\vtheta}{N}$, (2) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (3) is from L-smoothness, 
+(4) is from [todo], and (5) is from [todo].
+\end{proof}
 
 %Lemma 0
 \begin{restatable}[]{lemma}{auxzero}\label{lemma:aux0}
@@ -429,7 +504,7 @@ The expected scalar product between $\gradBlack{\vtheta_t^{s+1}}$ and any functi
 	&\qquad-
 	\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{1}{2}\Ets[t-1]{\norm[]{f(\vtheta_t^{s+1})}^2},\nonumber
 \end{align}
-where (1) is from Definition \ref{def:ideal}; (2) is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $f(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$; (3) is from $\Ets{e_s}=0$; (4) is from Young's inequality; and (5) is from the definition of $\gradApp{\vtheta}{N}$.
+where (6) is from Definition \ref{def:ideal}; (7) is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $f(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$; (8) is from $\Ets{e_s}=0$; (9) is from Young's inequality; and (10) is from the definition of $\gradApp{\vtheta}{N}$.
 \end{proof}
 
 %Lemma 1
@@ -455,7 +530,7 @@ The expected squared norm of the true gradient $\gradJ{\vtheta_t^{s+1}}$ can be 
 	&\qquad-
 	\frac{\alpha_t}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2},
 \end{align}
-where (6) is from the L-smoothness of $J(\vtheta)$, (7) is from the SVRPG update, and (8) is from Lemma \ref{lemma:aux0}.
+where (11) is from the L-smoothness of $J(\vtheta)$, (12) is from the SVRPG update, and (13) is from Lemma \ref{lemma:aux0}.
 
 Next we have:
 \begin{align}
@@ -482,9 +557,9 @@ Next we have:
 &\qquad-
 \frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2},
 \end{align}
-where (9) is from the SVRPG update, (10) is from Lemma \ref{lemma:aux0}, and (11) is from Young's inequality in the 'Peter-Paul' variant.
+where (14) is from the SVRPG update, (15) is from Lemma \ref{lemma:aux0}, and (16) is from Young's inequality in the 'Peter-Paul' variant.
 
-...[next: put (11),(8) and Lemma A.1 together to finish proof]
+...[next: put (16),(13) and Lemma A.1 together to finish proof]
 \end{proof}
 
 
