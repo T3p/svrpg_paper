@@ -48,6 +48,24 @@
 \DeclareRobustCommand{\eg}{e.g.,\@\xspace}
 \DeclareRobustCommand{\ie}{i.e.,\@\xspace}
 \DeclareRobustCommand{\wrt}{w.r.t.\@\xspace}
+% graphics
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{tikz,pgfplots}
+\pgfplotsset{compat=newest}
+%% TODOs
+% \setlength{\marginparwidth}{2cm}
+\usepackage[colorinlistoftodos, textwidth=20mm]{todonotes}
+\definecolor{citrine}{rgb}{0.89, 0.82, 0.04}
+\definecolor{blued}{RGB}{70,197,221}
+%%todo by Marcello
+\newcommand{\todomarc}[1]{\todo[color=green, inline]{\small #1}}
+\newcommand{\todomarcout}[1]{\todo[color=green]{\scriptsize #1}}
+%%todo by Matteo Papini
+\newcommand{\todomat}[1]{\todo[color=citrine, inline]{\small #1}}
+\newcommand{\todomatout}[1]{\todo[color=citrine]{\scriptsize #1}}
+%%todo by Matteo Pirotta
+\newcommand{\todopir}[1]{\todo[color=blued, inline]{\small #1}}
+\newcommand{\todopirout}[1]{\todo[color=blued]{\scriptsize #1}}
 %%%%%%
 
 %%%CUSTOM COMMANDS%%%
@@ -134,6 +152,8 @@
 % the "keywords" metadata in the PDF but will not be shown in the document
 \icmlkeywords{Machine Learning, ICML}
 
+
+
 \vskip 0.3in
 ]
 
@@ -149,18 +169,31 @@
 \printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
 
 \begin{abstract}
-
+Why we need variance-reduced gradient in RL?
 \end{abstract}
 
 \section{Introduction}
+\begin{itemize}
+        \item Similarities between RL and SL
+        \item SL needs SVRG so RL
+        \item Potential advantages of SVRG
+        \item Difficulties in RL \wrt SL
+\end{itemize}
 
 \section{Preliminaries}
-In this section we provide essential background on policy gradient methods for Reinforcement Learning and stochastic variance-reduced gradient methods for finite sum optimization. In the next section we will show how these methods can be combined to solve Reinforcement Learning tasks.
+In this section we provide essential background on policy gradient methods for Reinforcement Learning and stochastic variance-reduced gradient methods for finite-sum optimization. In the next section we will show how these methods can be combined to solve Reinforcement Learning tasks.
 
 \subsection{Policy Gradient}
-A Reinforcement Learning task \cite{sutton2011reinforcement} can be modeled with a discrete-time continuous Markov Decision Process (MDP) $\langle\Sspace,\Aspace,\Transition,\Reward,\gamma,\rho\rangle$, where $\Sspace$ is a continuous state space; $\Aspace$ is a continuous action space; $\Transition$ is a Markovian transition model, where $\Transition(s'\mid s,a)$ defines the transition density from state $s$ to $s'$ under action $a$; $\Reward$ is the reward function, where $\Reward(s,a) \in [-R,R]$ is the expected reward for state-action pair $(s,a)$ and $R$ is the maximum absolute-value reward; $\gamma\in[0,1)$ is the discount factor; and $\rho$ is the initial state distribution.
-The agent's behavior is modeled as a policy $\pi$, where $\pi(a\mid s)$ is the density distribution over $\Aspace$ of the action to take in state $s$.
-We consider episodic tasks, \ie, tasks composed of episodes of length $H$, also called time horizon. In this setting, a trajectory $\tau$ is the sequence of states and actions $(s_0,a_0,s_1,a_1,\dots,s_{H-1},a_{H-1})$ observed by following some stationary policy in a given episode, where $s_0$ is always sampled from the initial state distribution $\rho$. With abuse of notation, we denote with $\pi(\tau)$ the density distribution induced by policy $\pi$ on the set $\Tspace$ of all possible trajectories, and with $\Reward(\tau)$ the total discounted reward provided by trajectory $\tau$:
+A Reinforcement Learning task \cite{sutton2011reinforcement} can be modeled with a discrete-time continuous Markov Decision Process (MDP) $\langle\Sspace,\Aspace,\Transition,\Reward,\gamma,\rho\rangle$, where $\Sspace$ is a continuous state space; $\Aspace$ is a continuous action space; $\Transition$ is a Markovian transition model, where $\Transition(s'|s,a)$ defines the transition density from state $s$ to $s'$ under action $a$; $\Reward$ is the reward function, where $\Reward(s,a) \in [-R,R]$ is the expected reward for state-action pair $(s,a)$ and $R$ is the maximum absolute-value reward; $\gamma\in[0,1)$ is the discount factor; and $\rho$ is the initial state distribution.
+The agent's behavior is modeled as a policy $\pi$, where $\pi(\cdot|s)$ is the density distribution over $\Aspace$ in state $s$.
+We consider episodic tasks, \ie tasks composed of episodes of length $H$, also called time horizon.
+In this setting, a trajectory $\tau$ is the sequence of states and actions $(s_0,a_0,s_1,a_1,\dots,s_{H-1},a_{H-1})$ observed by following some stationary policy in a given episode, where $s_0$ is always sampled from the initial state distribution $\rho$.
+\todopir{This definition of episodic task is not precise!
+        An episodic task is a task in which there is an absorbing state (at least one) that is optimal. This means that the optimal policy reaches the target state in a finite number of steps. A part from that, there is no other property on the problem. The previous sentences may be misinterpreted and can lead to think that the problem is finite horizon but in that case we know that the optimal policy is non-stationary (bad)!
+        I would rewrite it in this way:
+        We consider episodic MDPs with effective horizon $H$, \ie optimal policy is able to reach the target state (\ie absorbing state) in at most $H$ steps (the true length depend on the initial state). This has not to be confused with a finite horizon problem where the optimal policy is non-stationary. In this setting, we can limit our attention to trajectories of length $H$. A trajectory $\tau$ is a sequence of states and actions $(s_0,a_0,s_1,a_1,\dots,s_{H-1},a_{H-1})$ observed by following a stationary policy, where $s_0 \sim \rho$.
+}
+With abuse of notation, we denote with $\pi(\tau)$ the density distribution induced by policy $\pi$ on the set $\Tspace$ of all possible trajectories, and with $\Reward(\tau)$ the total discounted reward provided by trajectory $\tau$:
 \begin{align*}
 \Reward(\tau) = \sum_{t=0}^{H-1}\gamma^t\Reward(s_t,a_t).
 \end{align*}
@@ -168,8 +201,8 @@ Performance $J$ allows to rank policies in terms of expected reward:
 \begin{align*}
 	J(\pi) = \int_{\Tspace}\pi(\tau)\Reward(\tau)\de \tau.
 \end{align*}
-Solving an MDP means finding a policy $\pi^*$ maximizing $J$.
-\par
+Solving an MDP means finding a policy $\pi^* \in \argmax_{\pi} \{J(\pi)\}$.
+
 Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^m\}$, with the only constraint that $\pol$ is differentiable in the $m$-dimensional parameter vector $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity, while in some occasions we denote $\pol(\tau)$ with $\pi(\tau\mid\vtheta)$ for the sake of readability. The search for a locally optimal policy is performed by means of gradient ascent, where the gradient of $J(\vtheta)$ \wrt the policy parameters is \cite{sutton2000policy}:
 \begin{align*}
 \gradJ{\vtheta} = \int_{\Tspace}\pol(\tau)\score{}{\tau}\Reward(\tau)\de \tau.
