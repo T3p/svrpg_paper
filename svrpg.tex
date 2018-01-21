@@ -310,6 +310,43 @@ where
 \section{Related Work}
 
 \section{Experiments}
+We design our experiments to investigate if:
+\begin{enumerate}
+\item Algorithm reaches high value of the reward function faster then GPOMDP.
+\item Averagely SVRPG maintains the reward function more stable then GPOMDP.
+\end{enumerate}
+
+In order to analyze these topics, we evaluate the behavior of rewards function mediated by 10 runs for each experiment.
+
+We decide to use the following models:
+\begin{enumerate}
+\item \emph{Cart-Pole Balancing} : 4-dimensional state space: cart position x, pole angle $\theta$, the cart velocity $\dot{x}$ , and the pole velocity $\dot{\theta}$; 1-dimensional action space: the horizontal force applied to the cart body. Reward function  is defined as $r(s, a) := 10 - (1 - cos(\theta)) - 10^{-5}\norm[] a^2$. Episodes terminates when $|x|>2.4$ or $|\theta|>0.2$ or the number of time step T is major than 100.
+\item \emph{Mujoco Swimmer}: 8-dimensional state space: 3 links velocities ($v_x$ and $v_y$ of center of masses) and 2 actuated joints angles. 2-dimensional action space: the two momentums applied on actuated joints.  Reward function is defined as $r(s, a) := v_x - 10^{-4}\norm[2] a^2$. Episodes terminates when the number of time step T is major than 500.
+\item \emph{Mujoco Half Cheetah}: 20-dimensional state space: 9 links and 6 actuated joints angles. 6-dimensional action space: the 6 momentums applied on actuated joints.  Reward function is defined as $r(s, a) := v_x - 0.05\norm[2] a^2$. Episodes terminates when the number of time step T is major than 500.
+\end{enumerate}
+
+In all the experiments we face with GPOMDP standard algorithm. GPOMDP uses a number of trajectories per batch that is equal to the number of trajectories used in SVRPO mini-batch size.
+In SVRPO we implemented two different Adam parameters: the first one for Snapshot and the second one for sub-iterations.
+The stopping condition depends on the maximum number of sub-iterations and on the step size of sub-iteration: in particular we stop if the ratio of step size to number of trajectories used results smaller in sub-iteration than in snapshot.
+We fixed the maximum number of trajectories that both the algorithms can use. 
+
+All the experiments' parameters are reported in the following table:
+
+\begin{tabular}{ l | c  c  c }	
+  & Cart-Pole & Swimmer & Half Cheetah \\
+  \hline
+  State space dim  & 4 & 8 & 20 \\
+  Control space dim & 1 & 2 & 6 \\
+  NN Hidden layers & 8 & 32x32 & 32x32 \\
+  Learning rate & $10^{-2}$ & $10^{-3}$ & $10^{-3}$ \\
+  Snapshot traj & 100 & 100 & 100 \\
+  Sub-iter traj & 10 & 10 & 10 \\
+  Max sub-iter & 50 & 20 & 20 \\
+  Traj lengths& 100 & 500 & 500 \\
+  Discount $(\gamma)$& 0.99 & 0.995 & 0.99 \\
+  Total traj& 10000 & 10000 & 10000 \\
+  \hline  
+\end{tabular}
 
 \section{Discussion}
 
