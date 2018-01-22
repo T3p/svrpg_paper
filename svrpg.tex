@@ -26,6 +26,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{mathtools}
 \usepackage{pifont}
+
 %%Theorems
 \usepackage{amsthm}
 \theoremstyle{remark}
@@ -204,16 +205,22 @@ Policy gradient methods restrict the search for the performance-maximizing polic
 \begin{align*}
 \gradJ{\vtheta} = \int_{\Tspace}\pol(\tau)\score{\vtheta}{\tau}\Reward(\tau)\de \tau.
 \end{align*}
-We consider the on-line learning problem, where trajectories must be sampled directly by interacting with the environment. In this setting, stochastic gradient ascent is typically employed: after sampling a trajectory $\tau$ or a batch of $N$ trajectories $\Dataset_{N}$,
-policy parameters are updated as $\vtheta\gets\vtheta + \alpha\gradApp{\vtheta}{N}$, where $\alpha$ is a step size and $\gradApp{\vtheta}{N}$ is an estimate of the true gradient. The REINFORCE gradient estimator \cite{williams1992simple} provides a simple, unbiased way of estimating the gradient:
+We consider the on-line learning problem, where trajectories must be sampled directly by interacting with the environment. 
+In this setting, $(N>0)$-batch gradient ascent is typically employed: after sampling a batch of $N$ trajectories (\ie $\Dataset_{N}$),
+policy parameters are updated as $\vtheta\gets\vtheta + \alpha\gradApp{\vtheta}{N}$, where $\alpha$ is a step size and $\gradApp{\vtheta}{N}$ is an estimate of the true gradient. 
+\todopir{step size is scalar or vectorial (just for notation)? Check consistency of $N$ with finite-sum function, we can use even $b$ or $B$ for the batch size.}
+The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, unbiased way of estimating the gradient:
 \begin{align*}
-\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{}{a_h^n\mid s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
+\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
 \end{align*}
 where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline, provided it is constant \wrt to actions.
-The G(PO)MDP gradient estimator \cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance while preserving the unbiasedness:
+\todopir{Actually it can be state-action dependant~\citep[\eg][]{Thomas2017actionbaseline,anonymous2018variance}.}
+The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance while preserving the unbiasedness:
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\gamma^h r_h^n - b\right).
 \end{align*}
+\todopir{Cite Jan's paper somewhere}
+\todopir{At this point we need to connect with the supervised learning framework (we can just define everything inside the first sum as $\nabla g(\tau)$).}
 
 \subsection{Stochastic Variance-Reduced Gradient}
 Finite sum optimization is the problem of maximizing an objective function $f(\vtheta)$ which can be decomposed into the sum or average of a finite number of functions $g_i(\vtheta)$:
@@ -224,20 +231,27 @@ This kind of optimization is very common in machine learning, where each $g_i$ m
 \begin{align*}
 \max_{\vtheta} f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}g(x_i \mid \vtheta).
 \end{align*}
-A common requirement is that $g$ must be smooth and convex in $\vtheta$. Under this hypothesis, full gradient ascent \cite{cauchy1847methode} with a constant step size achieves an IFO complexity \cite{agarwal2014lower} of $O(\nicefrac{N}{\epsilon})$, \ie it requires $k = O(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$. This can be too expensive for large values of $N$. Stochastic gradient ascent \cite{robbins1951stochastic} \cite{bottou2004large} overcomes this problem by sampling a single $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $O(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$. 
-Starting from SAG \cite{roux2012stochastic}, a series of variations to stochastic gradient ascent have been proposed to achieve a better trade-off between convergence speed and cost per iteration. This family of algorithms includes SAG, SVRG \cite{johnson2013accelerating}, SAGA \cite{defazio2014saga} and Finito \cite{defazio2014finito}, the common intuition being the reuse of previous gradient computations to reduce the variance of the current one. In particular, Stochastic Variance Reduced Gradient (SVRG) is often preferred to other similar methods for its limited storage requirements, which can become a problem when neural networks with several parameters are employed.  
+A common requirement is that $g$ must be smooth and convex in $\vtheta$. Under this hypothesis, full gradient ascent \cite{cauchy1847methode} with a constant step size achieves an Incremental First-order Oracle (IFO) complexity~\citep{agarwal2014lower} of $O(\nicefrac{N}{\epsilon})$, \ie it requires $k = O(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$. 
+\todopir{Explain IFO meaning (footnote) and this holds for deterministic algorithms}
+This can be too expensive for large values of $N$. Stochastic Gradient (SG) ascent~\citep[\eg][]{robbins1951stochastic,bottou2004large} overcomes this problem by sampling a single sample $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $O(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$. 
+\todopir{What is the reference?}
+Starting from SAG, a series of variations to SG have been proposed to achieve a better trade-off between convergence speed and cost per iteration: \eg SAG~\citep{roux2012stochastic}, SVRG~\cite{johnson2013accelerating}, SAGA~\cite{defazio2014saga} and Finito~\cite{defazio2014finito}, 
+The common idea is to reuse past gradient computations to reduce the variance of the current estimate.
+In particular, Stochastic Variance Reduced Gradient (SVRG) is often preferred to other similar methods for its limited storage requirements, which can become a problem when deep and/or wide neural networks are employed.  
 
-The idea of SVRG is to alternate full and stochastic gradient updates. Each $m = O(N)$ iterations, a snapshot $\tilde{\vtheta}$ of the current parameter is saved together with its full gradient $\nabla f(\tilde{\vtheta})$.
+The idea of SVRG is to alternate full and stochastic gradient updates. 
+\todopir{here would be nice to have a notation for the single batch}
+Each $m = O(N)$ iterations, a snapshot $\tilde{\vtheta}$ of the current parameter is saved together with its full gradient $\nabla f(\tilde{\vtheta})$.
 Otherwise, the parameter is updated with a corrected stochastic gradient estimate of the form:
 \begin{align*}
 \blacktriangledown f(\vtheta) = 
 	\nabla f(\tilde{\vtheta}) + 
-	\nabla g(x_i\mid\vtheta) -
-	\nabla g(x_i \mid \tilde{\vtheta}),
+	\nabla g(x_i | \vtheta) -
+	\nabla g(x_i | \tilde{\vtheta}),
 \end{align*} 
 where $x_i$ is sampled uniformly at random from $\mathcal{D}_N$. The corrected gradient $\blacktriangledown f(\vtheta)$ is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, without resorting to plain full gradient. The resulting IFO complexity is $O(N+\nicefrac{\sqrt{N}}{\epsilon})$ \cite{reddi2016stochastic}.
 
-More recently, some extensions of variance reduction algorithms to the non-convex objectives have been proposed \cite{reddi2016stochastic} \cite{allen2016variance} \cite{reddi2016stochastic} \cite{reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the IFO complexity of full gradient  and of stochastic gradient ascent are the same as in the convex case \cite{nesterov2013introductory} \cite{ghadimi2013stochastic}. Also in this case, SVRG yields an advantageous trade-off, with an IFO complexity of $O(N + \nicefrac{N^{\nicefrac{2}{3}}}{N})$ \cite{reddi2016stochastic}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value. Pseudocode of SVRG for both the convex and the non-convex case is provided in Algorithm \ref{alg:svrg}. 
+More recently, some extensions of variance reduction algorithms to the non-convex objectives have been proposed~\citep[\eg][]{reddi2016stochastic,allen2016variance,reddi2016stochastic,reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the IFO complexity of full gradient  and of stochastic gradient ascent are the same as in the convex case~\citep{nesterov2013introductory,ghadimi2013stochastic}. Also in this case, SVRG yields an advantageous trade-off, with an IFO complexity of $O(N + \nicefrac{N^{\nicefrac{2}{3}}}{N})$~\citep{reddi2016stochastic}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value. Pseudocode of SVRG for both the convex and the non-convex case is provided in Alg.~\ref{alg:svrg}. 
 
 
 \begin{algorithm}[tb]
