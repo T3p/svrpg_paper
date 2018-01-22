@@ -305,6 +305,22 @@ where
 \end{align*}
 \end{restatable}
 
+\section{Stopping Condition}\label{sec:stopping}
+In practice ,the performance of the SVRPG algorithm is sensitive to the number of sub-iterations.
+As the number of sub-iterations increases, the variance of the importance weights and the gradient increases too.
+Therefore, the SVRPG algorithm fails in its primary aim of stabilizing the gradient estimate.
+A fixed number of sub-iterations is not the optimal choice.
+Few sub-iterations lead to few updates, many update lead to increases of variance.
+
+We introduce two stopping condition: maximum number of sub-iterations and learning rate of Adam sub-iterations.
+Adam update rule help to stabilize the gradient estimate. In fact, this method computes adaptive learning rates for each parameter that depends by history of gradients' variance.
+In particular we use different Adam parameters: the first one for snapshot update and the second one for the sub-iterations update.
+We stop if:
+
+\[\frac{\alpha_{snap}}{N}>\frac{\alpha_{sub-iter}}{M}\]
+
+where M is the sub-iterations batch size.
+
 \section{Practical Variants}
 
 \section{Related Work}
@@ -318,13 +334,13 @@ We design our experiments to investigate if:
 
 In order to analyze these topics, we evaluate the behavior of rewards function mediated by 10 runs for each experiment.
 
-We decide to use the following models of Rllab: \emph{Cart-Pole Balancing} ,\emph{Mujoco Swimmer},\emph{Mujoco Half Cheetah}.
+We decide to use the following models of Rllab: \emph{Cart-Pole Balancing}, \emph{Mujoco Swimmer}, \emph{Mujoco Half Cheetah}.
 
 
 In all the experiments we face with GPOMDP standard algorithm. GPOMDP uses a number of trajectories per batch that is equal to the number of trajectories used in SVRPG mini-batch size.
 The neural network and the learning rate are the same for GPOMDP and SVRPG.
 In SVRPG we implemented two different Adam parameters: the first one for Snapshot and the second one for sub-iterations.
-The stopping condition depends on the maximum number of sub-iterations and on the step size of sub-iteration: in particular we stop if the ratio of step size to number of trajectories used results smaller in sub-iteration than in snapshot.
+We use the stopping condition defined in Section \ref{sec:stopping}.
 We fixed the maximum number of trajectories that both the algorithms can use. 
 
 The neural networks is composed by one layer with 8 neurons for Cart-Pole environment and by two layers with 32x32 neurons for Swimmer and for Half Cheetah environments. In each experiment, the length of episodes is 500 steps.
