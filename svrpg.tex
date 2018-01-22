@@ -93,7 +93,7 @@
 \newcommand{\policy}{\pi_{\vtheta}(a \mid s)}
 \newcommand{\pol}{\pi_{\vtheta}}
 \newcommand{\trajdistr}{\pi_{\vtheta}(\tau)}
-\newcommand{\score}[2]{\nabla_{#1}\log\pi_{#1}(#2)}
+\newcommand{\score}[2]{\nabla\log\pi_{#1}(#2)}
 \newcommand{\Qfun}{Q^{\pi_{\vtheta}}(s,a)}
 \newcommand{\Vfun}{V^{\pi_{\vtheta}}(s)}
 \newcommand{\vTheta}{\boldsymbol{\Theta}}
@@ -335,11 +335,45 @@ where
 \end{align*}
 \end{restatable}
 
+\section{Stopping Condition}\label{sec:stopping}
+In practice ,the performance of the SVRPG algorithm is sensitive to the number of sub-iterations.
+As the number of sub-iterations increases, the variance of the importance weights and the gradient increases too.
+Therefore, the SVRPG algorithm fails in its primary aim of stabilizing the gradient estimate.
+A fixed number of sub-iterations is not the optimal choice.
+Few sub-iterations lead to few updates, many update lead to increases of variance.
+
+We introduce two stopping condition: maximum number of sub-iterations and learning rate of Adam sub-iterations.
+Adam update rule help to stabilize the gradient estimate. In fact, this method computes adaptive learning rates for each parameter that depends by history of gradients' variance.
+In particular we use different Adam parameters: the first one for snapshot update and the second one for the sub-iterations update.
+We stop if:
+
+\[\frac{\alpha_{snap}}{N}>\frac{\alpha_{sub-iter}}{M}\]
+
+where M is the sub-iterations batch size.
+
 \section{Practical Variants}
 
 \section{Related Work}
 
 \section{Experiments}
+We design our experiments to investigate if:
+\begin{enumerate}
+\item Algorithm reaches high value of the reward function faster then GPOMDP.
+\item Averagely SVRPG maintains the reward function more stable then GPOMDP.
+\end{enumerate}
+
+In order to analyze these topics, we evaluate the behavior of rewards function mediated by 10 runs for each experiment.
+
+We decide to use the following models of Rllab: \emph{Cart-Pole Balancing}, \emph{Mujoco Swimmer}, \emph{Mujoco Half Cheetah}.
+
+
+In all the experiments we face with GPOMDP standard algorithm. GPOMDP uses a number of trajectories per batch that is equal to the number of trajectories used in SVRPG mini-batch size.
+The neural network and the learning rate are the same for GPOMDP and SVRPG.
+In SVRPG we implemented two different Adam parameters: the first one for Snapshot and the second one for sub-iterations.
+We use the stopping condition defined in Section \ref{sec:stopping}.
+We fixed the maximum number of trajectories that both the algorithms can use. 
+
+The neural networks is composed by one layer with 8 neurons for Cart-Pole environment and by two layers with 32x32 neurons for Swimmer and for Half Cheetah environments. In each experiment, the length of episodes is 500 steps.
 
 \section{Discussion}
 
@@ -404,8 +438,83 @@ Before addressing the main convergence theorem, we prove some useful lemmas.
 
 %Lemma 2
 \begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
-	...
+The expected squared norm of the SVRPG gradient can be bounded as follows:
+\[
+\Ets{\gradBlack{\vtheta_t^{s+1}}} \leq
+\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
++L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
++\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+\nonumber 
++dG^2R^2\left(M_2-1\right)
+\]
 \end{restatable}
+\begin{proof}
+	
+	\begin{align}
+	\Ets{\gradBlack{\vtheta_t^{s+1}}} 
+	&= \Ets{\norm[]{\gradApp{\tilde{\vtheta}^s}{N}
+			+ \score{\vtheta_t^{s+1}}{\tau_i} -
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}^2} \nonumber\\
+	&= \Ets{\norm[]{\gradApp{\tilde{\vtheta}^s}{N}
+			+ \score{\vtheta_t^{s+1}}{\tau_i} -
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}-\gradJ{\vtheta_t^{s+1}} + \gradJ{\tilde{\vtheta}^s}
+			+\gradJ{\vtheta_t^{s+1}} - \gradJ{\tilde{\vtheta}^s}}^2} \nonumber\\
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
+	+\Ets[]{\norm[]{\gradApp{\tilde{\vtheta}^s}{N} - \Ets[]{\gradApp{\tilde{\vtheta}^s}{N}}}^2} \nonumber\\
+	&\qquad+ 
+	\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i} -
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}- \Ets{\score{\vtheta_t^{s+1}}{\tau_i} -
+				\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}}^2} \nonumber\\
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\\
+	&\qquad+ 
+	\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i} -
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}- \Ets{\score{\vtheta_t^{s+1}}{\tau_i} -
+				\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}}^2} \nonumber\\
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
+	&\qquad+\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i} -
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}^2} \\
+	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\nonumber\\
+	&\qquad+\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i}
+			-\score{\tilde{\vtheta}^s}{\tau_i}
+			+\score{\tilde{\vtheta}^s}{\tau_i} 
+			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}^2} \nonumber\\
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\nonumber\\
+	&\qquad+\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i}
+			-\score{\tilde{\vtheta}^s}{\tau_i}}^2} \nonumber
+	+\Ets{\norm[]{\score{\tilde{\vtheta}^s}{\tau_i} 
+			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}^2} \nonumber\\
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\nonumber\\
+	&\qquad+L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	+\Ets{\norm[]{\score{\tilde{\vtheta}^s}{\tau_i} 
+			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}}^2} \\
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\nonumber\\
+	&\qquad+L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	+dG^2R^2\Ets{(\omega(\tau_i)-1)^2} \\
+	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\nonumber\\
+	&\qquad+L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	+dG^2R^2\left(\Ets{\omega^2(\tau_i)}-1\right) \nonumber\\
+	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
+	\nonumber\\
+	&\qquad+L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	+dG^2R^2\left(M_2-1\right),
+\end{align}
+where (1) is from the definition of $\gradApp{\vtheta}{N}$, (2) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (3) is from L-smoothness, 
+(4) is from [todo], and (5) is from [todo].
+\end{proof}
 
 %Lemma 0
 \begin{restatable}[]{lemma}{auxzero}\label{lemma:aux0}
@@ -459,7 +568,7 @@ The expected scalar product between $\gradBlack{\vtheta_t^{s+1}}$ and any functi
 	&\qquad-
 	\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{1}{2}\Ets[t-1]{\norm[]{f(\vtheta_t^{s+1})}^2},\nonumber
 \end{align}
-where (1) is from Definition \ref{def:ideal}; (2) is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $f(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$; (3) is from $\Ets{e_s}=0$; (4) is from Young's inequality; and (5) is from the definition of $\gradApp{\vtheta}{N}$.
+where (6) is from Definition \ref{def:ideal}; (7) is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $f(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$; (8) is from $\Ets{e_s}=0$; (9) is from Young's inequality; and (10) is from the definition of $\gradApp{\vtheta}{N}$.
 \end{proof}
 
 %Lemma 1
@@ -485,7 +594,7 @@ The expected squared norm of the true gradient $\gradJ{\vtheta_t^{s+1}}$ can be 
 	&\qquad-
 	\frac{\alpha_t}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2},
 \end{align}
-where (6) is from the L-smoothness of $J(\vtheta)$, (7) is from the SVRPG update, and (8) is from Lemma \ref{lemma:aux0}.
+where (11) is from the L-smoothness of $J(\vtheta)$, (12) is from the SVRPG update, and (13) is from Lemma \ref{lemma:aux0}.
 
 Next we have:
 \begin{align}
@@ -512,9 +621,9 @@ Next we have:
 &\qquad-
 \frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2},
 \end{align}
-where (9) is from the SVRPG update, (10) is from Lemma \ref{lemma:aux0}, and (11) is from Young's inequality in the 'Peter-Paul' variant.
+where (14) is from the SVRPG update, (15) is from Lemma \ref{lemma:aux0}, and (16) is from Young's inequality in the 'Peter-Paul' variant.
 
-...[next: put (11),(8) and Lemma A.1 together to finish proof]
+...[next: put (16),(13) and Lemma A.1 together to finish proof]
 \end{proof}
 
 
@@ -539,5 +648,34 @@ and $\beta,\alpha_t$ are chosen so that $\psi_t > 0$ for $t=1,\dots,m$.
 
 ...
 \end{proof}
+
+\section{Experimental Details}\label{app:proofs}
+Environments of our experiments are:
+\begin{enumerate}
+	\item \emph{Cart-Pole Balancing} : 4-dimensional state space: cart position x, pole angle $\theta$, the cart velocity $\dot{x}$ , and the pole velocity $\dot{\theta}$; 1-dimensional action space: the horizontal force applied to the cart body. Reward function  is defined as $r(s, a) := 10 - (1 - cos(\theta)) - 10^{-5}\norm[] a^2$. Episodes terminates when $|x|>2.4$ or $|\theta|>0.2$ or the number of time step T is major than 100.
+	\item \emph{Mujoco Swimmer}: 12-dimensional state space: 3 links velocities ($v_x$ and $v_y$ of center of masses) and 2 actuated joints angles. 2-dimensional action space: the two momentums applied on actuated joints.  Reward function is defined as $r(s, a) := v_x - 10^{-4}\norm[2] a^2$. Episodes terminates when the number of time step T is major than 500.
+	\item \emph{Mujoco Half Cheetah}: 20-dimensional state space: 9 links and 6 actuated joints angles. 6-dimensional action space: the 6 momentums applied on actuated joints.  Reward function is defined as $r(s, a) := v_x - 0.05\norm[2] a^2$. Episodes terminates when the number of time step T is major than 500.
+\end{enumerate}
+
+All the experiments' parameters are reported in the following table:
+
+\centering
+\begin{tabular}{| l | c  c  c |}
+	\hline	
+	& Cart-Pole & Swimmer & Half Cheetah \\
+	\hline
+	State space dimension  & 4 & 8 & 20 \\
+	Control space dimension & 1 & 2 & 6 \\
+	NN Hidden layers & 8 & 32x32 & 32x32 \\
+	Learning rate & $10^{-2}$ & $10^{-3}$ & $10^{-3}$ \\
+	Snapshot trajectories & 100 & 100 & 100 \\
+	Sub-iterations trajectories/GPOMDP batch & 10 & 10 & 10 \\
+	Max sub-iterations & 50 & 20 & 20 \\
+	Trajectories lengths& 500 & 500 & 500 \\
+	Discount $(\gamma)$& 0.99 & 0.995 & 0.99 \\
+	Total trajectories& 10000 & 10000 & 10000 \\
+	\hline  
+\end{tabular}
+
 
 \end{document}
