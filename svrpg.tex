@@ -26,6 +26,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{mathtools}
 \usepackage{pifont}
+
 %%Theorems
 \usepackage{amsthm}
 \theoremstyle{remark}
@@ -48,6 +49,24 @@
 \DeclareRobustCommand{\eg}{e.g.,\@\xspace}
 \DeclareRobustCommand{\ie}{i.e.,\@\xspace}
 \DeclareRobustCommand{\wrt}{w.r.t.\@\xspace}
+% graphics
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{tikz,pgfplots}
+\pgfplotsset{compat=newest}
+%% TODOs
+% \setlength{\marginparwidth}{2cm}
+\usepackage[colorinlistoftodos, textwidth=20mm]{todonotes}
+\definecolor{citrine}{rgb}{0.89, 0.82, 0.04}
+\definecolor{blued}{RGB}{70,197,221}
+%%todo by Marcello
+\newcommand{\todomarc}[1]{\todo[color=green, inline]{\small #1}}
+\newcommand{\todomarcout}[1]{\todo[color=green]{\scriptsize #1}}
+%%todo by Matteo Papini
+\newcommand{\todomat}[1]{\todo[color=citrine, inline]{\small #1}}
+\newcommand{\todomatout}[1]{\todo[color=citrine]{\scriptsize #1}}
+%%todo by Matteo Pirotta
+\newcommand{\todopir}[1]{\todo[color=blued, inline]{\small #1}}
+\newcommand{\todopirout}[1]{\todo[color=blued]{\scriptsize #1}}
 %%%%%%
 
 %%%CUSTOM COMMANDS%%%
@@ -134,6 +153,8 @@
 % the "keywords" metadata in the PDF but will not be shown in the document
 \icmlkeywords{Machine Learning, ICML}
 
+
+
 \vskip 0.3in
 ]
 
@@ -149,41 +170,57 @@
 \printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
 
 \begin{abstract}
-
+Why we need variance-reduced gradient in RL?
 \end{abstract}
 
 \section{Introduction}
+\begin{itemize}
+        \item Similarities between RL and SL
+        \item SL needs SVRG so RL
+        \item Potential advantages of SVRG
+        \item Difficulties in RL \wrt SL
+\end{itemize}
 
 \section{Preliminaries}
-In this section we provide essential background on policy gradient methods for Reinforcement Learning and stochastic variance-reduced gradient methods for finite sum optimization. In the next section we will show how these methods can be combined to solve Reinforcement Learning tasks.
+In this section we provide essential background on policy gradient methods for Reinforcement Learning and stochastic variance-reduced gradient methods for finite-sum optimization. In the next section we will show how these methods can be combined to solve Reinforcement Learning tasks.
 
 \subsection{Policy Gradient}
-A Reinforcement Learning task \cite{sutton2011reinforcement} can be modeled with a discrete-time continuous Markov Decision Process (MDP) $\langle\Sspace,\Aspace,\Transition,\Reward,\gamma,\rho\rangle$, where $\Sspace$ is a continuous state space; $\Aspace$ is a continuous action space; $\Transition$ is a Markovian transition model, where $\Transition(s'\mid s,a)$ defines the transition density from state $s$ to $s'$ under action $a$; $\Reward$ is the reward function, where $\Reward(s,a) \in [-R,R]$ is the expected reward for state-action pair $(s,a)$ and $R$ is the maximum absolute-value reward; $\gamma\in[0,1)$ is the discount factor; and $\rho$ is the initial state distribution.
-The agent's behavior is modeled as a policy $\pi$, where $\pi(a\mid s)$ is the density distribution over $\Aspace$ of the action to take in state $s$.
-We consider episodic tasks, \ie, tasks composed of episodes of length $H$, also called time horizon. In this setting, a trajectory $\tau$ is the sequence of states and actions $(s_0,a_0,s_1,a_1,\dots,s_{H-1},a_{H-1})$ observed by following some stationary policy in a given episode, where $s_0$ is always sampled from the initial state distribution $\rho$. With abuse of notation, we denote with $\pi(\tau)$ the density distribution induced by policy $\pi$ on the set $\Tspace$ of all possible trajectories, and with $\Reward(\tau)$ the total discounted reward provided by trajectory $\tau$:
+A Reinforcement Learning task \cite{sutton2011reinforcement} can be modeled with a discrete-time continuous Markov Decision Process (MDP) $\langle\Sspace,\Aspace,\Transition,\Reward,\gamma,\rho\rangle$, where $\Sspace$ is a continuous state space; $\Aspace$ is a continuous action space; $\Transition$ is a Markovian transition model, where $\Transition(s'|s,a)$ defines the transition density from state $s$ to $s'$ under action $a$; $\Reward$ is the reward function, where $\Reward(s,a) \in [-R,R]$ is the expected reward for state-action pair $(s,a)$ and $R$ is the maximum absolute-value reward; $\gamma\in[0,1)$ is the discount factor; and $\rho$ is the initial state distribution.
+The agent's behavior is modeled as a policy $\pi$, where $\pi(\cdot|s)$ is the density distribution over $\Aspace$ in state $s$.
+% We consider episodic tasks, \ie tasks composed of episodes of length $H$, also called time horizon.
+% In this setting, a trajectory $\tau$ is the sequence of states and actions $(s_0,a_0,s_1,a_1,\dots,s_{H-1},a_{H-1})$ observed by following some stationary policy in a given episode, where $s_0$ is always sampled from the initial state distribution $\rho$.
+We consider episodic MDPs with effective horizon $H$, \ie optimal policy is able to reach the target state (\ie absorbing state) in at most $H$ steps (the true length depend on the initial state). This has not to be confused with a finite horizon problem where the optimal policy is non-stationary. In this setting, we can limit our attention to trajectories of length $H$. A trajectory $\tau$ is a sequence of states and actions $(s_0,a_0,s_1,a_1,\dots,s_{H-1},a_{H-1})$ observed by following a stationary policy, where $s_0 \sim \rho$.
+With abuse of notation, we denote with $\pi(\tau)$ the density distribution induced by policy $\pi$ on the set $\Tspace$ of all possible trajectories, and with $\Reward(\tau)$ the total discounted reward provided by trajectory $\tau$:
 \begin{align*}
 \Reward(\tau) = \sum_{t=0}^{H-1}\gamma^t\Reward(s_t,a_t).
 \end{align*}
-Performance $J$ allows to rank policies in terms of expected reward:
+Policies can be ranked based on their expected total reward:
 \begin{align*}
 	J(\pi) = \int_{\Tspace}\pi(\tau)\Reward(\tau)\de \tau.
 \end{align*}
-Solving an MDP means finding a policy $\pi^*$ maximizing $J$.
-\par
-Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^m\}$, with the only constraint that $\pol$ is differentiable in the $m$-dimensional parameter vector $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity, while in some occasions we denote $\pol(\tau)$ with $\pi(\tau\mid\vtheta)$ for the sake of readability. The search for a locally optimal policy is performed by means of gradient ascent, where the gradient of $J(\vtheta)$ \wrt the policy parameters is \cite{sutton2000policy}:
+Solving an MDP means finding $\pi^* \in \argmax_{\pi} \{J(\pi)\}$.
+
+Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^m\}$, with the only constraint that $\pol$ is differentiable \wrt the $m$-dimensional parameter vector $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity, while in some occasions we replace $\pol(\tau)$ with $\pi(\tau|\vtheta)$ for the sake of readability. The search for a locally optimal policy is performed by means of gradient ascent, where the gradient of $J(\vtheta)$ \wrt the policy parameters is \cite{sutton2000policy}:
+\todopir{stochastic or mini-batch gradient}
 \begin{align*}
-\gradJ{\vtheta} = \int_{\Tspace}\pol(\tau)\score{}{\tau}\Reward(\tau)\de \tau.
+\gradJ{\vtheta} = \int_{\Tspace}\pol(\tau)\score{\vtheta}{\tau}\Reward(\tau)\de \tau.
 \end{align*}
-We consider the on-line learning problem, where trajectories must be sampled directly by interacting with the environment. In this setting, stochastic gradient descent is typically employed: after sampling a trajectory $\tau$ or a batch of $N$ trajectories $\Dataset_{N}$,
-policy parameters are updated as $\vtheta\gets\vtheta + \alpha\gradApp{\vtheta}{N}$, where $\alpha$ is a step size and $\gradApp{\vtheta}{N}$ is an estimate of the true gradient. The REINFORCE gradient estimator \cite{williams1992simple} provides a simple, unbiased way of estimating the gradient:
+We consider the on-line learning problem, where trajectories must be sampled directly by interacting with the environment. 
+In this setting, $(N>0)$-batch gradient ascent is typically employed: after sampling a batch of $N$ trajectories (\ie $\Dataset_{N}$),
+policy parameters are updated as $\vtheta\gets\vtheta + \alpha\gradApp{\vtheta}{N}$, where $\alpha$ is a step size and $\gradApp{\vtheta}{N}$ is an estimate of the true gradient. 
+\todopir{step size is scalar or vectorial (just for notation)? Check consistency of $N$ with finite-sum function, we can use even $b$ or $B$ for the batch size.}
+The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, unbiased way of estimating the gradient:
 \begin{align*}
-\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{}{a_h^n\mid s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
+\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
 \end{align*}
 where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline, provided it is constant \wrt to actions.
-The G(PO)MDP gradient estimator \cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance while preserving the unbiasedness:
+\todopir{Actually it can be state-action dependant~\citep[\eg][]{Thomas2017actionbaseline,anonymous2018variance}.}
+The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance while preserving the unbiasedness:
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\gamma^h r_h^n - b\right).
 \end{align*}
+\todopir{Cite Jan's paper somewhere}
+\todopir{At this point we need to connect with the supervised learning framework (we can just define everything inside the first sum as $\nabla g(\tau)$).}
 
 \subsection{Stochastic Variance-Reduced Gradient}
 Finite sum optimization is the problem of maximizing an objective function $f(\vtheta)$ which can be decomposed into the sum or average of a finite number of functions $g_i(\vtheta)$:
@@ -194,20 +231,27 @@ This kind of optimization is very common in machine learning, where each $g_i$ m
 \begin{align*}
 \max_{\vtheta} f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}g(x_i \mid \vtheta).
 \end{align*}
-A common requirement is that $g$ must be smooth and convex in $\vtheta$. Under this hypothesis, full gradient ascent \cite{cauchy1847methode} with a constant step size achieves an IFO complexity \cite{agarwal2014lower} of $O(\nicefrac{N}{\epsilon})$, \ie it requires $k = O(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$. This can be too expensive for large values of $N$. Stochastic gradient ascent \cite{robbins1951stochastic} \cite{bottou2004large} overcomes this problem by sampling a single $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $O(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$. 
-Starting from SAG \cite{roux2012stochastic}, a series of variations to stochastic gradient ascent have been proposed to achieve a better trade-off between convergence speed and cost per iteration. This family of algorithms includes SAG, SVRG \cite{johnson2013accelerating}, SAGA \cite{defazio2014saga} and Finito \cite{defazio2014finito}, the common intuition being the reuse of previous gradient computations to reduce the variance of the current one. In particular, Stochastic Variance Reduced Gradient (SVRG) is often preferred to other similar methods for its limited storage requirements, which can become a problem when neural networks with several parameters are employed.  
+A common requirement is that $g$ must be smooth and convex in $\vtheta$. Under this hypothesis, full gradient ascent \cite{cauchy1847methode} with a constant step size achieves an Incremental First-order Oracle (IFO) complexity~\citep{agarwal2014lower} of $O(\nicefrac{N}{\epsilon})$, \ie it requires $k = O(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$. 
+\todopir{Explain IFO meaning (footnote) and this holds for deterministic algorithms}
+This can be too expensive for large values of $N$. Stochastic Gradient (SG) ascent~\citep[\eg][]{robbins1951stochastic,bottou2004large} overcomes this problem by sampling a single sample $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $O(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$. 
+\todopir{What is the reference?}
+Starting from SAG, a series of variations to SG have been proposed to achieve a better trade-off between convergence speed and cost per iteration: \eg SAG~\citep{roux2012stochastic}, SVRG~\cite{johnson2013accelerating}, SAGA~\cite{defazio2014saga} and Finito~\cite{defazio2014finito}, 
+The common idea is to reuse past gradient computations to reduce the variance of the current estimate.
+In particular, Stochastic Variance Reduced Gradient (SVRG) is often preferred to other similar methods for its limited storage requirements, which can become a problem when deep and/or wide neural networks are employed.  
 
-The idea of SVRG is to alternate full and stochastic gradient updates. Each $m = O(N)$ iterations, a snapshot $\tilde{\vtheta}$ of the current parameter is saved together with its full gradient $\nabla f(\tilde{\vtheta})$.
+The idea of SVRG is to alternate full and stochastic gradient updates. 
+\todopir{here would be nice to have a notation for the single batch}
+Each $m = O(N)$ iterations, a snapshot $\tilde{\vtheta}$ of the current parameter is saved together with its full gradient $\nabla f(\tilde{\vtheta})$.
 Otherwise, the parameter is updated with a corrected stochastic gradient estimate of the form:
 \begin{align*}
 \blacktriangledown f(\vtheta) = 
 	\nabla f(\tilde{\vtheta}) + 
-	\nabla g(x_i\mid\vtheta) -
-	\nabla g(x_i \mid \tilde{\vtheta}),
+	\nabla g(x_i | \vtheta) -
+	\nabla g(x_i | \tilde{\vtheta}),
 \end{align*} 
 where $x_i$ is sampled uniformly at random from $\mathcal{D}_N$. The corrected gradient $\blacktriangledown f(\vtheta)$ is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, without resorting to plain full gradient. The resulting IFO complexity is $O(N+\nicefrac{\sqrt{N}}{\epsilon})$ \cite{reddi2016stochastic}.
 
-More recently, some extensions of variance reduction algorithms to the non-convex objectives have been proposed \cite{reddi2016stochastic} \cite{allen2016variance} \cite{reddi2016stochastic} \cite{reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the IFO complexity of full gradient  and of stochastic gradient ascent are the same as in the convex case \cite{nesterov2013introductory} \cite{ghadimi2013stochastic}. Also in this case, SVRG yields an advantageous trade-off, with an IFO complexity of $O(N + \nicefrac{N^{\nicefrac{2}{3}}}{N})$ \cite{reddi2016stochastic}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value. Pseudocode of SVRG for both the convex and the non-convex case is provided in Algorithm \ref{alg:svrg}. 
+More recently, some extensions of variance reduction algorithms to the non-convex objectives have been proposed~\citep[\eg][]{reddi2016stochastic,allen2016variance,reddi2016stochastic,reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the IFO complexity of full gradient  and of stochastic gradient ascent are the same as in the convex case~\citep{nesterov2013introductory,ghadimi2013stochastic}. Also in this case, SVRG yields an advantageous trade-off, with an IFO complexity of $O(N + \nicefrac{N^{\nicefrac{2}{3}}}{N})$~\citep{reddi2016stochastic}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value. Pseudocode of SVRG for both the convex and the non-convex case is provided in Alg.~\ref{alg:svrg}. 
 
 
 \begin{algorithm}[tb]
