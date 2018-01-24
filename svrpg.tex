@@ -339,9 +339,9 @@ For each trajectory $\tau$, value of $\vtheta$ and gradient component:
 \end{assumption}
 
 \begin{assumption}\label{ass:M2}
-	There is a constant $M_2<\infty$ such that, for each pair of policies encountered in Algorithm \ref{alg:svrpg} and for each possible trajectory,
+	There is a constant $\Omega<\infty$ such that, for each pair of policies encountered in Algorithm \ref{alg:svrpg} and for each possible trajectory,
 \[
-	\mathbb{V}ar\left(\omega(\tau)\right) \leq (M_2-1)
+	\mathbb{V}ar\left(\omega(\tau)\right) \leq \Omega
 \]
 \end{assumption}
 
@@ -361,7 +361,7 @@ Under Assumptions \ref{ass:bounded_score} and \ref{ass:M2}, the parameter vector
 		\frac{J(\vtheta^*)-J(\vtheta_0)}{\psi T} \\
 		&\qquad+
 		\frac{D\max_s\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}}{\psi N}
-		+\frac{F(M_2-1)}{\psi}
+		+\frac{F\Omega}{\psi}
 \end{align*}
 \end{restatable}
 
@@ -480,33 +480,44 @@ Under Assumption \ref{ass:bounded_score}
 \]
 \end{restatable}
 \begin{proof}
-	
 	\begin{align}
 	\Ets{\gradBlack{\vtheta_t^{s+1}}} 
 	&= \Ets{\norm[]{\gradApp{\tilde{\vtheta}^s}{N}
 			+ \score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
-	&= \Ets{\norm[]{\gradApp{\tilde{\vtheta}^s}{N}
+	%
+	&= \mathbb{E}_{t\mid s}\left[\left\|\gradApp{\tilde{\vtheta}^s}{N}
 			+ \score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)-\gradJ{\vtheta_t^{s+1}} + \gradJ{\tilde{\vtheta}^s}
-			+\gradJ{\vtheta_t^{s+1}} - \gradJ{\tilde{\vtheta}^s}}^2} \nonumber\\
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)
+			\right.\right.\nonumber\\&\qquad\left.\left.
+			-\gradJ{\vtheta_t^{s+1}} + \gradJ{\tilde{\vtheta}^s}
+			+\gradJ{\vtheta_t^{s+1}} - \gradJ{\tilde{\vtheta}^s}\right\|^2\right] \nonumber\\
+	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
 	+\Ets[]{\norm[]{\gradApp{\tilde{\vtheta}^s}{N} - \Ets[]{\gradApp{\tilde{\vtheta}^s}{N}}}^2} \nonumber\\
 	&\qquad+ 
-	\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)- \Ets{\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-				\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}}^2} \nonumber\\
+	\mathbb{E}_{t\mid s}\left[\left\|\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)
+		\right.\right.\nonumber\\&\qquad\left.\left.
+		- \Ets{\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
+				\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}\right\|^2\right] 
+	\nonumber\\
+	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\\
 	&\qquad+ 
-	\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)- \Ets{\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-				\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}}^2} \nonumber\\
+		\mathbb{E}_{t\mid s}\left[\left\|\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)
+			\right.\right.\nonumber\\&\qquad\left.\left.
+			-\Ets{\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
+				\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}\right\|^2\right]  \nonumber\\
+	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
 	&\qquad+\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \\
+	%
 	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
@@ -514,13 +525,16 @@ Under Assumption \ref{ass:bounded_score}
 			-\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)
 			+\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i) 
 			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
+	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
 	&\qquad+\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i)
-			-\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber
+			-\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
+	&\qquad
 	+\Ets{\norm[]{\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i) 
 			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
+	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
@@ -541,7 +555,7 @@ Under Assumption \ref{ass:bounded_score}
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
 	&\qquad+L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+G^2\frac{R^2}{(1-\gamma)^2}\left(M_2-1\right),
+	+G^2\frac{R^2\Omega}{(1-\gamma)^2},
 \end{align}
 where (1) is from the definition of $\gradApp{\vtheta}{N}$, (2) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (3) is from L-smoothness, 
 (4) is from Assumption \ref{ass:bounded_score}, and (5) is from Assumption \ref{ass:M2}.
@@ -549,13 +563,13 @@ where (1) is from the definition of $\gradApp{\vtheta}{N}$, (2) is from $\EVV[]{
 
 %Lemma 0
 \begin{restatable}[]{lemma}{auxzero}\label{lemma:aux0}
-Under Assumption \ref{ass:bounded_score},
-the expected scalar product between $\gradBlack{\vtheta_t^{s+1}}$ and any function $f(\vtheta_t^{s+1})$ which is deterministic for a fixed $\vtheta_t^{s+1}$ can be bounded as follows:
+Under Assumption \ref{ass:bounded_score}, for any function $f(\vtheta_t^{s+1})$ which is deterministic for a fixed $\vtheta_t^{s+1}$:
 \begin{align*}
-\Ets[t]{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} &\geq
-\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} \\
-&\qquad-
-\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{1}{2}\Ets[t-1]{\norm[]{f(\vtheta_t^{s+1})}^2}
+\left|\Ets[t]{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}}
+-\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}}
+\right|
+\leq
+\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Ets[t-1]{\norm[]{f(\vtheta_t^{s+1})}^2}
 \end{align*}
 \end{restatable}
 \begin{proof}
@@ -575,30 +589,30 @@ the expected scalar product between $\gradBlack{\vtheta_t^{s+1}}$ and any functi
 	&= 
 	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} \nonumber\\
 	&\qquad+
-	\Tr\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{f(\vtheta_t^{s+1})} \\
-	&\geq  
-	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} \nonumber\\
-	&\qquad-
+	\Tr\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{f(\vtheta_t^{s+1})}
+\end{align}
+Hence:
+\begin{align}
+	\left|\Ets{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}}
+	\right.&-\left.\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}}\right| 
+	=
+	\left|\Tr\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{f(\vtheta_t^{s+1})}\right|  
+	\nonumber\\
+	&\leq
 	\Tr\left|\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{f(\vtheta_t^{s+1})}\right| \nonumber \\
 	%
-	&\geq
-	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} \nonumber\\
-	&\qquad-\Tr\left(\sqrt{\Varts[]{\gradApp{\tilde{\vtheta}^s}{N}}}\circ\sqrt{\Varts[t-1]{f(\vtheta_t^{s+1})}}\right) \nonumber\\
+	&\leq
+	\Tr\left(\sqrt{\Varts[]{\gradApp{\tilde{\vtheta}^s}{N}}}\circ\sqrt{\Varts[t-1]{f(\vtheta_t^{s+1})}}\right) \nonumber\\
 	%
-	&\geq	
-	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} \nonumber\\
-	&\qquad-
-	\frac{\alpha_t}{2}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{N}} -\frac{\alpha_t}{2}\Tr\Varts[t-1]{f(\vtheta_t^{s+1})}\\
+	&\leq	
+	\frac{\alpha_t}{2}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{N}} +\frac{\alpha_t}{2}\Tr\Varts[t-1]{f(\vtheta_t^{s+1})}\\
 	%
 	&=
-	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} \nonumber\\
-	&\qquad-
-	\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{1}{2}\Tr\Varts[t-1]{f(\vtheta_t^{s+1})} \\
+	\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Tr\Varts[t-1]{f(\vtheta_t^{s+1})} \\
 	%
-	&\geq
-	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} \nonumber\\
-	&\qquad-
-	\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{1}{2}\Ets[t-1]{\norm[]{f(\vtheta_t^{s+1})}^2},\nonumber
+	&\leq
+	\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Ets[t-1]{\norm[]{f(\vtheta_t^{s+1})}^2},
+	\nonumber
 \end{align}
 where (6) is from Definition \ref{def:ideal}; (7) is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $f(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$; (8) is from $\Ets{e_s}=0$; (9) is from Young's inequality; and (10) is from the definition of $\gradApp{\vtheta}{N}$.
 \end{proof}
@@ -609,7 +623,7 @@ Under Assumptions \ref{ass:bounded_score} ans \ref{ass:M2}, the expected squared
 \[
 	\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \leq
 	\frac{R_{t+1}^{s+1} - R_t^{s+1}}{\Psi_t} + \frac{d_t\Tr\Varts{\gradApp{\tilde{\vtheta}^s}{1}}}{N\Psi_t}
-	+\frac{f_t(M_2-1)}{\Psi_t},
+	+\frac{f_t\Omega}{\Psi_t},
 \]
 	where
 \begin{align*}
@@ -620,7 +634,7 @@ Under Assumptions \ref{ass:bounded_score} ans \ref{ass:M2}, the expected squared
 	&d_t = \frac{\alpha_t}{2}\left(1+2c_{t+1}+\alpha_t^2L+2\alpha_t^2c_{t+1}\right), \\
 	&f_t = \alpha_t^2\frac{G^2R^2(L+2c_{t+1})}{2(1-\gamma)^2}.
 \end{align*}
-More precisely, the following constraints on $\alpha_t$ and $\beta_t$ are sufficient:
+In particular, the following constraints on $\alpha_t$ and $\beta_t$ are sufficient:
 \begin{align*}
 &0\leq\alpha_t < \frac{2(1-\nicefrac{c_{t+1}}{\beta_t})}{L+2c_{t+1}} \\
 &\beta_t > c_{t+1}.
@@ -698,7 +712,7 @@ Finally:
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\right.\nonumber\\
 	&\left.\qquad+L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+G^2\frac{R^2}{(1-\gamma)^2}\left(M_2-1\right)\right)
+	+G^2\frac{R^2}{(1-\gamma)^2}\Omega\right)
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}\right)\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \\
 	%
@@ -706,12 +720,12 @@ Finally:
 	&\qquad
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}+\alpha_t^2L+2\alpha_t^2c_{t+1}\right)\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
-	&\qquad-\alpha_t^2\frac{G^2R^2(L+2c_{t+1})}{2(1-\gamma)^2}(M_2-1) \nonumber\\
+	&\qquad-\alpha_t^2\frac{(L+2c_{t+1})G^2R^2\Omega}{2(1-\gamma)^2} \nonumber\\
 	%
 	&= R_t^{s+1}
 	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
 	-\frac{d_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
-	-f_t(M_2-1),\nonumber
+	-f_t\Omega,\nonumber
 \end{align}
 where (17) is from (13), (18) is from (16), and (19) is from Lemma \ref{lemma:aux0}.
 To complete the proof, besides rearranging terms, we have to ensure that $\Psi_t>0$ for each $t$. This gives the constraints on $\alpha_t$ and $\beta_t$.
