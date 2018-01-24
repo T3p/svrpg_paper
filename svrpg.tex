@@ -706,14 +706,14 @@ Finally:
 	&\qquad
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}+\alpha_t^2L+2\alpha_t^2c_{t+1}\right)\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
-	&\qquad-\alpha_t^2\frac{G^2R^2(L+2c_{t+1})}{2(1-\gamma)^2}(M_2-1) \\
+	&\qquad-\alpha_t^2\frac{G^2R^2(L+2c_{t+1})}{2(1-\gamma)^2}(M_2-1) \nonumber\\
 	%
 	&= R_t^{s+1}
 	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
 	-\frac{d_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
-	-f_t(M_2-1),
+	-f_t(M_2-1),\nonumber
 \end{align}
-
+where (17) is from (13), (18) is from (16), and (19) is from Lemma \ref{lemma:aux0}.
 To complete the proof, besides rearranging terms, we have to ensure that $\Psi_t>0$ for each $t$. This gives the constraints on $\alpha_t$ and $\beta_t$.
 \end{proof}
 
