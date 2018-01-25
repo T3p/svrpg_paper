@@ -332,10 +332,11 @@ To obtain a method that can be used in practice, a number of additional details 
 
 \section{Convergence Guarantees}
 \begin{assumption}\label{ass:bounded_score}
-For each trajectory $\tau$, value of $\vtheta$ and gradient component:
-\[
-	|\score{\vtheta}{\tau}| \leq G
-\]
+For each trajectory $\tau$, value of $\vtheta$ and dimensions $i,j$ there are positive constants $G,F<\infty$ such that:
+\begin{align*}
+	&\left|\nabla_{\theta_i}\log\pi_{\vtheta}(\tau)\right| \leq G \\
+	&\left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau)\right| \leq F
+\end{align*}
 \end{assumption}
 
 \begin{assumption}\label{ass:M2}
@@ -355,19 +356,19 @@ There is a constant $V<\infty$ such that, for each policy $\pol$:
 \begin{restatable}[]{lemma}{L-smoothness}\label{lemma:lsmooth}
 Under Assumption \ref{ass:bounded_score}, $J(\vtheta)$ is L-smooth with Lipschitz constant:
 \[
-	L = \frac{2RG^2}{1-\gamma}
+	L = \frac{R(G^2+F)}{1-\gamma}
 \]
 \end{restatable}
 
 \begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
-Under Assumptions \ref{ass:bounded_score} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Algorithm \ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,D, F$ and for proper choice of step sizes $\alpha_t$, the following property:
+Under Assumptions \ref{ass:bounded_score} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Algorithm \ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size, the following property:
 \begin{align*}
 	&\EVV[]
 	{\norm[]{\nabla J(\vtheta_A)}^2} 
 		\leq
 		\frac{J(\vtheta^*)-J(\vtheta_0)}{\psi T} +
-		\frac{Z}{N}
-		+\frac{\Omega}{b}
+		\frac{\zeta}{N}
+		+\frac{\xi}{B}
 \end{align*}
 \end{restatable}
 
@@ -482,19 +483,19 @@ Under Assumption \ref{ass:bounded_score}
 +L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 +\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 \nonumber 
-+dG^2R^2W
++\frac{G^2R^2W}{(1-\gamma)^2B}
 \]
 \end{restatable}
 \begin{proof}
 	\begin{align}
 	\Ets{\gradBlack{\vtheta_t^{s+1}}} 
 	&= \Ets{\norm[]{\gradApp{\tilde{\vtheta}^s}{N}
-			+\frac{1}{b}\sum_{i=0}^{b-1} \score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) 
-			-\frac{1}{b}\sum_{i=0}^{b-1}
+			+\frac{1}{B}\sum_{i=0}^{B-1} \score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) 
+			-\frac{1}{B}\sum_{i=0}^{B-1}
 			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
 	%
 	&= \mathbb{E}_{t\mid s}\left[\left\|\gradApp{\tilde{\vtheta}^s}{N}
-			+\frac{1}{b}\sum_{i=0}^{b-1}\left( 
+			+\frac{1}{B}\sum_{i=0}^{B-1}\left( 
 			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)
 			\right.\right.\nonumber\\&\qquad\left.\left.
@@ -505,12 +506,12 @@ Under Assumption \ref{ass:bounded_score}
 	+\Ets[]{\norm[]{\gradApp{\tilde{\vtheta}^s}{N} - \Ets[]{\gradApp{\tilde{\vtheta}^s}{N}}}^2} \nonumber\\
 	&\qquad+ 
 	\mathbb{E}_{t\mid s}\left[\left\|
-		\frac{1}{b}\sum_{i=0}^{b-1}\left(
+		\frac{1}{B}\sum_{i=0}^{B-1}\left(
 		\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)
 		\right.\right.\nonumber\\&\qquad\left.\left.
 		- \Ets{
-			\frac{1}{b}\sum_{i=0}^{b-1}\left(
+			\frac{1}{B}\sum_{i=0}^{B-1}\left(
 			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 				\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)}\right\|^2\right] 
 	\nonumber\\
@@ -520,26 +521,26 @@ Under Assumption \ref{ass:bounded_score}
 	\\
 	&\qquad+ 
 		\mathbb{E}_{t\mid s}\left[\left\|
-		\frac{1}{b}\sum_{i=0}^{b-1}\left(
+		\frac{1}{B}\sum_{i=0}^{B-1}\left(
 		\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 		\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)
 		\right.\right.\nonumber\\&\qquad\left.\left.
 		- \Ets{
-			\frac{1}{b}\sum_{i=0}^{b-1}\left(
+			\frac{1}{B}\sum_{i=0}^{B-1}\left(
 			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)}\right\|^2\right] 
 		\nonumber\\%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
 	&\qquad+\Ets{\norm[]{
-			\frac{1}{b}\sum_{i=0}^{b-1}\left(
+			\frac{1}{B}\sum_{i=0}^{B-1}\left(
 			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)}^2} \\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
 	&\qquad+
-			\frac{1}{b^2}\sum_{i=0}^{b-1}
+			\frac{1}{B^2}\sum_{i=0}^{B-1}
 			\Ets{\norm[]{
 			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
@@ -548,7 +549,7 @@ Under Assumption \ref{ass:bounded_score}
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
 	&\qquad+
-			\frac{1}{b^2}\sum_{i=0}^{b-1}
+			\frac{1}{B^2}\sum_{i=0}^{B-1}
 			\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i)
 			-\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)
 			+\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i) 
@@ -558,19 +559,19 @@ Under Assumption \ref{ass:bounded_score}
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
 	&\qquad+
-			\frac{1}{b^2}\sum_{i=0}^{b-1}
+			\frac{1}{B^2}\sum_{i=0}^{B-1}
 			\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i)
 			-\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
 	&\qquad
-			+\frac{1}{b^2}\sum_{i=0}^{b-1}
+			+\frac{1}{B^2}\sum_{i=0}^{B-1}
 			\Ets{\norm[]{\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i) 
 			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
-	+\frac{L^2}{b}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}\nonumber\\
+	+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}\nonumber\\
 	&\qquad+
-		\frac{1}{b^2}\sum_{i=0}^{b-1}
+		\frac{1}{B^2}\sum_{i=0}^{B-1}
 		\Ets{\norm[]{\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i) 
 			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \\
 % ...
@@ -580,20 +581,20 @@ Under Assumption \ref{ass:bounded_score}
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
-	&\qquad+\frac{L^2}{b}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+G^2\frac{R^2}{(1-\gamma)^2}\frac{1}{b^2}\sum_{i=0}^{b-1}\Ets{(\omega(\tau_i)-1)^2} \\
+	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	+G^2\frac{R^2}{(1-\gamma)^2}\frac{1}{B^2}\sum_{i=0}^{B-1}\Ets{(\omega(\tau_i)-1)^2} \\
 	%
 	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
-	&\qquad+\frac{L^2}{b}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+G^2\frac{R^2}{(1-\gamma)^2b^2}\sum_{i=0}^{b-1}\Varts{\omega(\tau_i)} \nonumber\\
+	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	+G^2\frac{R^2}{(1-\gamma)^2b^2}\sum_{i=0}^{B-1}\Varts{\omega(\tau_i)} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
-	&\qquad+\frac{L^2}{b}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+G^2\frac{R^2W}{(1-\gamma)^2b},
+	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	+G^2\frac{R^2W}{(1-\gamma)^2B},
 \end{align}
 where (1) is from the definition of $\gradApp{\vtheta}{N}$, (2) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (3) is from L-smoothness, 
 (4) is from Assumption \ref{ass:bounded_score}, and (5) is from Assumption \ref{ass:M2}.
@@ -660,7 +661,7 @@ where (6) is from Definition \ref{def:ideal}; (7) is from the fact that $\gradId
 Under Assumptions \ref{ass:bounded_score} ans \ref{ass:M2}, the expected squared norm of the true gradient $\gradJ{\vtheta_t^{s+1}}$, for appropriate choices of $\alpha_t\geq0$ and $\beta_t>0$, can be bounded as follows:
 \[
 	\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \leq
-	\frac{R_{t+1}^{s+1} - R_t^{s+1}}{\Psi_t} + \frac{d_t\Tr\Varts{\gradApp{\tilde{\vtheta}^s}{1}}}{N\Psi_t}
+	\frac{R_{t+1}^{s+1} - R_t^{s+1}}{\Psi_t} + \frac{d_tV}{N\Psi_t}
 	+\frac{f_tW}{b\Psi_t},
 \]
 	where
@@ -763,9 +764,13 @@ Finally:
 	&= R_t^{s+1}
 	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
 	-\frac{d_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
-	-\frac{f_t}{b}W,\nonumber
+	-\frac{f_t}{b}W,\nonumber\\
+	&\geq R_t^{s+1}
+	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
+	-\frac{d_t}{N}V
+	-\frac{f_t}{b}W,
 \end{align}
-where (17) is from (13), (18) is from (16), and (19) is from Lemma \ref{lemma:aux0}.
+where (17) is from (13), (18) is from (16), and (19) is from Lemma \ref{lemma:aux0} and (20) is from Assumption \ref{ass:REINFORCE}.
 To complete the proof, besides rearranging terms, we have to ensure that $\Psi_t>0$ for each $t$. This gives the constraints on $\alpha_t$ and $\beta_t$.
 \end{proof}
 
@@ -777,12 +782,49 @@ To complete the proof, besides rearranging terms, we have to ensure that $\Psi_t
 We prove the theorem for the following values of the constants:
 \begin{align*}
 & \psi \coloneqq \min_t\{\Psi_t\}, \\
-& Z \coloneqq \frac{\max_t\{d_t\}V}{\psi} \\
-& \Omega \coloneqq \frac{\max_t\{f_t\}W}{\psi}.
+& \zeta \coloneqq \frac{\max_t\{d_t\}V}{\psi} \\
+& \xi \coloneqq \frac{\max_t\{f_t\}W}{\psi}.
 \end{align*}
 The values of all other constants and the constraints on the step size are provided in Lemma \ref{lemma:aux1}.
 
-...
+Starting from Lemma \ref{lemma:aux1}, summing over iterations of an epoch $s$ we get:
+\begin{align}
+\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}^2}}&\leq
+ \frac{\sum_{t=0}^{m-1}\left(R_{t+1}^{s+1} - R_t^{s+1}\right)}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B} \\
+ %
+ &= \frac{\sum_{t=0}^{m-1}\left(\Ets[t+1]{J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} - \Ets[t]{J(\vtheta_{t}^{s+1}) - c_{t}\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}^s}^2}\right)}{\psi} \nonumber\\
+ &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \\
+ %
+ &= \frac{\Ets[m]{\sum_{t=0}^{m-1}\left(J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2 - J(\vtheta_{t}^{s+1}) - c_{t}\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}^s}^2\right)}}{\psi} \nonumber\\
+ &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \\
+ %
+ &= \frac{\Ets[m]{J(\vtheta_{m}^{s+1}) - c_{t+1}\norm[]{\vtheta_{m}^{s+1}-\tilde{\vtheta}^s}^2 - J(\vtheta_{0}^{s+1}) - c_{t}\norm[]{\vtheta_{0}^{s+1}-\tilde{\vtheta}^s}^2}}{\psi} \nonumber\\
+ &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \\
+ %
+ &= \frac{\Ets[m]{J(\tilde{\vtheta}^{s+1}) - J(\tilde{\vtheta}^{s})}}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B}
+ \end{align}
+Next, summing over epochs:
+\begin{align}
+\sum_{s=0}^{S-1}\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}^2}}&\leq
+\frac{\sum_{s=0}^{S-1}\Ets[m]{J(\tilde{\vtheta}^{s+1}) - J(\tilde{\vtheta}^{s})}}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B} \\
+%
+&\leq
+\frac{\EVV[]{J(\tilde{\vtheta}^{S}) - J(\tilde{\vtheta}^{0})}}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B}
+ \\
+ %
+ &\leq
+ \frac{\EVV[]{J(\vtheta_{out})} - J(\tilde{\vtheta}^{0})}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B} \\
+ %
+ &\leq
+ \frac{J(\vtheta^*) - J(\vtheta^0)}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B}
+\end{align}
+Finally, we consider the expectation \wrt all sources of randomness, including the uniform sampling of the output parameter:
+\begin{align}
+\EVV[]{\norm[]{\gradJ{(\vtheta_t^{s+1})}}^2} 
+&=\frac{1}{T}\sum_{s=0}^{S-1}\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}}^2} \\
+&\leq
+\frac{J(\vtheta^*) - J(\vtheta^0)}{\psi T} + \frac{\zeta}{N} + \frac{\xi}{B}
+\end{align}
 \end{proof}
 
 \section{Experimental Details}\label{app:proofs}
