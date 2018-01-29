@@ -67,6 +67,12 @@
 %%todo by Matteo Pirotta
 \newcommand{\todopir}[1]{\todo[color=blued, inline]{\small #1}}
 \newcommand{\todopirout}[1]{\todo[color=blued]{\scriptsize #1}}
+%%todo by Damiano
+\newcommand{\tododam}[1]{\todo[color=orange, inline]{\small #1}}
+\newcommand{\tododamout}[1]{\todo[color=orange]{\scriptsize #1}}
+%%todo by Giuseppe
+\newcommand{\todobep}[1]{\todo[color=purple, inline]{\small #1}}
+\newcommand{\todobepout}[1]{\todo[color=purple]{\scriptsize #1}}
 %%%%%%
 
 %%%CUSTOM COMMANDS%%%
@@ -109,6 +115,10 @@
 \newcommand{\Varts}[2][t]{{\mathbb{V}\text{ar}}_{#1\mid s}\left[#2\right]}
 \newcommand{\gradBlack}[1]{\blacktriangledown J(#1)}
 \newcommand{\gradIdeal}[1]{\overline{\blacktriangledown} J(#1)}
+\newcommand{\VARRF}{V}
+\newcommand{\GRADLOG}{G}
+\newcommand{\VARIS}{W}
+\newcommand{\HESSLOG}{F}
 %%%%%%
 
 % The \icmltitle you define below is probably too long as a header.
@@ -279,6 +289,7 @@ More recently, some extensions of variance reduction algorithms to the non-conve
 
 
 \section{Algorithm}
+\todomat{Add minibatch}
 In on-line policy gradient problems, stochastic gradient ascent (SGA) is not really a choice, but is dictated by the necessity of interacting with an unknown environment. We would like to apply SVRG to the policy gradient framework in order to limit the variance introduced by sampling trajectories, which would ultimately lead to faster convergence. In this scenario, the function $f(\vtheta)$ to optimize is $J(\vtheta)$ and the (implicit) dataset $\mathcal{D}$ is the set of all possible trajectories $\mathcal{T}$. Compared to the typical finite sum optimization scenario, we have the following additional challenges:
 \begin{itemize}
 	\item The objective $J(\vtheta)$ is typically non-convex;
@@ -300,8 +311,7 @@ The SVRPG gradient estimator is unbiased:
 \left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
 \]
 \end{restatable}
-
-[May also add Lemma about convergence of the variance to zero, since it provides an intuitive justification of some design choices]
+\todomat{Add lemma on zero variance at convergence}
 The resulting SVRPG policy optimization method is detailed in Algorithm \ref{alg:svrpg}.
 To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient and the step size $\alpha$. Adaptive selection of these meta-parameters is also possible. However, the next section will focus on providing converge guarantees for the plain SVRPG algorithm.
 
@@ -334,30 +344,27 @@ To obtain a method that can be used in practice, a number of additional details 
 \begin{assumption}\label{ass:bounded_score}
 For each trajectory $\tau$, value of $\vtheta$ and dimensions $i,j$ there are positive constants $G,F<\infty$ such that:
 \begin{align*}
-	&\left|\nabla_{\theta_i}\log\pi_{\vtheta}(\tau)\right| \leq G \\
-	&\left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau)\right| \leq F
+	&\left|\nabla_{\theta_i}\log\pi_{\vtheta}(\tau)\right| \leq \GRADLOG \\
+	&\left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau)\right| \leq \HESSLOG
 \end{align*}
 \end{assumption}
 
 \begin{assumption}\label{ass:M2}
 	There is a constant $W<\infty$ such that, for each pair of policies encountered in Algorithm \ref{alg:svrpg} and for each possible trajectory,
 \[
-	\mathbb{V}ar\left(\omega(\tau)\right) \leq W
+	\mathbb{V}ar\left(\omega(\tau)\right) \leq \VARIS
 \]
 \end{assumption}
 
 \begin{assumption}\label{ass:REINFORCE}
 There is a constant $V<\infty$ such that, for each policy $\pol$:
 \[
-	\Tr\mathbb{V}ar\left(\gradApp{\vtheta}{1}\right) \leq V
+	\Tr\mathbb{V}ar\left(\gradApp{\vtheta}{1}\right) \leq \VARRF
 \]
 \end{assumption}
 
 \begin{restatable}[]{lemma}{L-smoothness}\label{lemma:lsmooth}
-Under Assumption \ref{ass:bounded_score}, $J(\vtheta)$ is L-smooth with Lipschitz constant:
-\[
-	L = \frac{R(G^2+F)}{1-\gamma}
-\]
+Under Assumption \ref{ass:bounded_score}, $J(\vtheta)$ is L-smooth.
 \end{restatable}
 
 \begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
@@ -534,7 +541,7 @@ Under Assumption \ref{ass:bounded_score}
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
-	\\
+	\nonumber\\
 	&\qquad+ 
 		\mathbb{E}_{t\mid s}\left[\left\|
 		\frac{1}{B}\sum_{i=0}^{B-1}\left(
@@ -545,13 +552,13 @@ Under Assumption \ref{ass:bounded_score}
 			\frac{1}{B}\sum_{i=0}^{B-1}\left(
 			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)}\right\|^2\right] 
-		\nonumber\\%
+		\label{eq:1}\\%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
 	&\qquad+\Ets{\norm[]{
 			\frac{1}{B}\sum_{i=0}^{B-1}\left(
 			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)}^2} \\
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)}^2} \label{eq:2}\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
@@ -589,7 +596,7 @@ Under Assumption \ref{ass:bounded_score}
 	&\qquad+
 		\frac{1}{B^2}\sum_{i=0}^{B-1}
 		\Ets{\norm[]{\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i) 
-			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \\
+			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \label{eq:3}
 % ...
 \end{align}
 \begin{align}
@@ -598,22 +605,22 @@ Under Assumption \ref{ass:bounded_score}
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
 	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+G^2\frac{R^2}{(1-\gamma)^2}\frac{1}{B^2}\sum_{i=0}^{B-1}\Ets{(\omega(\tau_i)-1)^2} \\
+	+\GRADLOG^2\frac{R^2}{(1-\gamma)^2}\frac{1}{B^2}\sum_{i=0}^{B-1}\Ets{(\omega(\tau_i)-1)^2} \label{eq:4}\\
 	%
 	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
 	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+G^2\frac{R^2}{(1-\gamma)^2b^2}\sum_{i=0}^{B-1}\Varts{\omega(\tau_i)} \nonumber\\
+	+\GRADLOG^2\frac{R^2}{(1-\gamma)^2b^2}\sum_{i=0}^{B-1}\Varts{\omega(\tau_i)} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
 	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+G^2\frac{R^2W}{(1-\gamma)^2B},
+	+\GRADLOG^2\frac{R^2\VARRF}{(1-\gamma)^2B}, \label{eq:5}
 \end{align}
-where (1) is from the definition of $\gradApp{\vtheta}{N}$, (2) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (3) is from L-smoothness, 
-(4) is from Assumption \ref{ass:bounded_score}, and (5) is from Assumption \ref{ass:M2}.
+where (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (\ref{eq:3}) is from L-smoothness, 
+(\ref{eq:4}) is from Assumption \ref{ass:bounded_score}, and (\ref{eq:5}) is from Assumption \ref{ass:M2}.
 \end{proof}
 
 %Lemma 0
@@ -632,10 +639,10 @@ Under Assumption \ref{ass:bounded_score}, for any function $f(\vtheta_t^{s+1})$ 
 	\Ets{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}}
 	&=
 	\Ets{\dotprod{\gradIdeal{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} +
-	\Ets[t-1]{\dotprod{e_s}{f(\vtheta_t^{s+1})}} \\
+	\Ets[t-1]{\dotprod{e_s}{f(\vtheta_t^{s+1})}} \label{eq:6}\\
 	&=
 	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} +
-	\Ets[t-1]{\dotprod{e_s}{f(\vtheta_t^{s+1})}} \\
+	\Ets[t-1]{\dotprod{e_s}{f(\vtheta_t^{s+1})}} \label{eq:7}\\
 	&=
 	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} \nonumber\\
 	&\qquad+
@@ -644,7 +651,7 @@ Under Assumption \ref{ass:bounded_score}, for any function $f(\vtheta_t^{s+1})$ 
 	&= 
 	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} \nonumber\\
 	&\qquad+
-	\Tr\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{f(\vtheta_t^{s+1})}
+	\Tr\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{f(\vtheta_t^{s+1})} \label{eq:8}
 \end{align}
 Hence:
 \begin{align}
@@ -660,16 +667,16 @@ Hence:
 	\Tr\left(\sqrt{\Varts[]{\gradApp{\tilde{\vtheta}^s}{N}}}\circ\sqrt{\Varts[t-1]{f(\vtheta_t^{s+1})}}\right) \nonumber\\
 	%
 	&\leq	
-	\frac{\alpha_t}{2}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{N}} +\frac{\alpha_t}{2}\Tr\Varts[t-1]{f(\vtheta_t^{s+1})}\\
+	\frac{\alpha_t}{2}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{N}} +\frac{\alpha_t}{2}\Tr\Varts[t-1]{f(\vtheta_t^{s+1})}\label{eq:9}\\
 	%
 	&=
-	\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Tr\Varts[t-1]{f(\vtheta_t^{s+1})} \\
+	\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Tr\Varts[t-1]{f(\vtheta_t^{s+1})} \label{eq:10}\\
 	%
 	&\leq
 	\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Ets[t-1]{\norm[]{f(\vtheta_t^{s+1})}^2},
 	\nonumber
 \end{align}
-where (6) is from Definition \ref{def:ideal}; (7) is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $f(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$; (8) is from $\Ets{e_s}=0$; (9) is from Young's inequality; and (10) is from the definition of $\gradApp{\vtheta}{N}$.
+where (\ref{eq:6}) is from Definition \ref{def:ideal}; (\ref{eq:7}) is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $f(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$; (\ref{eq:8}) is from $\Ets{e_s}=0$; (\ref{eq:9}) is from Young's inequality; and (\ref{eq:10}) is from the definition of $\gradApp{\vtheta}{N}$.
 \end{proof}
 
 %Lemma 1
@@ -699,24 +706,24 @@ In particular, the following constraints on $\alpha_t$ and $\beta_t$ are suffici
 	We have:
 	\begin{align}
 	\Ets{J(\vtheta_{t+1}^{s+1})} 
-	&\geq \Ets{J(\vtheta_t^{s+1})+\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}} - \frac{L}{2}\norm[]{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}}^2} \\
-	&= \Ets{J(\vtheta_t^{s+1})+\alpha_t\dotprod{\gradJ{\vtheta_t^{s+1}}}{\gradBlack{\vtheta_t^{s+1}}} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \\
+	&\geq \Ets{J(\vtheta_t^{s+1})+\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}} - \frac{L}{2}\norm[]{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}}^2} \label{eq:11}\\
+	&= \Ets{J(\vtheta_t^{s+1})+\alpha_t\dotprod{\gradJ{\vtheta_t^{s+1}}}{\gradBlack{\vtheta_t^{s+1}}} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \label{eq:12}\\
 	&\geq
 	\Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-
-	\frac{\alpha_t}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2},
+	\frac{\alpha_t}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2}, \label{eq:13}
 \end{align}
-where (11) is from the L-smoothness of $J(\vtheta)$, (12) is from the SVRPG update, and (13) is from Lemma \ref{lemma:aux0}.
+where (\ref{eq:11}) is from the L-smoothness of $J(\vtheta)$, (\ref{eq:12}) is from the SVRPG update, and (\ref{eq:13}) is from Lemma \ref{lemma:aux0}.
 
 Next we have:
 \begin{align}
 \Ets{\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} 
 &= \Ets{\norm[]{\vtheta_{t+1}^{s+1}- \vtheta_t^{s+1} + \vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\
 &=\Ets{\norm[]{\vtheta_{t+1}^{s+1}-\vtheta_{t}^{s+1}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2+2\dotprod{\vtheta_{t+1}^{s+1}-\vtheta_{t}^{s+1}}{\vtheta_t^{s+1}-\tilde{\vtheta}^s}} \nonumber \\
-&= \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2+2\alpha_t\dotprod{\gradBlack{\vtheta_t^{s+1}}}{\vtheta_t^{s+1}-\tilde{\vtheta}^s}} \\
+&= \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2+2\alpha_t\dotprod{\gradBlack{\vtheta_t^{s+1}}}{\vtheta_t^{s+1}-\tilde{\vtheta}^s}} \label{eq:14}\\
 &\leq \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2+2\alpha_t\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_t^{s+1}-\tilde{\vtheta}^s}} \nonumber\\ 
 &\qquad+
-\frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \\
+\frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:15}\\
 %
 &\leq \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 +2\alpha_t\Ets{\left|\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_t^{s+1}-\tilde{\vtheta}^s}\right|} \nonumber\\ 
@@ -731,9 +738,9 @@ Next we have:
 &\leq \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 +2\alpha_t\Ets{\frac{1}{2\beta}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2+\frac{\beta}{2}\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\ 
 &\qquad
-\frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2},
+\frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}, \label{eq:16}
 \end{align}
-where (14) is from the SVRPG update, (15) is from Lemma \ref{lemma:aux0}, and (16) is from Young's inequality in the 'Peter-Paul' variant.
+where (\ref{eq:14}) is from the SVRPG update, (\ref{eq:15}) is from Lemma \ref{lemma:aux0}, and (\ref{eq:16}) is from Young's inequality in the 'Peter-Paul' variant.
 Finally:
 \begin{align}
 	R_{t+1}^{s+1} &= \Ets{J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\
@@ -741,7 +748,7 @@ Finally:
 	&\geq	\Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-
 	\frac{\alpha_t}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2}
-	-c_{t+1}\Ets{\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} \\
+	-c_{t+1}\Ets{\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:17}\\
 	%
 	&\geq \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} 
 	-\frac{\alpha_t}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
@@ -754,7 +761,7 @@ Finally:
 	\nonumber\\
 	&\qquad-2c_{t+1}\alpha_t\Ets{\frac{1}{2\beta}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2+\frac{\beta}{2}\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\ 
 	&\qquad
-	-c_{t+1}\frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -c_{t+1}\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \\
+	-c_{t+1}\frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -c_{t+1}\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:18}\\
 	%
 	&= \Ets{J(\vtheta_t^{s+1})} - \left(c_{t+1}\left(\frac{3}{2}+\alpha_t\beta\right)+\alpha_tL^2\right)\Ets{\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
 	&\qquad-\alpha_t^2\left(\frac{L}{2}+c_{t+1}\right)\Ets{\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2}
@@ -769,24 +776,24 @@ Finally:
 	&\left.\qquad+\frac{L^2}{b}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+G^2\frac{R^2}{(1-\gamma)^2b}W\right)
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
-	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}\right)\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \\
+	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}\right)\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \label{eq:19}\\
 	%
 	& = \Ets{J(\vtheta_t^{s+1}) - \left(c_{t+1}\left(\frac{3}{2}+\alpha_t\beta+\alpha_t^2\right)+\alpha_t\frac{L^2}{b}+\frac{\alpha_t^2L^3}{2}\right)\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
 	&\qquad
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}+\alpha_t^2L+2\alpha_t^2c_{t+1}\right)\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
-	&\qquad-\alpha_t^2\frac{(L+2c_{t+1})G^2R^2W}{2(1-\gamma)^2b} \nonumber\\
+	&\qquad-\alpha_t^2\frac{(L+2c_{t+1})G^2R^2\VARIS}{2(1-\gamma)^2b} \nonumber\\
 	%
 	&= R_t^{s+1}
 	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
 	-\frac{d_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
-	-\frac{f_t}{b}W,\nonumber\\
+	-\frac{f_t}{b}\VARIS,\nonumber\\
 	&\geq R_t^{s+1}
 	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
-	-\frac{d_t}{N}V
-	-\frac{f_t}{b}W,
+	-\frac{d_t}{N}\VARRF
+	-\frac{f_t}{b}\VARIS, \label{eq:20}
 \end{align}
-where (17) is from (13), (18) is from (16), and (19) is from Lemma \ref{lemma:aux0} and (20) is from Assumption \ref{ass:REINFORCE}.
+where (\ref{eq:17}) is from (\ref{eq:13}), (\ref{eq:18}) is from (\ref{eq:16}), (\ref{eq:19}) is from Lemma \ref{lemma:aux0}, and (\ref{eq:20}) is from Assumption \ref{ass:REINFORCE}.
 To complete the proof, besides rearranging terms, we have to ensure that $\Psi_t>0$ for each $t$. This gives the constraints on $\alpha_t$ and $\beta_t$.
 \end{proof}
 
@@ -806,40 +813,40 @@ The values of all other constants and the constraints on the step size are provi
 Starting from Lemma \ref{lemma:aux1}, summing over iterations of an epoch $s$ we get:
 \begin{align}
 \sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}^2}}&\leq
- \frac{\sum_{t=0}^{m-1}\left(R_{t+1}^{s+1} - R_t^{s+1}\right)}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B} \\
+ \frac{\sum_{t=0}^{m-1}\left(R_{t+1}^{s+1} - R_t^{s+1}\right)}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B} \nonumber\\
  %
  &= \frac{\sum_{t=0}^{m-1}\left(\Ets[t+1]{J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} - \Ets[t]{J(\vtheta_{t}^{s+1}) - c_{t}\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}^s}^2}\right)}{\psi} \nonumber\\
- &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \\
+ &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \nonumber\\
  %
  &= \frac{\Ets[m]{\sum_{t=0}^{m-1}\left(J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2 - J(\vtheta_{t}^{s+1}) - c_{t}\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}^s}^2\right)}}{\psi} \nonumber\\
- &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \\
+ &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \nonumber\\
  %
- &= \frac{\Ets[m]{J(\vtheta_{m}^{s+1}) - c_{t+1}\norm[]{\vtheta_{m}^{s+1}-\tilde{\vtheta}^s}^2 - J(\vtheta_{0}^{s+1}) - c_{t}\norm[]{\vtheta_{0}^{s+1}-\tilde{\vtheta}^s}^2}}{\psi} \nonumber\\
- &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \\
+ &= \frac{\Ets[m]{J(\vtheta_{m}^{s+1}) - c_{m}\norm[]{\vtheta_{m}^{s+1}-\tilde{\vtheta}^s}^2 - J(\vtheta_{0}^{s+1}) - c_{0}\norm[]{\vtheta_{0}^{s+1}-\tilde{\vtheta}^s}^2}}{\psi} \nonumber\\
+ &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \label{eq:21}\\
  %
- &= \frac{\Ets[m]{J(\tilde{\vtheta}^{s+1}) - J(\tilde{\vtheta}^{s})}}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B}
+ &= \frac{\Ets[m]{J(\tilde{\vtheta}^{s+1}) - J(\tilde{\vtheta}^{s})}}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B}, \label{eq:22}
  \end{align}
+where (\ref{eq:21}) is obtained by telescoping the sum and (\ref{eq:22}) from the fact that $c_m=0$ and $\vtheta_0^{s+1}=\tilde{\vtheta}^s$.
 Next, summing over epochs:
 \begin{align}
 \sum_{s=0}^{S-1}\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}^2}}&\leq
-\frac{\sum_{s=0}^{S-1}\Ets[m]{J(\tilde{\vtheta}^{s+1}) - J(\tilde{\vtheta}^{s})}}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B} \\
+\frac{\sum_{s=0}^{S-1}\Ets[m]{J(\tilde{\vtheta}^{s+1}) - J(\tilde{\vtheta}^{s})}}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B} \nonumber\\
 %
 &\leq
 \frac{\EVV[]{J(\tilde{\vtheta}^{S}) - J(\tilde{\vtheta}^{0})}}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B}
- \\
- %
- &\leq
- \frac{\EVV[]{J(\vtheta_{out})} - J(\tilde{\vtheta}^{0})}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B} \\
- %
- &\leq
- \frac{J(\vtheta^*) - J(\vtheta^0)}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B}
+ \label{eq:23}\\
+%
+&\leq
+\frac{J(\vtheta^*) - J(\vtheta^0)}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B}, \label{eq:24}
 \end{align}
+where the expectation in (\ref{eq:23}) is \wrt all the trajectories sampled in a run of Algorithm \ref{alg:svrpg} and (\ref{eq:24}) is from the definition of $\vtheta^*$.
+ 
 Finally, we consider the expectation \wrt all sources of randomness, including the uniform sampling of the output parameter:
 \begin{align}
 \EVV[]{\norm[]{\gradJ{(\vtheta_t^{s+1})}}^2} 
-&=\frac{1}{T}\sum_{s=0}^{S-1}\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}}^2} \\
+&=\frac{1}{T}\sum_{s=0}^{S-1}\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}}^2} \nonumber\\
 &\leq
-\frac{J(\vtheta^*) - J(\vtheta^0)}{\psi T} + \frac{\zeta}{N} + \frac{\xi}{B}
+\frac{J(\vtheta^*) - J(\vtheta^0)}{\psi T} + \frac{\zeta}{N} + \frac{\xi}{B} \nonumber.
 \end{align}
 \end{proof}
 
