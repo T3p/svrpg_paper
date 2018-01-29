@@ -184,7 +184,7 @@ Why we need variance-reduced gradient in RL?
 \section{Preliminaries}
 In this section we provide essential background on policy gradient methods for Reinforcement Learning and stochastic variance-reduced gradient methods for finite-sum optimization. In the next section we will show how these methods can be combined to solve Reinforcement Learning tasks.
 
-\subsection{Policy Gradient}
+\subsection{Policy Gradient}\label{subsec:PolicyGradient}
 A Reinforcement Learning task \cite{sutton2011reinforcement} can be modeled with a discrete-time continuous Markov Decision Process (MDP) $\langle\Sspace,\Aspace,\Transition,\Reward,\gamma,\rho\rangle$, where $\Sspace$ is a continuous state space; $\Aspace$ is a continuous action space; $\Transition$ is a Markovian transition model, where $\Transition(s'|s,a)$ defines the transition density from state $s$ to $s'$ under action $a$; $\Reward$ is the reward function, where $\Reward(s,a) \in [-R,R]$ is the expected reward for state-action pair $(s,a)$ and $R$ is the maximum absolute-value reward; $\gamma\in[0,1)$ is the discount factor; and $\rho$ is the initial state distribution.
 The agent's behavior is modeled as a policy $\pi$, where $\pi(\cdot|s)$ is the density distribution over $\Aspace$ in state $s$.
 % We consider episodic tasks, \ie tasks composed of episodes of length $H$, also called time horizon.
@@ -217,7 +217,7 @@ where subscripts denote the time step, superscripts denote the trajectory, $r_h$
 \todopir{Actually it can be state-action dependant~\citep[\eg][]{Thomas2017actionbaseline,anonymous2018variance}.}
 The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance while preserving the unbiasedness:
 \begin{align*}
-\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\gamma^h r_h^n - b\right).
+\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_k^n\mid s_k^n}\right)\left(\gamma^h r_h^n - b\right).
 \end{align*}
 \todopir{Cite Jan's paper somewhere}
 \todopir{At this point we need to connect with the supervised learning framework (we can just define everything inside the first sum as $\nabla g(\tau)$).}
@@ -373,22 +373,38 @@ Under Assumptions \ref{ass:bounded_score} and \ref{ass:M2}, the parameter vector
 \end{restatable}
 
 \section{Stopping Condition}\label{sec:stopping}
-In practice ,the performance of the SVRPG algorithm is sensitive to the number of sub-iterations.
+As shown, the performance of the SVRPG algorithm is sensitive to the number of sub-iterations.
 As the number of sub-iterations increases, the variance of the importance weights and the gradient increases too.
 Therefore, the SVRPG algorithm fails in its primary aim of stabilizing the gradient estimate.
 A fixed number of sub-iterations is not the optimal choice.
 Few sub-iterations lead to few updates, many update lead to increases of variance.
 
-We introduce two stopping condition: maximum number of sub-iterations and learning rate of Adam sub-iterations.
+We introduce two stopping condition: the maximum number of sub-iterations and the condition on learning rate of Adam sub-iterations.
 Adam update rule help to stabilize the gradient estimate. In fact, this method computes adaptive learning rates for each parameter that depends on the history of the gradients' variance.
-In particular we use different Adam parameters: the first one for snapshot updates and the second one for the sub-iterations updates.
-We stop if:
+In particular we use two different Adam parameters: the first one for snapshot updates and the second one for the sub-iterations updates.
+We stop with sub-iterations if:
 
-\[\frac{\alpha_{snap}}{N}>\frac{\alpha_{sub-iter}}{M}\]
+\[\frac{\alpha_{snap}}{N}>\frac{\alpha_{sub-iter}}{B}\]
 
-where M is the sub-iterations batch size.
+After that we sample N trajectories for the next Snapshot point.
+
 
 \section{Practical Variants}
+
+As reported in Section \ref{subsec:PolicyGradient} in practical variants we use G(PO)MDP gradient estimator~\cite{baxter2001infinite}, that brings the same guarantees of Reinforce Estimator.
+One variant in off-policy G(PO)MDP is to use the weighted per-decision importance sampling estimator \cite{precup2000eligibility}:  this allows a reduction of the gradient estimator variance. The off-policy gradient estimator becomes:
+\begin{align*}
+\gradApp{\vtheta}{N} = \frac{1}{\Omega}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_k^n\mid s_k^n}\right)\left(\gamma^h r_h^n \omega(z_{0:h})\right).
+\end{align*} 
+where:
+\begin{align*}
+\omega(z_{0:h}) = \prod_{k=0}^{h} \frac{\pi_{\vtheta}({a_k^n\mid s_k^n})
+ }{\pi_{\vtheta^{'}}({a_k^n\mid s_k^n})}
+\end{align*}
+\begin{align*}
+\Omega = \sum_{n=1}^{N}\sum_{h=0}^{H-1}\gamma^h\prod_{k=0}^{h} \frac{\pi_{\vtheta}({a_k^n\mid s_k^n})
+}{\pi_{\vtheta^{'}}({a_k^n\mid s_k^n})}
+\end{align*}
 
 \section{Related Work}
 
@@ -408,7 +424,7 @@ In all the experiments we compete with GPOMDP standard algorithm. GPOMDP uses a 
 The neural network and the learning rate are the same for GPOMDP and SVRPG.
 In SVRPG we used two different Adam parameters: the first one for Snapshot and the second one for sub-iterations.
 We used the stopping condition defined in Section \ref{sec:stopping}.
-We fixed the maximum number of trajectories that both the algorithms can use. 
+We fixed the maximum number of trajectories that both the algorithms can use as shown in appendices. 
 
 The neural networks is composed of one layer with 8 neurons for Cart-Pole environment and by two layers with 32x32 neurons for Swimmer and for Half Cheetah environments. In each experiment, the length of episodes is 500 steps.
 
