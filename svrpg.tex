@@ -26,6 +26,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{mathtools}
 \usepackage{pifont}
+\usepackage[makeroom]{cancel}
 
 %%Theorems
 \usepackage{amsthm}
@@ -84,6 +85,7 @@
 \DeclareMathOperator*{\EV}{\mathbb{E}}
 \DeclareMathOperator{\Tr}{Tr}
 \DeclareMathOperator*{\Cov}{\mathbb{C}ov}
+\DeclareMathOperator*{\Var}{\mathbb{V}ar}
 \newcommand{\EVV}[2][\ppvect \in \ppspace]{\EV_{#1}\left[{#2}\right]}
 \newcommand{\norm}[2][\infty]{\left\|#2\right\|_{#1}}
 \newcommand{\Dij}[2]{\frac{\partial^{2}{#1}}{\partial{#2}_i\partial{#2}_j}}
@@ -327,7 +329,7 @@ At convergence, the variance of the SVRPG estimator is equal to the variance of 
 \end{restatable}
 In particular, the latter suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can actually achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance, at least asymptotically.
 The resulting SVRPG policy optimization method is detailed in Algorithm \ref{alg:svrpg}.
-To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$. Adaptive selection of these meta-parameters is also possible. However, the next section will focus on providing general converge guarantees for Algorithm \ref{alg:svrpg}.
+To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$. Adaptive selection of these meta-parameters is also possible, and is explored in Section \ref{sec:stopping}. However, the next section will focus on providing general converge guarantees for Algorithm \ref{alg:svrpg}.
 
 \begin{algorithm}[tb]
 	\caption{SVRPG}
@@ -508,17 +510,25 @@ We prove two basic properties of the SVRPG update.
 
 \unbias*
 \begin{proof}
-...
+\begin{align*}
+\EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\tilde{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} + \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i)\score{\tilde{\vtheta}}{\tau_i}R(\tau_i)} \\
+&= \gradJ{\tilde{\vtheta}} + \gradJ{\vtheta} - \gradJ{\tilde{\vtheta}} = \gradJ{\vtheta}.
+\end{align*}
+Note that the importance weight is necessary to guarantee unbiasedness, since the $\tau_i$ are sampled from $\pi_{\vtheta}$.
 \end{proof}
 
 \zerovar*
 \begin{proof}
-...
+As $\vtheta\to\vtheta^*$, also $\tilde{\vtheta}\to\vtheta^*$. Hence, by continuity of $J(\vtheta)$:
+\begin{align*}
+\Var\left[\gradBlack{\vtheta}\right] &\to \Var\left[\gradApp{\vtheta^*}{N}\right] + \frac{1}{B}\Var\left[\score{\vtheta^*}{\tau}R(\tau) - \cancel{\omega(\tau)}\score{\vtheta^*}{\tau}R(\tau)\right] \\
+&= \Var\left[\gradApp{\vtheta^*}{N}\right].
+\end{align*}
+Note that it is important that the trajectories used in the second and the third term are the same for the variance to vanish.
 \end{proof}
 
 \subsection*{Ancillary Lemmas}
 Before addressing the main convergence theorem, we prove some useful lemmas.
-
 %Lemma 2
 \begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
 Under Assumption \ref{ass:bounded_score}
