@@ -289,7 +289,6 @@ More recently, some extensions of variance reduction algorithms to the non-conve
 
 
 \section{Algorithm}
-\todomat{Add minibatch}
 In on-line policy gradient problems, stochastic gradient ascent (SGA) is not really a choice, but is dictated by the necessity of interacting with an unknown environment. We would like to apply SVRG to the policy gradient framework in order to limit the variance introduced by sampling trajectories, which would ultimately lead to faster convergence. In this scenario, the function $f(\vtheta)$ to optimize is $J(\vtheta)$ and the (implicit) dataset $\mathcal{D}$ is the set of all possible trajectories $\mathcal{T}$. Compared to the typical finite sum optimization scenario, we have the following additional challenges:
 \begin{itemize}
 	\item The objective $J(\vtheta)$ is typically non-convex;
@@ -311,16 +310,22 @@ Our update is still fundamentally on-policy, since the weighting concerns only t
 \nabla\log\pi(\tau_i \mid \vtheta)\Reward(\tau_i) 
 - \omega(\tau_i)\nabla\log\pi(\tau_i \mid \tilde{\vtheta})\Reward(\tau_i)\right].
 \end{align*}
-The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case \cite{konevcny2016mini} \cite{harikandeh2015stopwasting}.
-We immediately have the following (proof in Appendix \ref{app:proofs}):
+The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case \cite{konevcny2016mini} \cite{harikandeh2015stopwasting}. It is easy to show that the SVRPG gradient estimator has the following, desirable properties (detailed proofs in Appendix \ref{app:proofs}):
 \begin{restatable}{lemma}{unbias}\label{lemma:unbias}
-The SVRPG gradient estimator is unbiased:
+The SVRPG estimator is unbiased:
 \[
 \mathop{\mathbb{E}}
 \left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
 \]
 \end{restatable}
-\todomat{Add lemma on zero variance at convergence}
+\begin{restatable}{lemma}{zerovar}\label{lemma:zerovar}
+At convergence, the variance of the SVRPG estimator is equal to the variance of the REINFORCE estimator, regardless of the mini-batch size $B$:
+\[
+	\mathbb{V}ar\left[\gradBlack{\vtheta^*}\right] = 
+	\mathbb{V}ar\left[\gradApp{\vtheta^*}{N}\right].
+\]
+\end{restatable}
+In particular, the latter suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can actually achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance, at least asymptotically.
 The resulting SVRPG policy optimization method is detailed in Algorithm \ref{alg:svrpg}.
 To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$. Adaptive selection of these meta-parameters is also possible. However, the next section will focus on providing general converge guarantees for Algorithm \ref{alg:svrpg}.
 
@@ -498,13 +503,21 @@ The ideal SVRPG gradient estimate is:
 \end{definition}
 
 
-\subsection*{Lemmas}
-Before addressing the main convergence theorem, we prove some useful lemmas.
+\subsection*{Basic Lemmas}
+We prove two basic properties of the SVRPG update.
 
 \unbias*
 \begin{proof}
 ...
 \end{proof}
+
+\zerovar*
+\begin{proof}
+...
+\end{proof}
+
+\subsection*{Ancillary Lemmas}
+Before addressing the main convergence theorem, we prove some useful lemmas.
 
 %Lemma 2
 \begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
@@ -809,6 +822,7 @@ To complete the proof, besides rearranging terms, we have to ensure that $\Psi_t
 
 
 \subsection*{Main theorem}
+We finally provide the proof of the convergence theorem:
 
 \convergence*
 \begin{proof}
