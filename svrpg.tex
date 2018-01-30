@@ -296,14 +296,23 @@ In on-line policy gradient problems, stochastic gradient ascent (SGA) is not rea
 	\item The dataset $\mathcal{T}$ can be infinite;
 	\item The value of the parameter $\vtheta$ influences the sampling of trajectories;
 \end{itemize}
-To deal with non-convexity, we require $J(\vtheta)$ to be L-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and Softmax [appendix?]. Because of the infinite dataset, we can only rely on an estimate of the full gradient. Finally, we employ importance weighting \cite{rubinstein1981simulation} \cite{precup2000eligibility} to guarantee proper sampling of trajectories. We focus on the REINFORCE gradient estimator for simplicity, but the extension to G(PO)MDP is straightforward. The proposed SVRG-like gradient estimate, which we call Stochastic Variance Reduced Policy Gradient (SVRPG), is the following:
+To deal with non-convexity, we require $J(\vtheta)$ to be L-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and Softmax [appendix?]. Because of the infinite dataset, we can only rely on an estimate of the full gradient. Finally, we employ importance weighting \cite{rubinstein1981simulation} \cite{precup2000eligibility} to guarantee proper sampling of trajectories. 
+We focus on the REINFORCE gradient estimator for simplicity, but the extension to G(PO)MDP is straightforward. The proposed SVRG-like gradient estimate, which we call Stochastic Variance Reduced Policy Gradient (SVRPG), is the following:
 \begin{align*}
 	\blacktriangledown J(\vtheta) &= \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \mid \tilde{\vtheta})\Reward(\tau_j) \\
 		&+ \nabla\log\pi(\tau_i \mid \vtheta)\Reward(\tau_i) 
 		- \omega(\tau_i)\nabla\log\pi(\tau_i \mid \tilde{\vtheta})\Reward(\tau_i),
 \end{align*}
-where trajectories $\tau_j$ for $j=1,\dots,N$ are sampled from a snapshot policy $\pi_{\tilde{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pol$, and $\omega(\tau) = \frac{\pi(\tau\mid\tilde{\vtheta})}{\pi(\tau\mid\vtheta)}$ is an importance weight from $\pol$ to the snapshot policy $\pi_{\tilde{\vtheta}}$. We immediately have the following (proof in Appendix \ref{app:proofs}):
-
+where trajectories $\tau_j$ for $j=1,\dots,N$ are sampled from a snapshot policy $\pi_{\tilde{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pol$, and $\omega(\tau) = \frac{\pi(\tau\mid\tilde{\vtheta})}{\pi(\tau\mid\vtheta)}$ is an importance weight from $\pol$ to the snapshot policy $\pi_{\tilde{\vtheta}}$. 
+Our update is still fundamentally on-policy, since the weighting concerns only the correction term. However, this partial "off-policyness" is enough to introduce variance. To mitigate it, we use mini-batches of trajectories of size B to compute the second and the third term, as follows:
+\begin{align*}
+\blacktriangledown J(\vtheta) &= \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \mid \tilde{\vtheta})\Reward(\tau_j) \\
+&+ \frac{1}{B}\left[\sum_{i=0}^{B-1}
+\nabla\log\pi(\tau_i \mid \vtheta)\Reward(\tau_i) 
+- \omega(\tau_i)\nabla\log\pi(\tau_i \mid \tilde{\vtheta})\Reward(\tau_i)\right].
+\end{align*}
+The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case \cite{konevcny2016mini} \cite{harikandeh2015stopwasting}.
+We immediately have the following (proof in Appendix \ref{app:proofs}):
 \begin{restatable}{lemma}{unbias}\label{lemma:unbias}
 The SVRPG gradient estimator is unbiased:
 \[
@@ -313,25 +322,26 @@ The SVRPG gradient estimator is unbiased:
 \end{restatable}
 \todomat{Add lemma on zero variance at convergence}
 The resulting SVRPG policy optimization method is detailed in Algorithm \ref{alg:svrpg}.
-To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient and the step size $\alpha$. Adaptive selection of these meta-parameters is also possible. However, the next section will focus on providing converge guarantees for the plain SVRPG algorithm.
+To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$. Adaptive selection of these meta-parameters is also possible. However, the next section will focus on providing general converge guarantees for Algorithm \ref{alg:svrpg}.
 
 \begin{algorithm}[tb]
 	\caption{SVRPG}
 	\label{alg:svrpg}
 	\begin{algorithmic}
-		\STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{m-1}^0$, batch size $N$
+		\STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{m-1}^0$, batch size $N$, mini-batch size B
 		\FOR{$s=0$ {\bfseries to} $S-1$}
 		\STATE Sample N trajectories $\tau_j$ from $\pi(\cdot\mid\tilde{\vtheta}^{s})$
 		\STATE $\gradApp{\tilde{\vtheta}^{s}}{N} = \frac{1}{N}\sum_{j=0}^{N-1}\score{}{\tau_j\mid\tilde{\vtheta}^{s}}\Reward(\tau_j)$
 		\STATE $\vtheta_0^{s+1} = \tilde{\vtheta}^s = \vtheta_{m-1}^s$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
-		\STATE Sample trajectory $\tau_i$ from 				$\pi(\cdot\mid\vtheta_t^{s+1})$
+		\STATE Sample $B$ trajectories $\tau_i$ from 				$\pi(\cdot\mid\vtheta_t^{s+1})$
 		\STATE 
 		\begin{align*}
 		\blacktriangledown J(\vtheta_t^{s+1}) = 
-		&\gradApp{\tilde{\vtheta}^s}{N}
-		+ \score{}{\tau_i\mid\vtheta_t^{s+1}}\Reward(\tau_i) \\
-		& - \omega(\tau_i)\score{}{\tau_i \mid \tilde{\vtheta}^{s}}\Reward(\tau_i)
+		&\gradApp{\tilde{\vtheta}^s}{N} \\
+		&+\frac{1}{B}\sum_{i=0}^{B-1}\left[ 
+		\score{}{\tau_i\mid\vtheta_t^{s+1}}\Reward(\tau_i)\right. \\
+		&\left. - \omega(\tau_i)\score{}{\tau_i \mid \tilde{\vtheta}^{s}}\Reward(\tau_i)\right]
 		\end{align*}
 		\STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha\blacktriangledown J(\vtheta_t^{s+1})$
 		\ENDFOR
