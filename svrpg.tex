@@ -391,7 +391,7 @@ the variance introduced by importance sampling must be bounded:
 Differently from the previous two, this assumption must be enforced by a proper handling of the epoch size $m$.
 \end{enumerate}
 
-We can now state the following key result (proof in Appendix \ref{app:proofs}):
+We can now state the following key result:
 \begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
 Under Assumptions \ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Algorithm \ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size $\alpha$ and the epoch size $m$, the following property:
 \begin{align*}
@@ -403,7 +403,8 @@ Under Assumptions \ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2},
 		+\frac{\xi}{B}
 \end{align*}
 \end{restatable}
-\todomat{Comment theorem}
+Specific constants and meta-parameter constraints are provided in the proof of the theorem in Appendix \ref{app:proofs}. In Section \ref{sec:stopping}, instead, we propose a joint selection of step size $\alpha$ and epoch size $m$ which is more suited for applications. 
+The $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on non-convex SVRG, \eg \cite{reddi2016stochastic}; the $\mathcal{O}(\nicefrac{1}{N})$ term is due to full gradient approximation and is analogous to the one in \cite{harikandeh2015stopwasting}; the $\mathcal{O}(\nicefrac{1}{B})$ term is due to importance weighting. To achieve true convergence, both the batch size $N$ and the mini-batch size $B$ should increase over time. In practice, it is enough to choose $N$ and $B$ large enough to make the second and the third term negligible, \ie to mitigate the variance introduced by full gradient approximation and importance sampling respectively. Since the optimal configuration may be task-dependent, we leave this choice to the empirical analysis of Section \ref{sec:exp}. 
 
 \section{Stopping Condition}\label{sec:stopping}
 As shown, the performance of the SVRPG algorithm is sensitive to the number of sub-iterations.
@@ -441,7 +442,7 @@ where:
 
 \section{Related Work}
 
-\section{Experiments}
+\section{Experiments}\label{sec:exp}
 We have designed our experiments to investigate whether:
 \begin{enumerate}
 \item The algorithm reaches high value of the reward function faster than GPOMDP.
