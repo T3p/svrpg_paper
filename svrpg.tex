@@ -370,7 +370,7 @@ Each of the three challenges presented at the beginning of Section \ref{sec:algo
 		&\left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau)\right| \leq \HESSLOG
 		\end{align*}
 	\end{assumption}
-	This property is satisfied by the commonly used Gaussian policy, and is a sufficient condition for the L-smoothness of the objective (see Lemma \ref{lemma:lsmooth} in the appendix).
+	This property is satisfied by the commonly used truncated Gaussian policy, and is a sufficient condition for the L-smoothness of the objective (see Lemma \ref{lemma:lsmooth} in the appendix).
 \item \textit{Approximation}:
 since we can only compute an estimate of the full gradient, we require its variance to be bounded:
 	\begin{assumption}\label{ass:REINFORCE}
@@ -542,10 +542,20 @@ Before addressing the main convergence theorem, we prove some useful lemmas.
 
  
 \begin{restatable}[]{lemma}{L-smoothness}\label{lemma:lsmooth}
-	 Under Assumption \ref{ass:bounded_score}, $J(\vtheta)$ is L-smooth.
+	Under Assumption \ref{ass:bounded_score}, $J(\vtheta)$ is L-smooth for some positive Lipschitz constant $L$.
 \end{restatable}
 \begin{proof}
-\todomat{...}
+By definition of $J(\vtheta)$:
+\begin{align}
+\Dij{J(\vtheta)}{\theta} 
+&= \int_{\Tspace}\Dij{}{\theta}\pol(\tau)\Reward(\tau)\de \tau
+\nonumber\\ 
+&= \int_{\Tspace}\pol(\tau)\score{\theta}{\tau}\score{\theta}{\tau}^T\Reward(\tau)\de \tau + \int_{\Tspace}\pol(\tau)\Dij{}{\theta}\log\pol(\tau)\Reward(\tau)\de \tau \nonumber\\
+&\leq \sup_{\tau} \left\{\left|\Reward(\tau)\right|\right\} \left(\GRADLOG^2+\HESSLOG\right) \label{eq:0}\\
+&= \frac{R}{1-\gamma}\left(\GRADLOG^2+\HESSLOG\right),\nonumber
+\end{align}
+where \ref{eq:0} is from Assumption \ref{ass:bounded_score}.
+Since the Hessian is bounded, $J(\vtheta)$ is Lipschitz-smooth.
 \end{proof}
 
 %Lemma 2
