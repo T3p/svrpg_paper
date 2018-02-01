@@ -365,7 +365,7 @@ To obtain a method that can be used in practice, a number of additional details 
 	\end{algorithmic}
 \end{algorithm}
 
-\section{Convergence Guarantees}
+\section{Convergence Guarantees}\label{sec:conv}
 In this section we adapt existing convergence guarantees for nonconvex SVRG \cite{reddi2016stochastic} \cite{allen2016variance} to the Policy Gradient framework.
 Each of the three challenges presented at the beginning of Section \ref{sec:algo} can potentially prevent convergence, so we need additional assumptions:
 \begin{enumerate}
@@ -416,22 +416,27 @@ The $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on non-convex S
 
 \section{Hyperparameters}\label{sec:stopping}
 In Reinforcement learning we have to take into account the gradient's variance.
-A used way for reduce the effect of variance is to use Adaptive Moment Estimation (Adam) \cite{kingma2014adam}, a method that computes adaptive learning rates for each parameter. Adam help to stabilize the gradient estimate. In fact, this method computes adaptive learning rates for each parameter that depends on the history of the gradients' variance.
-We use two different adam hyperparameters: one for updates tied to Snapshots points and the other tied to the updates of sub-iterations points. 
-This is because we're dealing with two different variance dimensions.
+\todomat{$\uparrow$ the opening of the section could connect better with previous sections. Declare which meta-parameters will be addressed in the section}
+A common way to reduce the effect of variance is to use Adaptive Moment Estimation (Adam) \cite{kingma2014adam}, a method that computes adaptive learning rates for each parameter. Adam helps to stabilize the gradient estimate by computing adaptive learning rates for each parameter based on the history of the gradients' variance.
+We use two different adam hyperparameters: one for updates tied to snapshot points and the other tied to the updates of sub-iterations points.
+\todomat{$\uparrow$ explain better: it's not only two separate meta-parameters, but two separate learning rate schedules. Use notation from previous sections, \eg snaphot is usually associated with $\tilde{\vtheta}$} 
+This is because we are dealing with two different variance magnitudes.
+\todomat{$\uparrow$ the reason is this, but try to spend more words on it}
 Denote by $\alpha_{snap}$ the last learning rate computed into the snapshot point and denote by  $\alpha_{sub-iter}$ the last learning rate computed into the sub-iteration point.
 
-As shown, the performance of the SVRPG algorithm is sensitive to the number of sub-iterations.
+As shown in Section \ref{sec:conv}, the performance of the SVRPG algorithm is sensitive to the epoch size $m$.
 As the number of sub-iterations increases, the variance of the importance weights and the gradient increases too.
 Therefore, the SVRPG algorithm fails in its primary aim of stabilizing the gradient estimate.
-A fixed number of sub-iterations is not the optimal choice.
+A fixed epoch size is not the optimal choice.
 Few sub-iterations lead to few updates, many update lead to increases of variance.
 
-We introduce two stopping condition: the maximum number of sub-iterations and the condition on learning rate of Adam sub-iterations.
-We stop with sub-iterations if:
+We introduce two stopping conditions: the maximum number of sub-iterations and the condition on learning rate of Adam sub-iterations.
+\todomat{I find "two stopping conditions" confusing: it's just one with an additional constraint}
+We stop with inner iterations if:
 
 \[\frac{\alpha_{snap}}{N}>\frac{\alpha_{sub-iter}}{B}\]
 
+\todomat{why? should mention how this formula combines trajectory efficiency and variance control}
 After that we sample N trajectories for the next Snapshot point.
 
 
