@@ -290,13 +290,13 @@ More recently, some extensions of variance reduction algorithms to the non-conve
 \end{algorithm}
 
 
-\section{Algorithm}
+\section{Algorithm}\label{sec:algo}
 In on-line policy gradient problems, stochastic gradient ascent (SGA) is not really a choice, but is dictated by the necessity of interacting with an unknown environment. We would like to apply SVRG to the policy gradient framework in order to limit the variance introduced by sampling trajectories, which would ultimately lead to faster convergence. In this scenario, the function $f(\vtheta)$ to optimize is $J(\vtheta)$ and the (implicit) dataset $\mathcal{D}$ is the set of all possible trajectories $\mathcal{T}$. Compared to the typical finite sum optimization scenario, we have the following additional challenges:
-\begin{itemize}
-	\item The objective $J(\vtheta)$ is typically non-convex;
-	\item The dataset $\mathcal{T}$ can be infinite;
-	\item The value of the parameter $\vtheta$ influences the sampling of trajectories;
-\end{itemize}
+\begin{enumerate}
+	\item \textit{Non-convexity}: the objective $J(\vtheta)$ is typically non-convex;
+	\item \textit{Approximation}: the dataset $\mathcal{T}$ can be infinite, but we can only sample a finite number of trajectories;
+	\item \textit{Non-stationarity}: the value of the parameter $\vtheta$ influences the sampling of trajectories;
+\end{enumerate}
 To deal with non-convexity, we require $J(\vtheta)$ to be L-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and Softmax [appendix?]. Because of the infinite dataset, we can only rely on an estimate of the full gradient. Finally, we employ importance weighting \cite{rubinstein1981simulation} \cite{precup2000eligibility} to guarantee proper sampling of trajectories. 
 We focus on the REINFORCE gradient estimator for simplicity, but the extension to G(PO)MDP is straightforward. The proposed SVRG-like gradient estimate, which we call Stochastic Variance Reduced Policy Gradient (SVRPG), is the following:
 \begin{align*}
@@ -358,34 +358,42 @@ To obtain a method that can be used in practice, a number of additional details 
 \end{algorithm}
 
 \section{Convergence Guarantees}
-\begin{assumption}\label{ass:bounded_score}
-For each trajectory $\tau$, value of $\vtheta$ and dimensions $i,j$ there are positive constants $G,F<\infty$ such that:
-\begin{align*}
-	&\left|\nabla_{\theta_i}\log\pi_{\vtheta}(\tau)\right| \leq \GRADLOG \\
-	&\left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau)\right| \leq \HESSLOG
-\end{align*}
-\end{assumption}
+In this section we adapt existing convergence guarantees for nonconvex SVRG \cite{reddi2016stochastic} \cite{allen2016variance} to the Policy Gradient framework.
+Each of the three challenges presented at the beginning of Section \ref{sec:algo} can potentially prevent convergence, so we need additional assumptions:
+\begin{enumerate}
+\item \textit{Non-convexity}:
+	as already mentioned, a common assumption for nonconvex optimization is the L-smoothness of the objective. We actually require the following, which is stronger:
+	\begin{assumption}\label{ass:bounded_score}
+		For each trajectory $\tau$, value of $\vtheta$ and dimensions $i,j$ there are positive constants $G,F<\infty$ such that:
+		\begin{align*}
+		&\left|\nabla_{\theta_i}\log\pi_{\vtheta}(\tau)\right| \leq \GRADLOG \\
+		&\left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau)\right| \leq \HESSLOG
+		\end{align*}
+	\end{assumption}
+	This property is satisfied by the commonly used truncated Gaussian policy, and is a sufficient condition for the L-smoothness of the objective (see Lemma \ref{lemma:lsmooth} in the appendix).
+\item \textit{Approximation}:
+since we can only compute an estimate of the full gradient, we require its variance to be bounded:
+	\begin{assumption}\label{ass:REINFORCE}
+		There is a constant $V<\infty$ such that, for each policy $\pol$:
+		\[
+		\Tr\mathbb{V}ar\left(\gradApp{\vtheta}{1}\right) \leq \VARRF.
+		\]
+	\end{assumption}
+This assumption is satisfied by the REINFORCE and G(PO)MDP estimators and Gaussian policies \cite{zhao2011analysis} \cite{pirotta2013adaptive}. The problem of full gradient approximation for SVRG has been addressed in the supervised learning framework \cite{harikandeh2015stopwasting} with results similar to ours.
+\item \textit{Non-stationarity}:
+the variance introduced by importance sampling must be bounded:
+	\begin{assumption}\label{ass:M2}
+		There is a constant $W<\infty$ such that, for each pair of policies encountered in Algorithm \ref{alg:svrpg} and for each possible trajectory,
+		\[
+		\mathbb{V}ar\left(\omega(\tau)\right) \leq \VARIS.
+		\]
+	\end{assumption}
+Differently from the previous two, this assumption must be enforced by a proper handling of the epoch size $m$.
+\end{enumerate}
 
-\begin{assumption}\label{ass:M2}
-	There is a constant $W<\infty$ such that, for each pair of policies encountered in Algorithm \ref{alg:svrpg} and for each possible trajectory,
-\[
-	\mathbb{V}ar\left(\omega(\tau)\right) \leq \VARIS
-\]
-\end{assumption}
-
-\begin{assumption}\label{ass:REINFORCE}
-There is a constant $V<\infty$ such that, for each policy $\pol$:
-\[
-	\Tr\mathbb{V}ar\left(\gradApp{\vtheta}{1}\right) \leq \VARRF
-\]
-\end{assumption}
-
-\begin{restatable}[]{lemma}{L-smoothness}\label{lemma:lsmooth}
-Under Assumption \ref{ass:bounded_score}, $J(\vtheta)$ is L-smooth.
-\end{restatable}
-
+We can now state the following key result:
 \begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
-Under Assumptions \ref{ass:bounded_score} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Algorithm \ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size, the following property:
+Under Assumptions \ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Algorithm \ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size $\alpha$ and the epoch size $m$, the following property:
 \begin{align*}
 	&\EVV[]
 	{\norm[]{\nabla J(\vtheta_A)}^2} 
@@ -395,6 +403,8 @@ Under Assumptions \ref{ass:bounded_score} and \ref{ass:M2}, the parameter vector
 		+\frac{\xi}{B}
 \end{align*}
 \end{restatable}
+Specific constants and meta-parameter constraints are provided in the proof of the theorem in Appendix \ref{app:proofs}. In Section \ref{sec:stopping}, instead, we propose a joint selection of step size $\alpha$ and epoch size $m$ which is more suited for applications. 
+The $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on non-convex SVRG, \eg \cite{reddi2016stochastic}; the $\mathcal{O}(\nicefrac{1}{N})$ term is due to full gradient approximation and is analogous to the one in \cite{harikandeh2015stopwasting}; the $\mathcal{O}(\nicefrac{1}{B})$ term is due to importance weighting. To achieve true convergence, both the batch size $N$ and the mini-batch size $B$ should increase over time. In practice, it is enough to choose $N$ and $B$ large enough to make the second and the third term negligible, \ie to mitigate the variance introduced by full gradient approximation and importance sampling respectively. Since the optimal configuration may be task-dependent, we leave this choice to the empirical analysis of Section \ref{sec:exp}. 
 
 \section{Stopping Condition}\label{sec:stopping}
 As shown, the performance of the SVRPG algorithm is sensitive to the number of sub-iterations.
@@ -415,8 +425,8 @@ After that we sample N trajectories for the next Snapshot point.
 
 \section{Practical Variants}
 
-As reported in Section \ref{subsec:PolicyGradient} in practical variants we use G(PO)MDP gradient estimator~\cite{baxter2001infinite}, that brings the same guarantees of Reinforce Estimator.
-One variant in off-policy G(PO)MDP is to use the weighted per-decision importance sampling estimator \cite{precup2000eligibility}:  this allows a reduction of the gradient estimator variance. The off-policy gradient estimator becomes:
+As reported in Section \ref{subsec:PolicyGradient} we use G(PO)MDP gradient estimator~\cite{baxter2001infinite}, which gives us the same guarantees we have for the Reinforce Estimator.
+One variant in off-policy G(PO)MDP is to use the weighted per-decision importance sampling estimator \cite{precup2000eligibility}, allowing a reduction of the gradient estimator variance. The off-policy gradient estimator becomes:
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{\Omega}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_k^n\mid s_k^n}\right)\left(\gamma^h r_h^n \omega(z_{0:h})\right).
 \end{align*} 
@@ -432,7 +442,7 @@ where:
 
 \section{Related Work}
 
-\section{Experiments}
+\section{Experiments}\label{sec:exp}
 We have designed our experiments to investigate whether:
 \begin{enumerate}
 \item The algorithm reaches high value of the reward function faster than GPOMDP.
@@ -545,6 +555,25 @@ Note that it is important that the trajectories used in the second and the third
 
 \subsection*{Ancillary Lemmas}
 Before addressing the main convergence theorem, we prove some useful lemmas.
+
+ 
+\begin{restatable}[]{lemma}{L-smoothness}\label{lemma:lsmooth}
+	Under Assumption \ref{ass:bounded_score}, $J(\vtheta)$ is L-smooth for some positive Lipschitz constant $L$.
+\end{restatable}
+\begin{proof}
+By definition of $J(\vtheta)$:
+\begin{align}
+\Dij{J(\vtheta)}{\theta} 
+&= \int_{\Tspace}\Dij{}{\theta}\pol(\tau)\Reward(\tau)\de \tau
+\nonumber\\ 
+&= \int_{\Tspace}\pol(\tau)\score{\theta}{\tau}\score{\theta}{\tau}^T\Reward(\tau)\de \tau + \int_{\Tspace}\pol(\tau)\Dij{}{\theta}\log\pol(\tau)\Reward(\tau)\de \tau \nonumber\\
+&\leq \sup_{\tau} \left\{\left|\Reward(\tau)\right|\right\} \left(\GRADLOG^2+\HESSLOG\right) \label{eq:0}\\
+&= \frac{R}{1-\gamma}\left(\GRADLOG^2+\HESSLOG\right),\nonumber
+\end{align}
+where \ref{eq:0} is from Assumption \ref{ass:bounded_score}.
+Since the Hessian is bounded, $J(\vtheta)$ is Lipschitz-smooth.
+\end{proof}
+
 %Lemma 2
 \begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
 Under Assumption \ref{ass:bounded_score}
@@ -900,7 +929,10 @@ Finally, we consider the expectation \wrt all sources of randomness, including t
 \end{align}
 \end{proof}
 
-\section{Experimental Details}\label{app:proofs}
+\section{Applicability to Gaussian Policies}\label{app:pol}
+\todomat{...}
+
+\section{Experimental Details}\label{app:exp}
 Setting specifications for all the used environments:
 \begin{enumerate}
 	\item \emph{Cart-Pole Balancing} : 4-dimensional state space: cart position x, pole angle $\theta$, cart velocity $\dot{x}$ and pole velocity $\dot{\theta}$; 1-dimensional action space: the horizontal force applied to the cart body. Reward function  is defined as $r(s, a) := 10 - (1 - cos(\theta)) - 10^{-5}\norm[] a^2$. The episodes terminates when $|x|>2.4$ or $|\theta|>0.2$ or the number of time steps T is greater than 100.
