@@ -26,6 +26,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{mathtools}
 \usepackage{pifont}
+\usepackage[makeroom]{cancel}
 
 %%Theorems
 \usepackage{amsthm}
@@ -67,6 +68,12 @@
 %%todo by Matteo Pirotta
 \newcommand{\todopir}[1]{\todo[color=blued, inline]{\small #1}}
 \newcommand{\todopirout}[1]{\todo[color=blued]{\scriptsize #1}}
+%%todo by Damiano
+\newcommand{\tododam}[1]{\todo[color=orange, inline]{\small #1}}
+\newcommand{\tododamout}[1]{\todo[color=orange]{\scriptsize #1}}
+%%todo by Giuseppe
+\newcommand{\todobep}[1]{\todo[color=purple, inline]{\small #1}}
+\newcommand{\todobepout}[1]{\todo[color=purple]{\scriptsize #1}}
 %%%%%%
 
 %%%CUSTOM COMMANDS%%%
@@ -78,6 +85,7 @@
 \DeclareMathOperator*{\EV}{\mathbb{E}}
 \DeclareMathOperator{\Tr}{Tr}
 \DeclareMathOperator*{\Cov}{\mathbb{C}ov}
+\DeclareMathOperator*{\Var}{\mathbb{V}ar}
 \newcommand{\EVV}[2][\ppvect \in \ppspace]{\EV_{#1}\left[{#2}\right]}
 \newcommand{\norm}[2][\infty]{\left\|#2\right\|_{#1}}
 \newcommand{\Dij}[2]{\frac{\partial^{2}{#1}}{\partial{#2}_i\partial{#2}_j}}
@@ -109,6 +117,10 @@
 \newcommand{\Varts}[2][t]{{\mathbb{V}\text{ar}}_{#1\mid s}\left[#2\right]}
 \newcommand{\gradBlack}[1]{\blacktriangledown J(#1)}
 \newcommand{\gradIdeal}[1]{\overline{\blacktriangledown} J(#1)}
+\newcommand{\VARRF}{V}
+\newcommand{\GRADLOG}{G}
+\newcommand{\VARIS}{W}
+\newcommand{\HESSLOG}{F}
 %%%%%%
 
 % The \icmltitle you define below is probably too long as a header.
@@ -185,8 +197,8 @@ Why we need variance-reduced gradient in RL?
 In this section we provide the essential background on policy gradient methods for Reinforcement Learning and stochastic variance-reduced gradient methods for finite-sum optimization.
 %In the next section we will show how these methods can be combined to solve Reinforcement Learning tasks.
 
-\subsection{Policy Gradient in Reinforcement Learning}
-A Reinforcement Learning task \cite{sutton2011reinforcement} can be modeled with a discrete-time continuous Markov Decision Process (MDP) $M = \{ \Sspace,\Aspace,\Transition,\Reward,\gamma,\rho \}$, where $\Sspace$ is a continuous state space; $\Aspace$ is a continuous action space; $\Transition$ is a Markovian transition model, where $\Transition(s'|s,a)$ defines the transition density from state $s$ to $s'$ under action $a$; $\Reward$ is the reward function, where $\Reward(s,a) \in [-R,R]$ is the expected reward for state-action pair $(s,a)$;
+\subsection{Policy Gradient}\label{subsec:PolicyGradient}
+A Reinforcement Learning task \cite{sutton2011reinforcement} can be modeled with a discrete-time continuous Markov Decision Process (MDP) $\langle\Sspace,\Aspace,\Transition,\Reward,\gamma,\rho\rangle$, where $\Sspace$ is a continuous state space; $\Aspace$ is a continuous action space; $\Transition$ is a Markovian transition model, where $\Transition(s'|s,a)$ defines the transition density from state $s$ to $s'$ under action $a$; $\Reward$ is the reward function, where $\Reward(s,a) \in [-R,R]$ is the expected reward for state-action pair $(s,a)$;
 % and $R$ is the maximum absolute-value reward;
 $\gamma\in[0,1)$ is the discount factor; and $\rho$ is the initial state distribution.
 The agent's behavior is modeled as a policy $\pi$, where $\pi(\cdot|s)$ is the density distribution over $\Aspace$ in state $s$.
@@ -205,16 +217,14 @@ Solving an MDP $M$ means finding $\pi^* \in \argmax_{\pi} \{J(\pi)\}$.
 
 Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^m\}$, with the only constraint that $\pol$ is differentiable \wrt $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity, while in some occasions we replace $\pol(\tau)$ with $\pi(\tau|\vtheta)$ for the sake of readability. The search for a locally optimal policy is performed by means of gradient ascent, where the gradient of $J(\vtheta)$ \wrt the policy parameters is \cite{sutton2000policy, Peters2008reinf}:
 \begin{align} \label{E:policygradient}
-\gradJ{\vtheta} =
-\EVV[\tau \sim \pol(\tau)]{\score{\vtheta}{\tau}\Reward(\tau)}
-%\int_{\Tspace}\pol(\tau)\score{\vtheta}{\tau}\Reward(\tau)\de \tau.
+\gradJ{\vtheta} = \int_{\Tspace}\pol(\tau)\score{\vtheta}{\tau}\Reward(\tau)\de \tau.
 \end{align}
-Notice that the distribution defining the gradient is induced by the current policy. This peculiarity induces a nonstationarity in the sampling process. Since the underlying distribution is changing over time, it is necessary to resample at each update or use weighting techniques like importance sampling.
+Notice that the distribution defining the gradient is induced by the current policy. This aspect introduces a nonstationarity in the sampling process. Since the underlying distribution is changing over time, it is necessary to resample at each update or use weighting techniques such as importance sampling.
 
 We consider the \emph{on-line learning problem}, where trajectories are sampled by interacting with the environment at each policy change. 
 In this setting, stochastic gradient ascent is typically employed.
-At each iteration $k >0$, after sampling a batch of $N$ ($0<N<+\infty$) trajectories with policy %$\pi_{{\vtheta_k}}$,
-the policy is updated as $\vtheta  = \vtheta + \alpha\gradApp{{\vtheta_k}}{N}$, where $\alpha$ is a step size and $\gradApp{\vtheta}{N}$ is an estimate of~\eqref{E:policygradient} using $N$ samples.
+At each iteration $k >0$, after sampling a batch of $N$ ($0<N<+\infty$) trajectories with policy $\pi_{\vtheta_k}$,
+the policy is updated as $\vtheta  = \vtheta + \alpha\gradApp{\vtheta}{N}$, where $\alpha$ is a step size and $\gradApp{\vtheta}{N}$ is an estimate of~\eqref{E:policygradient} using $N$ samples.
 Several estimators have been provided in literature as empirical average over trajectories:
 \begin{align} \label{E:policygradient.estimate}
         \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N} \nabla f(\tau^i).
@@ -287,43 +297,58 @@ In on-line policy gradient problems, stochastic gradient ascent (SGA) is not rea
 	\item The dataset $\mathcal{T}$ can be infinite;
 	\item The value of the parameter $\vtheta$ influences the sampling of trajectories;
 \end{itemize}
-To deal with non-convexity, we require $J(\vtheta)$ to be L-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and Softmax [appendix?]. Because of the infinite dataset, we can only rely on an estimate of the full gradient. Finally, we employ importance weighting \cite{rubinstein1981simulation} \cite{precup2000eligibility} to guarantee proper sampling of trajectories. We focus on the REINFORCE gradient estimator for simplicity, but the extension to G(PO)MDP is straightforward. The proposed SVRG-like gradient estimate, which we call Stochastic Variance Reduced Policy Gradient (SVRPG), is the following:
+To deal with non-convexity, we require $J(\vtheta)$ to be L-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and Softmax [appendix?]. Because of the infinite dataset, we can only rely on an estimate of the full gradient. Finally, we employ importance weighting \cite{rubinstein1981simulation} \cite{precup2000eligibility} to guarantee proper sampling of trajectories. 
+We focus on the REINFORCE gradient estimator for simplicity, but the extension to G(PO)MDP is straightforward. The proposed SVRG-like gradient estimate, which we call Stochastic Variance Reduced Policy Gradient (SVRPG), is the following:
 \begin{align*}
 	\blacktriangledown J(\vtheta) &= \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \mid \tilde{\vtheta})\Reward(\tau_j) \\
 		&+ \nabla\log\pi(\tau_i \mid \vtheta)\Reward(\tau_i) 
 		- \omega(\tau_i)\nabla\log\pi(\tau_i \mid \tilde{\vtheta})\Reward(\tau_i),
 \end{align*}
-where trajectories $\tau_j$ for $j=1,\dots,N$ are sampled from a snapshot policy $\pi_{\tilde{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pol$, and $\omega(\tau) = \frac{\pi(\tau\mid\tilde{\vtheta})}{\pi(\tau\mid\vtheta)}$ is an importance weight from $\pol$ to the snapshot policy $\pi_{\tilde{\vtheta}}$. We immediately have the following (proof in Appendix \ref{app:proofs}):
-
+where trajectories $\tau_j$ for $j=1,\dots,N$ are sampled from a snapshot policy $\pi_{\tilde{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pol$, and $\omega(\tau) = \frac{\pi(\tau\mid\tilde{\vtheta})}{\pi(\tau\mid\vtheta)}$ is an importance weight from $\pol$ to the snapshot policy $\pi_{\tilde{\vtheta}}$. 
+Our update is still fundamentally on-policy, since the weighting concerns only the correction term. However, this partial "off-policyness" is enough to introduce variance. To mitigate it, we use mini-batches of trajectories of size B to compute the second and the third term, as follows:
+\begin{align*}
+\blacktriangledown J(\vtheta) &= \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \mid \tilde{\vtheta})\Reward(\tau_j) \\
+&+ \frac{1}{B}\left[\sum_{i=0}^{B-1}
+\nabla\log\pi(\tau_i \mid \vtheta)\Reward(\tau_i) 
+- \omega(\tau_i)\nabla\log\pi(\tau_i \mid \tilde{\vtheta})\Reward(\tau_i)\right].
+\end{align*}
+The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case \cite{konevcny2016mini} \cite{harikandeh2015stopwasting}. It is easy to show that the SVRPG gradient estimator has the following, desirable properties (detailed proofs in Appendix \ref{app:proofs}):
 \begin{restatable}{lemma}{unbias}\label{lemma:unbias}
-The SVRPG gradient estimator is unbiased:
+The SVRPG estimator is unbiased:
 \[
 \mathop{\mathbb{E}}
 \left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
 \]
 \end{restatable}
-
-[May also add Lemma about convergence of the variance to zero, since it provides an intuitive justification of some design choices]
+\begin{restatable}{lemma}{zerovar}\label{lemma:zerovar}
+At convergence, the variance of the SVRPG estimator is equal to the variance of the REINFORCE estimator, regardless of the mini-batch size $B$:
+\[
+	\mathbb{V}ar\left[\gradBlack{\vtheta^*}\right] = 
+	\mathbb{V}ar\left[\gradApp{\vtheta^*}{N}\right].
+\]
+\end{restatable}
+In particular, the latter suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can actually achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance, at least asymptotically.
 The resulting SVRPG policy optimization method is detailed in Algorithm \ref{alg:svrpg}.
-To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient and the step size $\alpha$. Adaptive selection of these meta-parameters is also possible. However, the next section will focus on providing converge guarantees for the plain SVRPG algorithm.
+To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$. Adaptive selection of these meta-parameters is also possible, and is explored in Section \ref{sec:stopping}. However, the next section will focus on providing general converge guarantees for Algorithm \ref{alg:svrpg}.
 
 \begin{algorithm}[tb]
 	\caption{SVRPG}
 	\label{alg:svrpg}
 	\begin{algorithmic}
-		\STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{m-1}^0$, batch size $N$
+		\STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{m-1}^0$, batch size $N$, mini-batch size B
 		\FOR{$s=0$ {\bfseries to} $S-1$}
 		\STATE Sample N trajectories $\tau_j$ from $\pi(\cdot\mid\tilde{\vtheta}^{s})$
 		\STATE $\gradApp{\tilde{\vtheta}^{s}}{N} = \frac{1}{N}\sum_{j=0}^{N-1}\score{}{\tau_j\mid\tilde{\vtheta}^{s}}\Reward(\tau_j)$
 		\STATE $\vtheta_0^{s+1} = \tilde{\vtheta}^s = \vtheta_{m-1}^s$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
-		\STATE Sample trajectory $\tau_i$ from 				$\pi(\cdot\mid\vtheta_t^{s+1})$
+		\STATE Sample $B$ trajectories $\tau_i$ from 				$\pi(\cdot\mid\vtheta_t^{s+1})$
 		\STATE 
 		\begin{align*}
 		\blacktriangledown J(\vtheta_t^{s+1}) = 
-		&\gradApp{\tilde{\vtheta}^s}{N}
-		+ \score{}{\tau_i\mid\vtheta_t^{s+1}}\Reward(\tau_i) \\
-		& - \omega(\tau_i)\score{}{\tau_i \mid \tilde{\vtheta}^{s}}\Reward(\tau_i)
+		&\gradApp{\tilde{\vtheta}^s}{N} \\
+		&+\frac{1}{B}\sum_{i=0}^{B-1}\left[ 
+		\score{}{\tau_i\mid\vtheta_t^{s+1}}\Reward(\tau_i)\right. \\
+		&\left. - \omega(\tau_i)\score{}{\tau_i \mid \tilde{\vtheta}^{s}}\Reward(\tau_i)\right]
 		\end{align*}
 		\STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha\blacktriangledown J(\vtheta_t^{s+1})$
 		\ENDFOR
@@ -336,30 +361,27 @@ To obtain a method that can be used in practice, a number of additional details 
 \begin{assumption}\label{ass:bounded_score}
 For each trajectory $\tau$, value of $\vtheta$ and dimensions $i,j$ there are positive constants $G,F<\infty$ such that:
 \begin{align*}
-	&\left|\nabla_{\theta_i}\log\pi_{\vtheta}(\tau)\right| \leq G \\
-	&\left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau)\right| \leq F
+	&\left|\nabla_{\theta_i}\log\pi_{\vtheta}(\tau)\right| \leq \GRADLOG \\
+	&\left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau)\right| \leq \HESSLOG
 \end{align*}
 \end{assumption}
 
 \begin{assumption}\label{ass:M2}
 	There is a constant $W<\infty$ such that, for each pair of policies encountered in Algorithm \ref{alg:svrpg} and for each possible trajectory,
 \[
-	\mathbb{V}ar\left(\omega(\tau)\right) \leq W
+	\mathbb{V}ar\left(\omega(\tau)\right) \leq \VARIS
 \]
 \end{assumption}
 
 \begin{assumption}\label{ass:REINFORCE}
 There is a constant $V<\infty$ such that, for each policy $\pol$:
 \[
-	\Tr\mathbb{V}ar\left(\gradApp{\vtheta}{1}\right) \leq V
+	\Tr\mathbb{V}ar\left(\gradApp{\vtheta}{1}\right) \leq \VARRF
 \]
 \end{assumption}
 
 \begin{restatable}[]{lemma}{L-smoothness}\label{lemma:lsmooth}
-Under Assumption \ref{ass:bounded_score}, $J(\vtheta)$ is L-smooth with Lipschitz constant:
-\[
-	L = \frac{R(G^2+F)}{1-\gamma}
-\]
+Under Assumption \ref{ass:bounded_score}, $J(\vtheta)$ is L-smooth.
 \end{restatable}
 
 \begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
@@ -375,22 +397,38 @@ Under Assumptions \ref{ass:bounded_score} and \ref{ass:M2}, the parameter vector
 \end{restatable}
 
 \section{Stopping Condition}\label{sec:stopping}
-In practice ,the performance of the SVRPG algorithm is sensitive to the number of sub-iterations.
+As shown, the performance of the SVRPG algorithm is sensitive to the number of sub-iterations.
 As the number of sub-iterations increases, the variance of the importance weights and the gradient increases too.
 Therefore, the SVRPG algorithm fails in its primary aim of stabilizing the gradient estimate.
 A fixed number of sub-iterations is not the optimal choice.
 Few sub-iterations lead to few updates, many update lead to increases of variance.
 
-We introduce two stopping condition: maximum number of sub-iterations and learning rate of Adam sub-iterations.
+We introduce two stopping condition: the maximum number of sub-iterations and the condition on learning rate of Adam sub-iterations.
 Adam update rule help to stabilize the gradient estimate. In fact, this method computes adaptive learning rates for each parameter that depends on the history of the gradients' variance.
-In particular we use different Adam parameters: the first one for snapshot updates and the second one for the sub-iterations updates.
-We stop if:
+In particular we use two different Adam parameters: the first one for snapshot updates and the second one for the sub-iterations updates.
+We stop with sub-iterations if:
 
-\[\frac{\alpha_{snap}}{N}>\frac{\alpha_{sub-iter}}{M}\]
+\[\frac{\alpha_{snap}}{N}>\frac{\alpha_{sub-iter}}{B}\]
 
-where M is the sub-iterations batch size.
+After that we sample N trajectories for the next Snapshot point.
+
 
 \section{Practical Variants}
+
+As reported in Section \ref{subsec:PolicyGradient} in practical variants we use G(PO)MDP gradient estimator~\cite{baxter2001infinite}, that brings the same guarantees of Reinforce Estimator.
+One variant in off-policy G(PO)MDP is to use the weighted per-decision importance sampling estimator \cite{precup2000eligibility}:  this allows a reduction of the gradient estimator variance. The off-policy gradient estimator becomes:
+\begin{align*}
+\gradApp{\vtheta}{N} = \frac{1}{\Omega}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_k^n\mid s_k^n}\right)\left(\gamma^h r_h^n \omega(z_{0:h})\right).
+\end{align*} 
+where:
+\begin{align*}
+\omega(z_{0:h}) = \prod_{k=0}^{h} \frac{\pi_{\vtheta}({a_k^n\mid s_k^n})
+ }{\pi_{\vtheta^{'}}({a_k^n\mid s_k^n})}
+\end{align*}
+\begin{align*}
+\Omega = \sum_{n=1}^{N}\sum_{h=0}^{H-1}\gamma^h\prod_{k=0}^{h} \frac{\pi_{\vtheta}({a_k^n\mid s_k^n})
+}{\pi_{\vtheta^{'}}({a_k^n\mid s_k^n})}
+\end{align*}
 
 \section{Related Work}
 
@@ -410,7 +448,7 @@ In all the experiments we compete with GPOMDP standard algorithm. GPOMDP uses a 
 The neural network and the learning rate are the same for GPOMDP and SVRPG.
 In SVRPG we used two different Adam parameters: the first one for Snapshot and the second one for sub-iterations.
 We used the stopping condition defined in Section \ref{sec:stopping}.
-We fixed the maximum number of trajectories that both the algorithms can use. 
+We fixed the maximum number of trajectories that both the algorithms can use as shown in appendices. 
 
 The neural networks is composed of one layer with 8 neurons for Cart-Pole environment and by two layers with 32x32 neurons for Swimmer and for Half Cheetah environments. In each experiment, the length of episodes is 500 steps.
 
@@ -483,14 +521,30 @@ The ideal SVRPG gradient estimate is:
 \end{definition}
 
 
-\subsection*{Lemmas}
-Before addressing the main convergence theorem, we prove some useful lemmas.
+\subsection*{Basic Lemmas}
+We prove two basic properties of the SVRPG update.
 
 \unbias*
 \begin{proof}
-...
+\begin{align*}
+\EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\tilde{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} + \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i)\score{\tilde{\vtheta}}{\tau_i}R(\tau_i)} \\
+&= \gradJ{\tilde{\vtheta}} + \gradJ{\vtheta} - \gradJ{\tilde{\vtheta}} = \gradJ{\vtheta}.
+\end{align*}
+Note that the importance weight is necessary to guarantee unbiasedness, since the $\tau_i$ are sampled from $\pi_{\vtheta}$.
 \end{proof}
 
+\zerovar*
+\begin{proof}
+As $\vtheta\to\vtheta^*$, also $\tilde{\vtheta}\to\vtheta^*$. Hence, by continuity of $J(\vtheta)$:
+\begin{align*}
+\Var\left[\gradBlack{\vtheta}\right] &\to \Var\left[\gradApp{\vtheta^*}{N}\right] + \frac{1}{B}\Var\left[\score{\vtheta^*}{\tau}R(\tau) - \cancel{\omega(\tau)}\score{\vtheta^*}{\tau}R(\tau)\right] \\
+&= \Var\left[\gradApp{\vtheta^*}{N}\right].
+\end{align*}
+Note that it is important that the trajectories used in the second and the third term are the same for the variance to vanish.
+\end{proof}
+
+\subsection*{Ancillary Lemmas}
+Before addressing the main convergence theorem, we prove some useful lemmas.
 %Lemma 2
 \begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
 Under Assumption \ref{ass:bounded_score}
@@ -536,7 +590,7 @@ Under Assumption \ref{ass:bounded_score}
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
-	\\
+	\nonumber\\
 	&\qquad+ 
 		\mathbb{E}_{t\mid s}\left[\left\|
 		\frac{1}{B}\sum_{i=0}^{B-1}\left(
@@ -547,13 +601,13 @@ Under Assumption \ref{ass:bounded_score}
 			\frac{1}{B}\sum_{i=0}^{B-1}\left(
 			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)}\right\|^2\right] 
-		\nonumber\\%
+		\label{eq:1}\\%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
 	&\qquad+\Ets{\norm[]{
 			\frac{1}{B}\sum_{i=0}^{B-1}\left(
 			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)}^2} \\
+			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)}^2} \label{eq:2}\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
@@ -591,7 +645,7 @@ Under Assumption \ref{ass:bounded_score}
 	&\qquad+
 		\frac{1}{B^2}\sum_{i=0}^{B-1}
 		\Ets{\norm[]{\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i) 
-			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \\
+			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \label{eq:3}
 % ...
 \end{align}
 \begin{align}
@@ -600,22 +654,22 @@ Under Assumption \ref{ass:bounded_score}
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
 	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+G^2\frac{R^2}{(1-\gamma)^2}\frac{1}{B^2}\sum_{i=0}^{B-1}\Ets{(\omega(\tau_i)-1)^2} \\
+	+\GRADLOG^2\frac{R^2}{(1-\gamma)^2}\frac{1}{B^2}\sum_{i=0}^{B-1}\Ets{(\omega(\tau_i)-1)^2} \label{eq:4}\\
 	%
 	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
 	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+G^2\frac{R^2}{(1-\gamma)^2b^2}\sum_{i=0}^{B-1}\Varts{\omega(\tau_i)} \nonumber\\
+	+\GRADLOG^2\frac{R^2}{(1-\gamma)^2b^2}\sum_{i=0}^{B-1}\Varts{\omega(\tau_i)} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
 	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+G^2\frac{R^2W}{(1-\gamma)^2B},
+	+\GRADLOG^2\frac{R^2\VARRF}{(1-\gamma)^2B}, \label{eq:5}
 \end{align}
-where (1) is from the definition of $\gradApp{\vtheta}{N}$, (2) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (3) is from L-smoothness, 
-(4) is from Assumption \ref{ass:bounded_score}, and (5) is from Assumption \ref{ass:M2}.
+where (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (\ref{eq:3}) is from L-smoothness, 
+(\ref{eq:4}) is from Assumption \ref{ass:bounded_score}, and (\ref{eq:5}) is from Assumption \ref{ass:M2}.
 \end{proof}
 
 %Lemma 0
@@ -634,10 +688,10 @@ Under Assumption \ref{ass:bounded_score}, for any function $f(\vtheta_t^{s+1})$ 
 	\Ets{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}}
 	&=
 	\Ets{\dotprod{\gradIdeal{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} +
-	\Ets[t-1]{\dotprod{e_s}{f(\vtheta_t^{s+1})}} \\
+	\Ets[t-1]{\dotprod{e_s}{f(\vtheta_t^{s+1})}} \label{eq:6}\\
 	&=
 	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} +
-	\Ets[t-1]{\dotprod{e_s}{f(\vtheta_t^{s+1})}} \\
+	\Ets[t-1]{\dotprod{e_s}{f(\vtheta_t^{s+1})}} \label{eq:7}\\
 	&=
 	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} \nonumber\\
 	&\qquad+
@@ -646,7 +700,7 @@ Under Assumption \ref{ass:bounded_score}, for any function $f(\vtheta_t^{s+1})$ 
 	&= 
 	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} \nonumber\\
 	&\qquad+
-	\Tr\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{f(\vtheta_t^{s+1})}
+	\Tr\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{f(\vtheta_t^{s+1})} \label{eq:8}
 \end{align}
 Hence:
 \begin{align}
@@ -662,16 +716,16 @@ Hence:
 	\Tr\left(\sqrt{\Varts[]{\gradApp{\tilde{\vtheta}^s}{N}}}\circ\sqrt{\Varts[t-1]{f(\vtheta_t^{s+1})}}\right) \nonumber\\
 	%
 	&\leq	
-	\frac{\alpha_t}{2}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{N}} +\frac{\alpha_t}{2}\Tr\Varts[t-1]{f(\vtheta_t^{s+1})}\\
+	\frac{\alpha_t}{2}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{N}} +\frac{\alpha_t}{2}\Tr\Varts[t-1]{f(\vtheta_t^{s+1})}\label{eq:9}\\
 	%
 	&=
-	\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Tr\Varts[t-1]{f(\vtheta_t^{s+1})} \\
+	\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Tr\Varts[t-1]{f(\vtheta_t^{s+1})} \label{eq:10}\\
 	%
 	&\leq
 	\frac{1}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Ets[t-1]{\norm[]{f(\vtheta_t^{s+1})}^2},
 	\nonumber
 \end{align}
-where (6) is from Definition \ref{def:ideal}; (7) is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $f(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$; (8) is from $\Ets{e_s}=0$; (9) is from Young's inequality; and (10) is from the definition of $\gradApp{\vtheta}{N}$.
+where (\ref{eq:6}) is from Definition \ref{def:ideal}; (\ref{eq:7}) is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $f(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$; (\ref{eq:8}) is from $\Ets{e_s}=0$; (\ref{eq:9}) is from Young's inequality; and (\ref{eq:10}) is from the definition of $\gradApp{\vtheta}{N}$.
 \end{proof}
 
 %Lemma 1
@@ -701,24 +755,24 @@ In particular, the following constraints on $\alpha_t$ and $\beta_t$ are suffici
 	We have:
 	\begin{align}
 	\Ets{J(\vtheta_{t+1}^{s+1})} 
-	&\geq \Ets{J(\vtheta_t^{s+1})+\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}} - \frac{L}{2}\norm[]{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}}^2} \\
-	&= \Ets{J(\vtheta_t^{s+1})+\alpha_t\dotprod{\gradJ{\vtheta_t^{s+1}}}{\gradBlack{\vtheta_t^{s+1}}} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \\
+	&\geq \Ets{J(\vtheta_t^{s+1})+\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}} - \frac{L}{2}\norm[]{\vtheta_{t+1}^{s+1}-\vtheta_t^{s+1}}^2} \label{eq:11}\\
+	&= \Ets{J(\vtheta_t^{s+1})+\alpha_t\dotprod{\gradJ{\vtheta_t^{s+1}}}{\gradBlack{\vtheta_t^{s+1}}} - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \label{eq:12}\\
 	&\geq
 	\Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-
-	\frac{\alpha_t}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2},
+	\frac{\alpha_t}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2}, \label{eq:13}
 \end{align}
-where (11) is from the L-smoothness of $J(\vtheta)$, (12) is from the SVRPG update, and (13) is from Lemma \ref{lemma:aux0}.
+where (\ref{eq:11}) is from the L-smoothness of $J(\vtheta)$, (\ref{eq:12}) is from the SVRPG update, and (\ref{eq:13}) is from Lemma \ref{lemma:aux0}.
 
 Next we have:
 \begin{align}
 \Ets{\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} 
 &= \Ets{\norm[]{\vtheta_{t+1}^{s+1}- \vtheta_t^{s+1} + \vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\
 &=\Ets{\norm[]{\vtheta_{t+1}^{s+1}-\vtheta_{t}^{s+1}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2+2\dotprod{\vtheta_{t+1}^{s+1}-\vtheta_{t}^{s+1}}{\vtheta_t^{s+1}-\tilde{\vtheta}^s}} \nonumber \\
-&= \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2+2\alpha_t\dotprod{\gradBlack{\vtheta_t^{s+1}}}{\vtheta_t^{s+1}-\tilde{\vtheta}^s}} \\
+&= \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2+2\alpha_t\dotprod{\gradBlack{\vtheta_t^{s+1}}}{\vtheta_t^{s+1}-\tilde{\vtheta}^s}} \label{eq:14}\\
 &\leq \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2+2\alpha_t\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_t^{s+1}-\tilde{\vtheta}^s}} \nonumber\\ 
 &\qquad+
-\frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \\
+\frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:15}\\
 %
 &\leq \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 +2\alpha_t\Ets{\left|\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_t^{s+1}-\tilde{\vtheta}^s}\right|} \nonumber\\ 
@@ -733,9 +787,9 @@ Next we have:
 &\leq \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 +2\alpha_t\Ets{\frac{1}{2\beta}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2+\frac{\beta}{2}\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\ 
 &\qquad
-\frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2},
+\frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}, \label{eq:16}
 \end{align}
-where (14) is from the SVRPG update, (15) is from Lemma \ref{lemma:aux0}, and (16) is from Young's inequality in the 'Peter-Paul' variant.
+where (\ref{eq:14}) is from the SVRPG update, (\ref{eq:15}) is from Lemma \ref{lemma:aux0}, and (\ref{eq:16}) is from Young's inequality in the 'Peter-Paul' variant.
 Finally:
 \begin{align}
 	R_{t+1}^{s+1} &= \Ets{J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\
@@ -743,7 +797,7 @@ Finally:
 	&\geq	\Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-
 	\frac{\alpha_t}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2}
-	-c_{t+1}\Ets{\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} \\
+	-c_{t+1}\Ets{\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:17}\\
 	%
 	&\geq \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} 
 	-\frac{\alpha_t}{2N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
@@ -756,7 +810,7 @@ Finally:
 	\nonumber\\
 	&\qquad-2c_{t+1}\alpha_t\Ets{\frac{1}{2\beta}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2+\frac{\beta}{2}\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\ 
 	&\qquad
-	-c_{t+1}\frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -c_{t+1}\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \\
+	-c_{t+1}\frac{\alpha_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} -c_{t+1}\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:18}\\
 	%
 	&= \Ets{J(\vtheta_t^{s+1})} - \left(c_{t+1}\left(\frac{3}{2}+\alpha_t\beta\right)+\alpha_tL^2\right)\Ets{\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
 	&\qquad-\alpha_t^2\left(\frac{L}{2}+c_{t+1}\right)\Ets{\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2}
@@ -771,29 +825,30 @@ Finally:
 	&\left.\qquad+\frac{L^2}{b}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+G^2\frac{R^2}{(1-\gamma)^2b}W\right)
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
-	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}\right)\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \\
+	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}\right)\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \label{eq:19}\\
 	%
 	& = \Ets{J(\vtheta_t^{s+1}) - \left(c_{t+1}\left(\frac{3}{2}+\alpha_t\beta+\alpha_t^2\right)+\alpha_t\frac{L^2}{b}+\frac{\alpha_t^2L^3}{2}\right)\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
 	&\qquad
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}+\alpha_t^2L+2\alpha_t^2c_{t+1}\right)\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}} \nonumber\\
-	&\qquad-\alpha_t^2\frac{(L+2c_{t+1})G^2R^2W}{2(1-\gamma)^2b} \nonumber\\
+	&\qquad-\alpha_t^2\frac{(L+2c_{t+1})G^2R^2\VARIS}{2(1-\gamma)^2b} \nonumber\\
 	%
 	&= R_t^{s+1}
 	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
 	-\frac{d_t}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
-	-\frac{f_t}{b}W,\nonumber\\
+	-\frac{f_t}{b}\VARIS,\nonumber\\
 	&\geq R_t^{s+1}
 	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
-	-\frac{d_t}{N}V
-	-\frac{f_t}{b}W,
+	-\frac{d_t}{N}\VARRF
+	-\frac{f_t}{b}\VARIS, \label{eq:20}
 \end{align}
-where (17) is from (13), (18) is from (16), and (19) is from Lemma \ref{lemma:aux0} and (20) is from Assumption \ref{ass:REINFORCE}.
+where (\ref{eq:17}) is from (\ref{eq:13}), (\ref{eq:18}) is from (\ref{eq:16}), (\ref{eq:19}) is from Lemma \ref{lemma:aux0}, and (\ref{eq:20}) is from Assumption \ref{ass:REINFORCE}.
 To complete the proof, besides rearranging terms, we have to ensure that $\Psi_t>0$ for each $t$. This gives the constraints on $\alpha_t$ and $\beta_t$.
 \end{proof}
 
 
 \subsection*{Main theorem}
+We finally provide the proof of the convergence theorem:
 
 \convergence*
 \begin{proof}
@@ -808,40 +863,40 @@ The values of all other constants and the constraints on the step size are provi
 Starting from Lemma \ref{lemma:aux1}, summing over iterations of an epoch $s$ we get:
 \begin{align}
 \sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}^2}}&\leq
- \frac{\sum_{t=0}^{m-1}\left(R_{t+1}^{s+1} - R_t^{s+1}\right)}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B} \\
+ \frac{\sum_{t=0}^{m-1}\left(R_{t+1}^{s+1} - R_t^{s+1}\right)}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B} \nonumber\\
  %
  &= \frac{\sum_{t=0}^{m-1}\left(\Ets[t+1]{J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} - \Ets[t]{J(\vtheta_{t}^{s+1}) - c_{t}\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}^s}^2}\right)}{\psi} \nonumber\\
- &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \\
+ &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \nonumber\\
  %
  &= \frac{\Ets[m]{\sum_{t=0}^{m-1}\left(J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2 - J(\vtheta_{t}^{s+1}) - c_{t}\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}^s}^2\right)}}{\psi} \nonumber\\
- &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \\
+ &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \nonumber\\
  %
- &= \frac{\Ets[m]{J(\vtheta_{m}^{s+1}) - c_{t+1}\norm[]{\vtheta_{m}^{s+1}-\tilde{\vtheta}^s}^2 - J(\vtheta_{0}^{s+1}) - c_{t}\norm[]{\vtheta_{0}^{s+1}-\tilde{\vtheta}^s}^2}}{\psi} \nonumber\\
- &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \\
+ &= \frac{\Ets[m]{J(\vtheta_{m}^{s+1}) - c_{m}\norm[]{\vtheta_{m}^{s+1}-\tilde{\vtheta}^s}^2 - J(\vtheta_{0}^{s+1}) - c_{0}\norm[]{\vtheta_{0}^{s+1}-\tilde{\vtheta}^s}^2}}{\psi} \nonumber\\
+ &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \label{eq:21}\\
  %
- &= \frac{\Ets[m]{J(\tilde{\vtheta}^{s+1}) - J(\tilde{\vtheta}^{s})}}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B}
+ &= \frac{\Ets[m]{J(\tilde{\vtheta}^{s+1}) - J(\tilde{\vtheta}^{s})}}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B}, \label{eq:22}
  \end{align}
+where (\ref{eq:21}) is obtained by telescoping the sum and (\ref{eq:22}) from the fact that $c_m=0$ and $\vtheta_0^{s+1}=\tilde{\vtheta}^s$.
 Next, summing over epochs:
 \begin{align}
 \sum_{s=0}^{S-1}\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}^2}}&\leq
-\frac{\sum_{s=0}^{S-1}\Ets[m]{J(\tilde{\vtheta}^{s+1}) - J(\tilde{\vtheta}^{s})}}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B} \\
+\frac{\sum_{s=0}^{S-1}\Ets[m]{J(\tilde{\vtheta}^{s+1}) - J(\tilde{\vtheta}^{s})}}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B} \nonumber\\
 %
 &\leq
 \frac{\EVV[]{J(\tilde{\vtheta}^{S}) - J(\tilde{\vtheta}^{0})}}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B}
- \\
- %
- &\leq
- \frac{\EVV[]{J(\vtheta_{out})} - J(\tilde{\vtheta}^{0})}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B} \\
- %
- &\leq
- \frac{J(\vtheta^*) - J(\vtheta^0)}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B}
+ \label{eq:23}\\
+%
+&\leq
+\frac{J(\vtheta^*) - J(\vtheta^0)}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B}, \label{eq:24}
 \end{align}
+where the expectation in (\ref{eq:23}) is \wrt all the trajectories sampled in a run of Algorithm \ref{alg:svrpg} and (\ref{eq:24}) is from the definition of $\vtheta^*$.
+ 
 Finally, we consider the expectation \wrt all sources of randomness, including the uniform sampling of the output parameter:
 \begin{align}
 \EVV[]{\norm[]{\gradJ{(\vtheta_t^{s+1})}}^2} 
-&=\frac{1}{T}\sum_{s=0}^{S-1}\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}}^2} \\
+&=\frac{1}{T}\sum_{s=0}^{S-1}\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}}^2} \nonumber\\
 &\leq
-\frac{J(\vtheta^*) - J(\vtheta^0)}{\psi T} + \frac{\zeta}{N} + \frac{\xi}{B}
+\frac{J(\vtheta^*) - J(\vtheta^0)}{\psi T} + \frac{\zeta}{N} + \frac{\xi}{B} \nonumber.
 \end{align}
 \end{proof}
 
