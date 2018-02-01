@@ -408,7 +408,7 @@ The $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on non-convex S
 
 \section{Hyperparameters}\label{sec:stopping}
 In Reinforcement learning we have to take into account the gradient's variance.
-A used way for reduce the effect of variance is to use Adaptive Moment Estimation (Adam) \cite{kingma2015adam}, a method that computes adaptive learning rates for each parameter. Adam help to stabilize the gradient estimate. In fact, this method computes adaptive learning rates for each parameter that depends on the history of the gradients' variance.
+A used way for reduce the effect of variance is to use Adaptive Moment Estimation (Adam) \cite{kingma2014adam}, a method that computes adaptive learning rates for each parameter. Adam help to stabilize the gradient estimate. In fact, this method computes adaptive learning rates for each parameter that depends on the history of the gradients' variance.
 We use two different adam hyperparameters: one for updates tied to Snapshots points and the other tied to the updates of sub-iterations points. 
 This is because we're dealing with two different variance dimensions.
 Denote by $\alpha_{snap}$ the last learning rate computed into the snapshot point and denote by  $\alpha_{sub-iter}$ the last learning rate computed into the sub-iteration point.
