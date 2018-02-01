@@ -425,8 +425,8 @@ After that we sample N trajectories for the next Snapshot point.
 
 \section{Practical Variants}
 
-As reported in Section \ref{subsec:PolicyGradient} in practical variants we use G(PO)MDP gradient estimator~\cite{baxter2001infinite}, that brings the same guarantees of Reinforce Estimator.
-One variant in off-policy G(PO)MDP is to use the weighted per-decision importance sampling estimator \cite{precup2000eligibility}:  this allows a reduction of the gradient estimator variance. The off-policy gradient estimator becomes:
+As reported in Section \ref{subsec:PolicyGradient} we use G(PO)MDP gradient estimator~\cite{baxter2001infinite}, which gives us the same guarantees we have for the Reinforce Estimator.
+One variant in off-policy G(PO)MDP is to use the weighted per-decision importance sampling estimator \cite{precup2000eligibility}, allowing a reduction of the gradient estimator variance. The off-policy gradient estimator becomes:
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{\Omega}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_k^n\mid s_k^n}\right)\left(\gamma^h r_h^n \omega(z_{0:h})\right).
 \end{align*} 
