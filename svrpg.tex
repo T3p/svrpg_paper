@@ -538,7 +538,7 @@ We prove two basic properties of the SVRPG update.
 \unbias*
 \begin{proof}
 \begin{align*}
-\EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\tilde{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} + \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i)\score{\tilde{\vtheta}}{\tau_i}R(\tau_i)} \\
+\EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\tilde{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} - \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i)\score{\tilde{\vtheta}}{\tau_i}R(\tau_i)} \\
 &= \gradJ{\tilde{\vtheta}} + \gradJ{\vtheta} - \gradJ{\tilde{\vtheta}} = \gradJ{\vtheta}.
 \end{align*}
 Note that the importance weight is necessary to guarantee unbiasedness, since the $\tau_i$ are sampled from $\pi_{\vtheta}$.
