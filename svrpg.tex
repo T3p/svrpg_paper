@@ -186,12 +186,17 @@ Why we need variance-reduced gradient in RL?
 \end{abstract}
 
 \section{Introduction}
-\begin{itemize}
-        \item Similarities between RL and SL
-        \item SL needs SVRG so RL
-        \item Potential advantages of SVRG
-        \item Difficulties in RL \wrt SL
-\end{itemize}
+%Similarities between RL and SL
+On a very general level, machine learning addresses the problem of artificial agents that must select the right actions to solve a given task. The approach of Reinforcement Learning \cite{sutton2011reinforcement} is to learn the best actions by direct interaction with the environment and evaluation of the performance in the form of a reward signal. This makes RL fundamentally different from Supervised Learning (SL), where correct actions are explicitly prescribed by a human teacher (\eg for classification, in the form of class labels). However, the two approaches share many challenges and, as a consequence, solution concepts. The problem of estimating a model from samples, which is at the core of SL, is equally fundamental in RL, whether we choose to model the environment, a value function, or a policy of behavior directly. In particular, when the tasks are characterized by large or continuous state-action spaces, RL needs to borrow the powerful function approximators that are the main subject of study of SL, such as neural networks. Among RL solutions for learning continuous tasks, policy gradient methods bear the closest similarity to SL, since they allow to formulate the RL problem as the unconstrained optimization of an objective function (\ie a negative loss) of policy parameters and data samples.
+
+% SL needs SVRG so RL
+In supervised learning, stochastic optimization is often employed for reasons of efficiency. The idea is to evaluate the objective on a random subset of the available data to obtain an approximate gradient direction. This can be much less expensive that taking into account all the data for all parameter updates. However, the sub-sampling of data samples is a source of variance that can potentially compromise convergence, so that speed and variance must be traded off with proper handling of meta-parameters.
+Variance-reduced gradient algorithms such as SAG, SVRG and SAGA offer better ways of achieving the optimal trade-off between variance and speed, both in theory and practice. 
+In Reinforcement Learning, stochastic optimization is not even a choice, since samples must be sequentially obtained by interacting with an initially unknown environment. In this scenario, containing the variance of the estimates is a problem that cannot be avoided, and methods like SVRG can offer a more efficient alternative 
+
+\todomat{work in progress}
+% Potential advantages of SVRG
+% Difficulties in RL \wrt SL
 
 \section{Preliminaries}
 In this section we provide essential background on policy gradient methods for Reinforcement Learning and stochastic variance-reduced gradient methods for finite-sum optimization. In the next section we will show how these methods can be combined to solve Reinforcement Learning tasks.
@@ -226,7 +231,7 @@ The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, u
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
 \end{align*}
 where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline, provided it is constant \wrt to actions.
-\todopir{Actually it can be state-action dependant~\citep[\eg][]{Thomas2017actionbaseline,anonymous2018variance}.}
+\todopir{Actually it can be state-action dependant~\citep[\eg][]{Thomas2017actionbaseline,wu2018variance}.}
 The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance while preserving the unbiasedness:
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_k^n\mid s_k^n}\right)\left(\gamma^h r_h^n - b\right).
