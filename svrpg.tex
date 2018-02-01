@@ -91,6 +91,7 @@
 \newcommand{\Dij}[2]{\frac{\partial^{2}{#1}}{\partial{#2}_i\partial{#2}_j}}
 \newcommand{\de}{\,\mathrm{d}}
 \newcommand{\dotprod}[2]{\left\langle#1,#2\right\rangle}
+\newcommand{\dnabla}{\nabla\!\!\!\!\nabla}
 %RL
 \newcommand{\vtheta}{\boldsymbol{\theta}}
 \newcommand{\Aspace}{\mathcal{A}}
@@ -116,7 +117,7 @@
 \newcommand{\Covts}[3][t]{{\mathbb{C}\text{ov}}_{#1\mid s}\left(#2,#3\right)}
 \newcommand{\Varts}[2][t]{{\mathbb{V}\text{ar}}_{#1\mid s}\left[#2\right]}
 \newcommand{\gradBlack}[1]{\blacktriangledown J(#1)}
-\newcommand{\gradIdeal}[1]{\overline{\blacktriangledown} J(#1)}
+\newcommand{\gradIdeal}[1]{\dnabla J(#1)}
 \newcommand{\VARRF}{V}
 \newcommand{\GRADLOG}{G}
 \newcommand{\VARIS}{W}
@@ -514,7 +515,7 @@ The full gradient estimation error is:
 \begin{definition}\label{def:ideal}
 The ideal SVRPG gradient estimate is:
 \begin{align*}
-	\overline{\blacktriangledown}J(\vtheta_t^{s+1}) &\coloneqq 
+	\gradIdeal{\vtheta_t^{s+1}} &\coloneqq 
 	\gradJ{\tilde{\vtheta}^s}
 	+ \nabla\log\pi(\tau_i \mid \vtheta_t^{s+1})\Reward(\tau_i) 
 	- \omega(\tau_i)\nabla\log\pi(\tau_i \mid \tilde{\vtheta}^s)\Reward(\tau_i) \\
