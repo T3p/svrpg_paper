@@ -498,17 +498,17 @@ We give some additional definitions which will be useful in the proofs.
 For a random variable $X$:
 \begin{align*}
 	&\mathbb{E}_{t\mid s}\left[X\right] \coloneqq 
-		\mathop{\mathbb{E}}_{\substack{\tau_j\sim\pi(\cdot\mid\tilde{\vtheta}^s) \\ \tau_i\sim\pi(\cdot\mid\vtheta^{s+1}_i)\text{ for $i=0,\dots,t-1$}}}{\left[X \mid \tilde{\vtheta^s}\right]} \\
-	&\coloneqq \EVV[\tau_j\sim\pi(\cdot\mid\tilde{\vtheta}^s)]{
-			\EVV[\tau_0\sim\pi(\cdot\mid\vtheta_0^{s+1})]
+		\mathop{\mathbb{E}}_{\substack{\tau_j\sim\pi(\cdot\mid\tilde{\vtheta}^s)\forall j \in {\it {\bf N}} \\ \tau_{i,h}\sim\pi(\cdot\mid\vtheta^{s+1}_i) \forall h \in {\it {\bf B}}, \text{ for $i=0,\dots,t-1$}}}{\left[X \mid \tilde{\vtheta^s}\right]} \\
+	&\coloneqq \EVV[\tau_j\sim\pi(\cdot\mid\tilde{\vtheta}^s)\forall j \in {\it {\bf N}}]{
+			\EVV[\tau_{0,h}\sim\pi(\cdot\mid\vtheta_0^{s+1}) \forall h \in {\it {\bf B}}]
 				{\dots
-					\EVV[\tau_t\sim\pi(\cdot\mid\vtheta_t^{s+1})]
+					\EVV[\tau_{t,h}\sim\pi(\cdot\mid\vtheta_t^{s+1})\forall h \in {\it {\bf B}}]
 						{X\mid\vtheta_t^{s+1}}
 				 \dots
 			\mid\vtheta_0^{s+1}}
 		\mid\tilde{\vtheta}^s},
 \end{align*}
-where the sequence $\tilde{\vtheta}^s,\vtheta_0^{s+1},\dots,\vtheta_t^{s+1}$ is defined in Algorithm \ref{alg:svrpg}. 
+where the sequence $\tilde{\vtheta}^s,\vtheta_0^{s+1},\dots,\vtheta_t^{s+1}$ is defined in Algorithm \ref{alg:svrpg}, ${\it {\bf N}}$ is the amount of trajectories sampled for the snapshot and ${\it {\bf B}}$ is the amount of trajectories sampled for a sub iteration. 
 \end{definition}
 Intuitively, the $\Ets{\cdot}$ operator computes the expected value with respect to the sampling of trajectories from the snapshot $\tilde{\vtheta}^s$ up to the $t$-th iteration included. Note that the order in which expected values are taken is important since each $\vtheta_{t}^{s+1}$ is function of previously sampled trajectories and is used to sample new ones.
 
