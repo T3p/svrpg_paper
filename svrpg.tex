@@ -198,7 +198,7 @@ Among RL approaches, policy gradient is the one that bears the closest similarit
 % Difficulties in RL \wrt SL
 Unfortunately, RL has a series of difficulties that are not present in ERM. First, in SL the objective can often be designed to be strongly convex. This is not possible in RL, so we have to deal with non-convexities. Then, as mentioned, the dataset is not initially available and may even be infinite, which  makes approximations unavoidable. This also rules out SAG and SAGA because of their storage requirements, which leaves SVRG as the most promising choice. Finally, the distribution used to sample data is not under direct control of the algorithm designer, but is a function of policy parameters that changes over time as the policy is optimized, which is a form of nonstationarity.
 
-% Related work
+% Related work?
 
 %Paper structure
 After providing a background on policy gradient and SVRG in Section \ref{sec:pre}, in Section \ref{sec:alg} we address the aforementioned difficulties to design SVRPG, a variant of SVRG for the policy gradient framework. In Section \ref{sec:conv} we provide convergence guarantees for our algorithm which also offers insights on the challenges of variance reduction in RL. In Section \ref{sec:stopping} we suggests how to set the hyperparameters of SVRPG, while in Section \ref{sec:prac} we discuss some practical variants of the algorithm. Finally, in Section \ref{sec:exp} we empirically evaluate the performance of our method on popular continuous RL benchmark tasks.
@@ -322,8 +322,8 @@ We focus on the REINFORCE gradient estimator for simplicity, but the extension t
 where trajectories $\tau_j$ for $j=1,\dots,N$ are sampled from a snapshot policy $\pi_{\tilde{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pol$, and $\omega(\tau) = \frac{\pi(\tau\vert\tilde{\vtheta})}{\pi(\tau\vert\vtheta)}$ is an importance weight from $\pol$ to the snapshot policy $\pi_{\tilde{\vtheta}}$. 
 Our update is still fundamentally on-policy, since the weighting concerns only the correction term. However, this partial "off-policyness" is enough to introduce variance. To mitigate it, we use mini-batches of trajectories of size B to compute the second and the third term, as follows:
 \begin{align*}
-\blacktriangledown J(\vtheta) &= \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \vert \tilde{\vtheta})\Reward(\tau_j) \\
-&+ \frac{1}{B}\left[\sum_{i=0}^{B-1}
+&\blacktriangledown J(\vtheta) = \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \vert \tilde{\vtheta})\Reward(\tau_j) +\\
+&\quad\frac{1}{B}\left[\sum_{i=0}^{B-1}
 \nabla\log\pi(\tau_i \vert \vtheta)\Reward(\tau_i) 
 - \omega(\tau_i)\nabla\log\pi(\tau_i \vert \tilde{\vtheta})\Reward(\tau_i)\right].
 \end{align*}
@@ -440,7 +440,7 @@ These two weights ${\bf{\it N}}$ and ${\bf{\it B}}$ represent, respectively, the
 Another insight about this adaptive stopping condition lies within the value of the two different learning rate proposed by adam. Whenever the learning rate of a sub-iteration becomes too small with respect to that one proposed at the previous snapshot we are experiencing high variance. Hence it could be better to perform a new snapshot so to mitigate this issue.
 
 
-\section{Practical Variants}
+\section{Practical Variants}\label{sec:prac}
 \todomat{Missing opening to section}
 We introduce a term with importance weights to guarantee proper sampling of trajectories.
 This term's variance is subjected to the variance of importance weights. 
