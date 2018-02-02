@@ -438,13 +438,14 @@ Few sub-iterations lead to few updates, many update lead to increases of varianc
 In order to cope with this behaviour we introduce an adaptive stopping condition: we permorm a new snapshot anytime the weighted learning rate proposed by the adam optimizer in a sub-iteration is smaller than the weighted one proposed at the immediately previous snapshot. This stopping condition is subject to a constraint on the maximum number of sub-iterations performable, which is problem dependent.
 \todomat{I find "two stopping conditions" confusing: it's just one with an additional constraint}
 \todobep{I tried to solve the issue here:hope it's better now}
-We stop with inner iterations if:
+More precisely we stop performing sub-iterations when:
 
 \[\frac{\alpha_{snap}}{N}>\frac{\alpha_{sub-iter}}{B}\]
 
-\todomat{why? should mention how this formula combines trajectory efficiency and variance control}
-After that we sample N trajectories for the next Snapshot point.
+These two weights ${\bf{\it N}}$ and ${\bf{\it B}}$ represent, respectively, the number of trajectories used for a snapshot and the number of trajectories used for an update of the parameters in a sub-iteration. Therefore, in this stopping condition, we use them to take into account the trajectories efficiency. The less trajectories we use to perform an update the better it is from a data usage point of view. The variance control offered by this adaptive stopping condition lies within the value of the two different learning rate proposed by adam. Whenever the learning rate of a sub-iteration becomes too small with respect to that one proposed at the previous snapshot we are experiencing high variance. Hence it could be better to perform a new snapshot so to mitigate this issue.
 
+\todomat{why? should mention how this formula combines trajectory efficiency and variance control}
+\todobep{also here I tried to solve the issues highlighted}
 
 \section{Practical Variants}
 
