@@ -100,7 +100,7 @@
 \newcommand{\Transition}{\mathcal{P}}
 \newcommand{\Reward}{\mathcal{R}}
 \newcommand{\stationary}{d_{\rho}^{\pi_{\vtheta}}(s)}
-\newcommand{\policy}{\pi_{\vtheta}(a \mid s)}
+\newcommand{\policy}{\pi_{\vtheta}(a \vert s)}
 \newcommand{\pol}{\pi_{\vtheta}}
 \newcommand{\trajdistr}{\pi_{\vtheta}(\tau)}
 \newcommand{\score}[2]{\nabla\log\pi_{#1}(#2)}
@@ -113,9 +113,9 @@
 \newcommand{\eqdef}{\mathrel{\mathop:}=}
 \newcommand{\Dataset}{\mathcal{D}}
 %Specific
-\newcommand{\Ets}[2][t]{\mathbb{E}_{#1\mid s}\left[#2\right]}
-\newcommand{\Covts}[3][t]{{\mathbb{C}\text{ov}}_{#1\mid s}\left(#2,#3\right)}
-\newcommand{\Varts}[2][t]{{\mathbb{V}\text{ar}}_{#1\mid s}\left[#2\right]}
+\newcommand{\Ets}[2][t]{\mathbb{E}_{#1\vert s}\left[#2\right]}
+\newcommand{\Covts}[3][t]{{\mathbb{C}\text{ov}}_{#1\vert s}\left(#2,#3\right)}
+\newcommand{\Varts}[2][t]{{\mathbb{V}\text{ar}}_{#1\vert s}\left[#2\right]}
 \newcommand{\gradBlack}[1]{\blacktriangledown J(#1)}
 \newcommand{\gradIdeal}[1]{\dnabla J(#1)}
 \newcommand{\VARRF}{V}
@@ -188,20 +188,22 @@ Why we need variance-reduced gradient in RL?
 
 \section{Introduction}
 %Similarities between RL and SL
-On a very general level, machine learning addresses the problem of an agent that must select the right actions to solve a given task. The approach of Reinforcement Learning~\citep{sutton1998reinforcement} is to learn the best actions by direct interaction with the environment and evaluation of the performance in the form of a reward signal. This makes RL fundamentally different from Supervised Learning (SL), even in its online version, where correct actions are explicitly prescribed by a human teacher (\eg for classification, in the form of class labels). However, the two approaches share many challenges and, as a consequence, solution concepts. The problem of estimating a model from samples, which is at the core of SL, is equally fundamental in RL, whether we choose to model the environment, a value function, or a policy of behaviour directly. Moreover, when the tasks are characterized by large or continuous state-action spaces, RL needs to borrow the powerful function approximators that are the main subject of study of SL, such as neural networks.
-
+On a very general level, machine learning addresses the problem of an agent that must select the right actions to solve a task. The approach of Reinforcement Learning~\citep{sutton1998reinforcement} is to learn the best actions by direct interaction with the environment and evaluation of the performance in the form of a reward signal. This makes RL fundamentally different from Supervised Learning (SL), where correct actions are explicitly prescribed by a human teacher (\eg for classification, in the form of class labels). However, the two approaches share many challenges and tools. The problem of estimating a model from samples, which is at the core of SL, is equally fundamental in RL, whether we choose to model the environment, a value function, or a policy of behaviour directly. Moreover, when the tasks are characterized by large or continuous state-action spaces, RL needs to borrow the powerful function approximators that are the main subject of study of SL, such as neural networks.
 % SL needs SVRG so RL
-In a typical discriminative supervised learning setting, an objective function $J(x\mid\vtheta)$ has to be optimized \wrt to a parameter vector $\vtheta$. The training set $\mathcal{D}_{train}$ is the set of data samples $x$ for which the objective (and its gradient) can be evaluated. In most practical cases, $\mathcal{D}_{train}$ is only a subset of the set $\mathcal{D}$ of all the $x$ of interest, hence we resort to stochastic optimization of the expected value of $J$ over an unknown data distribution. The special case in which $\mathcal{D}_{train} = \mathcal{D}$ is known as Empirical Risk Minimization (ERM), and allows for deterministic optimization. Even in this case, stochastic optimization is often used for reasons of efficiency. The idea is to evaluate the objective on a random subset of the available data to obtain an approximate gradient direction. This can be much less expensive than taking into account all the data for all parameter updates. However, the sub-sampling of data samples is a source of variance that can potentially compromise convergence, so that speed and variance must be traded off with proper handling of meta-parameters.
-Variance-reduced gradient algorithms such as SAG, SVRG and SAGA offer better ways of achieving the optimal trade-off between variance and speed, both in theory and practice. Although designed explicitly for ERM, this algorithms address a problem that is equally important, if not more critical, in more general machine learning problems.
-In Reinforcement Learning, as in online learning n general, stochastic optimization is rarely a matter of choice, since data must be actively sampled by interacting with an initially unknown environment. In this scenario, containing the variance of the estimates is a problem that cannot be avoided, and methods like SVRG can offer a more efficient alternative, or a complement, to traditional methods such as batch learning.
-
-\todomat{work in progress}
+In a typical SL setting, a performance function $J(\vtheta)$ has to be optimized \wrt to model parameters $\vtheta$. The set of data that are available for training is often a subset of all the data of interest, which may even be infinite, leading to optimization of finite sums to approximate expected performance over an unknown data distribution. When generalization to the complete dataset is not taken into consideration we talk about Empirical Risk Minization (ERM). Even in this case, stochastic optimization is often used for reasons of efficiency. The idea of stochastic gradient descent \cite{nesterov2013introductory} is to iteratively focus on a random subset of the available data to obtain an approximate improvement direction. At the level of the single iteration, this can be much less expensive than taking into account all the data. However, the sub-sampling of data samples is a source of variance that can potentially compromise convergence, so that per-iteration efficiency and convergence rate must be traded off with proper handling of meta-parameters.
+Variance-reduced gradient algorithms such as SAG \cite{roux2012stochastic}, SVRG \cite{johnson2013accelerating} and SAGA \cite{defazio2014saga} offer better ways of addressing this trade-off, with significant results both in theory and practice. Although designed explicitly for ERM, this algorithms address a problem that affects more general machine learning problems. 
+In RL, stochastic optimization is rarely a matter of choice, since data must be actively sampled by interacting with an initially unknown environment. In this scenario, containing the variance of the estimates is a problem that cannot be avoided, which makes variance-reduced algorithms very interesting.
 % Potential advantages of SVRG
+Among RL approaches, policy gradient is the one that bears the closest similarity to SL solutions. The fundamental principle of this methods is to optimize a parametric policy by means of stochastic gradient descent. Compared to other applications of SGD, the cost of collecting samples can be very high since it requires to interact with the environment. This makes SVRG-like methods potentially much more efficient than, \eg batch learning.
 % Difficulties in RL \wrt SL
+Unfortunately, RL has a series of difficulties that are not present in ERM. First, in SL the objective can often be designed to be strongly convex. This is not possible in RL, so we have to deal with non-convexities. Then, as mentioned, the dataset is not initially available and may even be infinite, which  makes approximations unavoidable. This also rules out SAG and SAGA because of their storage requirements, which leaves SVRG as the most promising choice. Finally, the distribution used to sample data is not under direct control of the algorithm designer, but is a function of policy parameters that changes over time as the policy is optimized, which is a form of nonstationarity.
 
-% Among RL solutions for learning continuous tasks, policy gradient methods bear the closest similarity to SL, since they allow to formulate the RL problem as the unconstrained optimization of an objective function (\ie a negative loss) of policy parameters and data samples.
+% Related work
 
-\section{Preliminaries}
+%Paper structure
+After providing a background on policy gradient and SVRG in Section \ref{sec:pre}, in Section \ref{sec:alg} we address the aforementioned difficulties to design SVRPG, a variant of SVRG for the policy gradient framework. In Section \ref{sec:conv} we provide convergence guarantees for our algorithm which also offers insights on the challenges of variance reduction in RL. In Section \ref{sec:stopping} we suggests how to set the hyperparameters of SVRPG, while in Section \ref{sec:prac} we discuss some practical variants of the algorithm. Finally, in Section \ref{sec:exp} we empirically evaluate the performance of our method on popular continuous RL benchmark tasks.
+
+\section{Preliminaries}\label{sec:pre}
 In this section we provide the essential background on policy gradient methods for Reinforcement Learning and stochastic variance-reduced gradient methods for finite-sum optimization.
 %In the next section we will show how these methods can be combined to solve Reinforcement Learning tasks.
 
@@ -255,7 +257,7 @@ Finite-sum optimization is the problem of maximizing an objective function $f(\v
 This kind of optimization is very common in machine learning, where each $g_i$ may correspond to a data sample $x_i$ from a dataset $\mathcal{D}_N$ of size $N$ (\ie $g_i(\vtheta) = g(x_i|\vtheta)$). 
 %% In this case, we adopt the following, more meaningful notation:
 %% \begin{align*}
-%% \max_{\vtheta} f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}g(x_i \mid \vtheta).
+%% \max_{\vtheta} f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}g(x_i \vert \vtheta).
 %% \end{align*}
 A common requirement is that $g$ must be smooth and {\color{red} concave} in $\vtheta$.\footnote{Note that we are considering a maximization problem instead of the classical minimization one.} Under this hypothesis, full gradient ascent \cite{cauchy1847methode} with a constant step size achieves an Incremental First-order Oracle (IFO) complexity~\citep{agarwal2014lower} of $O(\nicefrac{N}{\epsilon})$, \ie it requires $k = O(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$.\todopirout{Is it $\ell_2$-norm?} 
 This can be too expensive for large values of $N$. Stochastic Gradient (SG) ascent~\citep[\eg][]{robbins1951stochastic,bottou2004large} overcomes this problem by sampling a single sample $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $O(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$. 
@@ -291,8 +293,8 @@ More recently, some extensions of variance reduction algorithms to the non-conve
 		\STATE \begin{align*}
 			\blacktriangledown f(\vtheta_t^{s+1}) = 
 			&\nabla f(\tilde{\vtheta}^s) \\ + 
-			&\nabla g(x_i\mid\vtheta_t^{s+1}) -
-			\nabla g(x_i \mid \tilde{\vtheta}^{s+1})
+			&\nabla g(x_i\vert\vtheta_t^{s+1}) -
+			\nabla g(x_i \vert \tilde{\vtheta}^{s+1})
 		\end{align*}
 		\STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha\blacktriangledown f(\vtheta_t^{s+1})$
 		\ENDFOR
@@ -303,7 +305,7 @@ More recently, some extensions of variance reduction algorithms to the non-conve
 \end{algorithm}
 
 
-\section{Algorithm}\label{sec:algo}
+\section{Algorithm}\label{sec:alg}
 In on-line policy gradient problems, stochastic gradient ascent (SGA) is not really a choice, but is dictated by the necessity of interacting with an unknown environment. We would like to apply SVRG to the policy gradient framework in order to limit the variance introduced by sampling trajectories, which would ultimately lead to faster convergence. In this scenario, the function $f(\vtheta)$ to optimize is $J(\vtheta)$ and the (implicit) dataset $\mathcal{D}$ is the set of all possible trajectories $\mathcal{T}$. Compared to the typical finite sum optimization scenario, we have the following additional challenges:
 \begin{enumerate}
 	\item \textit{Non-convexity}: the objective $J(\vtheta)$ is typically non-convex;
@@ -313,17 +315,17 @@ In on-line policy gradient problems, stochastic gradient ascent (SGA) is not rea
 To deal with non-convexity, we require $J(\vtheta)$ to be L-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and Softmax [appendix?]. Because of the infinite dataset, we can only rely on an estimate of the full gradient. Finally, we employ importance weighting \cite{rubinstein1981simulation} \cite{precup2000eligibility} to guarantee proper sampling of trajectories. 
 We focus on the REINFORCE gradient estimator for simplicity, but the extension to G(PO)MDP is straightforward. The proposed SVRG-like gradient estimate, which we call Stochastic Variance Reduced Policy Gradient (SVRPG), is the following:
 \begin{align*}
-	\blacktriangledown J(\vtheta) &= \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \mid \tilde{\vtheta})\Reward(\tau_j) \\
-		&+ \nabla\log\pi(\tau_i \mid \vtheta)\Reward(\tau_i) 
-		- \omega(\tau_i)\nabla\log\pi(\tau_i \mid \tilde{\vtheta})\Reward(\tau_i),
+	\blacktriangledown J(\vtheta) &= \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \vert \tilde{\vtheta})\Reward(\tau_j) \\
+		&+ \nabla\log\pi(\tau_i \vert \vtheta)\Reward(\tau_i) 
+		- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \tilde{\vtheta})\Reward(\tau_i),
 \end{align*}
-where trajectories $\tau_j$ for $j=1,\dots,N$ are sampled from a snapshot policy $\pi_{\tilde{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pol$, and $\omega(\tau) = \frac{\pi(\tau\mid\tilde{\vtheta})}{\pi(\tau\mid\vtheta)}$ is an importance weight from $\pol$ to the snapshot policy $\pi_{\tilde{\vtheta}}$. 
+where trajectories $\tau_j$ for $j=1,\dots,N$ are sampled from a snapshot policy $\pi_{\tilde{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pol$, and $\omega(\tau) = \frac{\pi(\tau\vert\tilde{\vtheta})}{\pi(\tau\vert\vtheta)}$ is an importance weight from $\pol$ to the snapshot policy $\pi_{\tilde{\vtheta}}$. 
 Our update is still fundamentally on-policy, since the weighting concerns only the correction term. However, this partial "off-policyness" is enough to introduce variance. To mitigate it, we use mini-batches of trajectories of size B to compute the second and the third term, as follows:
 \begin{align*}
-\blacktriangledown J(\vtheta) &= \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \mid \tilde{\vtheta})\Reward(\tau_j) \\
+\blacktriangledown J(\vtheta) &= \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \vert \tilde{\vtheta})\Reward(\tau_j) \\
 &+ \frac{1}{B}\left[\sum_{i=0}^{B-1}
-\nabla\log\pi(\tau_i \mid \vtheta)\Reward(\tau_i) 
-- \omega(\tau_i)\nabla\log\pi(\tau_i \mid \tilde{\vtheta})\Reward(\tau_i)\right].
+\nabla\log\pi(\tau_i \vert \vtheta)\Reward(\tau_i) 
+- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \tilde{\vtheta})\Reward(\tau_i)\right].
 \end{align*}
 The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case \cite{konevcny2016mini} \cite{harikandeh2015stopwasting}. It is easy to show that the SVRPG gradient estimator has the following, desirable properties (detailed proofs in Appendix \ref{app:proofs}):
 \begin{restatable}{lemma}{unbias}\label{lemma:unbias}
@@ -350,18 +352,18 @@ To obtain a method that can be used in practice, a number of additional details 
 	\begin{algorithmic}
 		\STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{m-1}^0$, batch size $N$, mini-batch size B
 		\FOR{$s=0$ {\bfseries to} $S-1$}
-		\STATE Sample N trajectories $\tau_j$ from $\pi(\cdot\mid\tilde{\vtheta}^{s})$
-		\STATE $\gradApp{\tilde{\vtheta}^{s}}{N} = \frac{1}{N}\sum_{j=0}^{N-1}\score{}{\tau_j\mid\tilde{\vtheta}^{s}}\Reward(\tau_j)$
+		\STATE Sample N trajectories $\tau_j$ from $\pi(\cdot\vert\tilde{\vtheta}^{s})$
+		\STATE $\gradApp{\tilde{\vtheta}^{s}}{N} = \frac{1}{N}\sum_{j=0}^{N-1}\score{}{\tau_j\vert\tilde{\vtheta}^{s}}\Reward(\tau_j)$
 		\STATE $\vtheta_0^{s+1} = \tilde{\vtheta}^s = \vtheta_{m-1}^s$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
-		\STATE Sample $B$ trajectories $\tau_i$ from 				$\pi(\cdot\mid\vtheta_t^{s+1})$
+		\STATE Sample $B$ trajectories $\tau_i$ from 				$\pi(\cdot\vert\vtheta_t^{s+1})$
 		\STATE 
 		\begin{align*}
 		\blacktriangledown J(\vtheta_t^{s+1}) = 
 		&\gradApp{\tilde{\vtheta}^s}{N} \\
 		&+\frac{1}{B}\sum_{i=0}^{B-1}\left[ 
-		\score{}{\tau_i\mid\vtheta_t^{s+1}}\Reward(\tau_i)\right. \\
-		&\left. - \omega(\tau_i)\score{}{\tau_i \mid \tilde{\vtheta}^{s}}\Reward(\tau_i)\right]
+		\score{}{\tau_i\vert\vtheta_t^{s+1}}\Reward(\tau_i)\right. \\
+		&\left. - \omega(\tau_i)\score{}{\tau_i \vert \tilde{\vtheta}^{s}}\Reward(\tau_i)\right]
 		\end{align*}
 		\STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha\blacktriangledown J(\vtheta_t^{s+1})$
 		\ENDFOR
@@ -435,7 +437,7 @@ Therefore, the SVRPG algorithm fails in its primary aim of stabilizing the gradi
 A fixed epoch size is not the optimal choice.
 Few sub-iterations lead to few updates, many update lead to increases of variance.
 
-In order to cope with this behaviour we introduce an adaptive stopping condition: we permorm a new snapshot anytime the weighted learning rate proposed by the adam optimizer in a sub-iteration is smaller than the weighted one proposed at the immediately previous snapshot. This stopping condition is subject to a constraint on the maximum number of sub-iterations performable, which is problem dependent.
+In order to cope with this behaviour we introduce an adaptive stopping condition: we perform a new snapshot anytime the weighted learning rate proposed by the adam optimizer in a sub-iteration is smaller than the weighted one proposed at the immediately previous snapshot. This stopping condition is subject to a constraint on the maximum number of sub-iterations performable, which is problem dependent.
 \todomat{I find "two stopping conditions" confusing: it's just one with an additional constraint}
 \todobep{I tried to solve the issue here:hope it's better now}
 We stop with inner iterations if:
@@ -446,23 +448,23 @@ We stop with inner iterations if:
 After that we sample N trajectories for the next Snapshot point.
 
 
-\section{Practical Variants}
-
-As reported in Section \ref{subsec:PolicyGradient} we use G(PO)MDP gradient estimator~\cite{baxter2001infinite}, which gives us the same guarantees we have for the Reinforce Estimator.
+\section{Practical Variants}\label{sec:prac}
+\todomat{Missing opening to section}
+As reported in Section \ref{subsec:PolicyGradient} we use the G(PO)MDP gradient estimator~\cite{baxter2001infinite}, which gives us the same guarantees we have for the Reinforce Estimator.
 One variant in off-policy G(PO)MDP is to use the weighted per-decision importance sampling estimator \cite{precup2000eligibility}, allowing a reduction of the gradient estimator variance. The off-policy gradient estimator becomes:
 \begin{align*}
-\gradApp{\vtheta}{N} = \frac{1}{\Omega}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_k^n\mid s_k^n}\right)\left(\gamma^h r_h^n \omega(z_{0:h})\right).
+\gradApp{\vtheta}{N} = \frac{1}{\Omega}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_k^n\vert s_k^n}\right)\left(\gamma^h r_h^n \omega(z_{0:h})\right).
 \end{align*} 
 where:
 \begin{align*}
-\omega(z_{0:h}) = \prod_{k=0}^{h} \frac{\pi_{\vtheta}({a_k^n\mid s_k^n})
- }{\pi_{\vtheta^{'}}({a_k^n\mid s_k^n})}
+\omega(z_{0:h}) = \prod_{k=0}^{h} \frac{\pi_{\vtheta}({a_k^n\vert s_k^n})
+ }{\pi_{\vtheta^{'}}({a_k^n\vert s_k^n})}
 \end{align*}
 \begin{align*}
-\Omega = \sum_{n=1}^{N}\sum_{h=0}^{H-1}\gamma^h\prod_{k=0}^{h} \frac{\pi_{\vtheta}({a_k^n\mid s_k^n})
-}{\pi_{\vtheta^{'}}({a_k^n\mid s_k^n})}
+\Omega = \sum_{n=1}^{N}\sum_{h=0}^{H-1}\gamma^h\prod_{k=0}^{h} \frac{\pi_{\vtheta}({a_k^n\vert s_k^n})
+}{\pi_{\vtheta^{'}}({a_k^n\vert s_k^n})}
 \end{align*}
-
+\todomat{why should we use it? What advantages do we expect? At what cost? Pointer to experiments}
 \section{Related Work}
 
 \section{Experiments}\label{sec:exp}
@@ -501,13 +503,13 @@ The neural networks is composed of one layer with 8 neurons for Cart-Pole enviro
 
 The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, unbiased way of estimating the gradient:
 \begin{align*}
-\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
+\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
 \end{align*}
 where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline, provided it is constant \wrt to actions.
 \todopir{Actually it can be state-action dependant~\citep[\eg][]{Thomas2017actionbaseline,wu2018variance}.}
 The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance while preserving the unbiasedness:
 \begin{align*}
-\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\mid s_h^n}\right)\left(\gamma^h r_h^n - b\right).
+\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\gamma^h r_h^n - b\right).
 \end{align*}
 
 
@@ -519,16 +521,16 @@ We give some additional definitions which will be useful in the proofs.
 \begin{definition}
 For a random variable $X$:
 \begin{align*}
-	&\mathbb{E}_{t\mid s}\left[X\right] \coloneqq 
-		\mathop{\mathbb{E}}_{\substack{\tau_j\sim\pi(\cdot\mid\tilde{\vtheta}^s)\forall j \in {\it {\bf N}} \\ \tau_{i,h}\sim\pi(\cdot\mid\vtheta^{s+1}_i) \forall h \in {\it {\bf B}}, \text{ for $i=0,\dots,t-1$}}}{\left[X \mid \tilde{\vtheta^s}\right]} \\
-	&\coloneqq \EVV[\tau_j\sim\pi(\cdot\mid\tilde{\vtheta}^s)\forall j \in {\it {\bf N}}]{
-			\EVV[\tau_{0,h}\sim\pi(\cdot\mid\vtheta_0^{s+1}) \forall h \in {\it {\bf B}}]
+	&\mathbb{E}_{t\vert s}\left[X\right] \coloneqq 
+		\mathop{\mathbb{E}}_{\substack{\tau_j\sim\pi(\cdot\vert\tilde{\vtheta}^s)\forall j \in {\it {\bf N}} \\ \tau_{i,h}\sim\pi(\cdot\vert\vtheta^{s+1}_i) \forall h \in {\it {\bf B}}, \text{ for $i=0,\dots,t-1$}}}{\left[X \vert \tilde{\vtheta^s}\right]} \\
+	&\coloneqq \EVV[\tau_j\sim\pi(\cdot\vert\tilde{\vtheta}^s)\forall j \in {\it {\bf N}}]{
+			\EVV[\tau_{0,h}\sim\pi(\cdot\vert\vtheta_0^{s+1}) \forall h \in {\it {\bf B}}]
 				{\dots
-					\EVV[\tau_{t,h}\sim\pi(\cdot\mid\vtheta_t^{s+1})\forall h \in {\it {\bf B}}]
-						{X\mid\vtheta_t^{s+1}}
+					\EVV[\tau_{t,h}\sim\pi(\cdot\vert\vtheta_t^{s+1})\forall h \in {\it {\bf B}}]
+						{X\vert\vtheta_t^{s+1}}
 				 \dots
-			\mid\vtheta_0^{s+1}}
-		\mid\tilde{\vtheta}^s},
+			\vert\vtheta_0^{s+1}}
+		\vert\tilde{\vtheta}^s},
 \end{align*}
 where the sequence $\tilde{\vtheta}^s,\vtheta_0^{s+1},\dots,\vtheta_t^{s+1}$ is defined in Algorithm \ref{alg:svrpg}, ${\it {\bf N}}$ is the amount of trajectories sampled for the snapshot and ${\it {\bf B}}$ is the amount of trajectories sampled for a sub iteration. 
 \end{definition}
@@ -546,8 +548,8 @@ The ideal SVRPG gradient estimate is:
 \begin{align*}
 	\gradIdeal{\vtheta_t^{s+1}} &\coloneqq 
 	\gradJ{\tilde{\vtheta}^s}
-	+ \nabla\log\pi(\tau_i \mid \vtheta_t^{s+1})\Reward(\tau_i) 
-	- \omega(\tau_i)\nabla\log\pi(\tau_i \mid \tilde{\vtheta}^s)\Reward(\tau_i) \\
+	+ \nabla\log\pi(\tau_i \vert \vtheta_t^{s+1})\Reward(\tau_i) 
+	- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \tilde{\vtheta}^s)\Reward(\tau_i) \\
 	&= \gradBlack{\vtheta_t^{s+1}} - \gradApp{\tilde{\vtheta}^s}{N} + \gradJ{\tilde{\vtheta}^s} \\
 	&= \gradBlack{\vtheta_t^{s+1}} - e_s
 \end{align*}
@@ -618,7 +620,7 @@ Under Assumption \ref{ass:bounded_score}
 			-\frac{1}{B}\sum_{i=0}^{B-1}
 			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
 	%
-	&= \mathbb{E}_{t\mid s}\left[\left\|\gradApp{\tilde{\vtheta}^s}{N}
+	&= \mathbb{E}_{t\vert s}\left[\left\|\gradApp{\tilde{\vtheta}^s}{N}
 			+\frac{1}{B}\sum_{i=0}^{B-1}\left( 
 			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)
@@ -629,7 +631,7 @@ Under Assumption \ref{ass:bounded_score}
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
 	+\Ets[]{\norm[]{\gradApp{\tilde{\vtheta}^s}{N} - \Ets[]{\gradApp{\tilde{\vtheta}^s}{N}}}^2} \nonumber\\
 	&\qquad+ 
-	\mathbb{E}_{t\mid s}\left[\left\|
+	\mathbb{E}_{t\vert s}\left[\left\|
 		\frac{1}{B}\sum_{i=0}^{B-1}\left(
 		\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)
@@ -644,7 +646,7 @@ Under Assumption \ref{ass:bounded_score}
 	+\frac{1}{N}\Tr\Varts[]{\gradApp{\tilde{\vtheta}^s}{1}}
 	\nonumber\\
 	&\qquad+ 
-		\mathbb{E}_{t\mid s}\left[\left\|
+		\mathbb{E}_{t\vert s}\left[\left\|
 		\frac{1}{B}\sum_{i=0}^{B-1}\left(
 		\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
 		\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)
