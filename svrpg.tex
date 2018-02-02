@@ -427,7 +427,7 @@ We use two different adam hyperparameters: one for updates tied to snapshot poin
 \todomat{$\uparrow$ explain better: it's not only two separate meta-parameters, but two separate learning rate schedules. Use notation from previous sections, \eg snaphot is usually associated with $\tilde{\vtheta}$} 
 This is because we are dealing with two different variance magnitudes.
 \todomat{$\uparrow$ the reason is this, but try to spend more words on it}
-Denote by $\alpha_{snap}$ the last learning rate computed into the snapshot point and denote by  $\alpha_{sub-iter}$ the last learning rate computed into the sub-iteration point.
+Denote by $\alpha_{snap}$ the learning rate associated to the last snapshot and denote by  $\alpha_{sub-iter}$ the learning rate associated to the current sub-iteration.
 
 As shown in Section \ref{sec:conv}, the performance of the SVRPG algorithm is sensitive to the epoch size $m$.
 As the number of sub-iterations increases, the variance of the importance weights and the gradient increases too.
