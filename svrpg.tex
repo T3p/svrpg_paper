@@ -449,6 +449,10 @@ These two weights ${\bf{\it N}}$ and ${\bf{\it B}}$ represent, respectively, the
 
 \section{Practical Variants}
 
+We introduce a term with importance weights to guarantee proper sampling of trajectories.
+This term's variance is subjected to the variance of importance weights. 
+There are some methods to reduce this variance.
+
 As reported in Section \ref{subsec:PolicyGradient} we use G(PO)MDP gradient estimator~\cite{baxter2001infinite}, which gives us the same guarantees we have for the Reinforce Estimator.
 One variant in off-policy G(PO)MDP is to use the weighted per-decision importance sampling estimator \cite{precup2000eligibility}, allowing a reduction of the gradient estimator variance. The off-policy gradient estimator becomes:
 \begin{align*}
