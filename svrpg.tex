@@ -435,8 +435,9 @@ Therefore, the SVRPG algorithm fails in its primary aim of stabilizing the gradi
 A fixed epoch size is not the optimal choice.
 Few sub-iterations lead to few updates, many update lead to increases of variance.
 
-We introduce two stopping conditions: the maximum number of sub-iterations and the condition on learning rate of Adam sub-iterations.
+In order to cope with this behaviour we introduce an adaptive stopping condition: we permorm a new snapshot anytime the learning rate proposed by the adam optimizer in a sub-iteration is 10 times smaller than that one proposed at the immediately previous snapshot. This stopping condition is subject to a constraint on the maximum number of sub-iterations performable, which is problem dependent.
 \todomat{I find "two stopping conditions" confusing: it's just one with an additional constraint}
+\todobep{I tried to solve the issue here:hope it's better now}
 We stop with inner iterations if:
 
 \[\frac{\alpha_{snap}}{N}>\frac{\alpha_{sub-iter}}{B}\]
