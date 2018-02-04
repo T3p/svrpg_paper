@@ -190,13 +190,13 @@ Why we need variance-reduced gradient in RL?
 %Similarities between RL and SL
 On a very general level, machine learning addresses the problem of an agent that must select the right actions to solve a task. The approach of Reinforcement Learning~\citep{sutton1998reinforcement} is to learn the best actions by direct interaction with the environment and evaluation of the performance in the form of a reward signal. This makes RL fundamentally different from Supervised Learning (SL), where correct actions are explicitly prescribed by a human teacher (\eg for classification, in the form of class labels). However, the two approaches share many challenges and tools. The problem of estimating a model from samples, which is at the core of SL, is equally fundamental in RL, whether we choose to model the environment, a value function, or a policy of behaviour directly. Moreover, when the tasks are characterized by large or continuous state-action spaces, RL needs to borrow the powerful function approximators that are the main subject of study of SL, such as neural networks.
 % SL needs SVRG so RL
-In a typical SL setting, a performance function $J(\vtheta)$ has to be optimized \wrt to model parameters $\vtheta$. The set of data that are available for training is often a subset of all the data of interest, which may even be infinite, leading to optimization of finite sums to approximate expected performance over an unknown data distribution. When generalization to the complete dataset is not taken into consideration we talk about Empirical Risk Minization (ERM). Even in this case, stochastic optimization is often used for reasons of efficiency. The idea of stochastic gradient descent \cite{nesterov2013introductory} is to iteratively focus on a random subset of the available data to obtain an approximate improvement direction. At the level of the single iteration, this can be much less expensive than taking into account all the data. However, the sub-sampling of data samples is a source of variance that can potentially compromise convergence, so that per-iteration efficiency and convergence rate must be traded off with proper handling of meta-parameters.
+In a typical SL setting, a performance function $J(\vtheta)$ has to be optimized \wrt to model parameters $\vtheta$. The set of data that are available for training is often a subset of all the cases of interest, which may even be infinite, leading to optimization of finite sums to approximate expected performance over an unknown data distribution. When generalization to the complete dataset is not taken into consideration we talk about Empirical Risk Minization (ERM). Even in this case, stochastic optimization is often used for reasons of efficiency. The idea of stochastic gradient ascent \cite{nesterov2013introductory} is to iteratively focus on a random subset of the available data to obtain an approximate improvement direction. At the level of the single iteration, this can be much less expensive than taking into account all the data. However, the sub-sampling of data samples is a source of variance that can potentially compromise convergence, so that per-iteration efficiency and convergence rate must be traded off with proper handling of meta-parameters.
 Variance-reduced gradient algorithms such as SAG \cite{roux2012stochastic}, SVRG \cite{johnson2013accelerating} and SAGA \cite{defazio2014saga} offer better ways of addressing this trade-off, with significant results both in theory and practice. Although designed explicitly for ERM, this algorithms address a problem that affects more general machine learning problems. 
 In RL, stochastic optimization is rarely a matter of choice, since data must be actively sampled by interacting with an initially unknown environment. In this scenario, containing the variance of the estimates is a problem that cannot be avoided, which makes variance-reduced algorithms very interesting.
 % Potential advantages of SVRG
-Among RL approaches, policy gradient is the one that bears the closest similarity to SL solutions. The fundamental principle of this methods is to optimize a parametric policy by means of stochastic gradient descent. Compared to other applications of SGD, the cost of collecting samples can be very high since it requires to interact with the environment. This makes SVRG-like methods potentially much more efficient than, \eg batch learning.
+Among RL approaches, policy gradient \cite{sutton2000policy} is the one that bears the closest similarity to SL solutions. The fundamental principle of this methods is to optimize a parametric policy by means of stochastic gradient ascent. Compared to other applications of SGD, the cost of collecting samples can be very high since it requires to interact with the environment. This makes SVRG-like methods potentially much more efficient than, \eg batch learning.
 % Difficulties in RL \wrt SL
-Unfortunately, RL has a series of difficulties that are not present in ERM. First, in SL the objective can often be designed to be strongly convex. This is not possible in RL, so we have to deal with non-convexities. Then, as mentioned, the dataset is not initially available and may even be infinite, which  makes approximations unavoidable. This also rules out SAG and SAGA because of their storage requirements, which leaves SVRG as the most promising choice. Finally, the distribution used to sample data is not under direct control of the algorithm designer, but is a function of policy parameters that changes over time as the policy is optimized, which is a form of nonstationarity.
+Unfortunately, RL has a series of difficulties that are not present in ERM. First, in SL the objective can often be designed to be strongly concave. This is not possible in RL, so we have to deal with non-concavities. Then, as mentioned, the dataset is not initially available and may even be infinite, which  makes approximations unavoidable. This also rules out SAG and SAGA because of their storage requirements, which leaves SVRG as the most promising choice. Finally, the distribution used to sample data is not under direct control of the algorithm designer, but is a function of policy parameters that changes over time as the policy is optimized, which is a form of nonstationarity.
 
 % Related work?
 
@@ -245,8 +245,8 @@ The main limitation of plain policy gradient has been the high variance of these
 The naive approach of increasing the batch size is not an option in RL due to the high cost of collecting samples, \ie by interacting with the environment.
 For this reason, literature has focused on the introduction of baselines aiming to reduce the variance~\citep[\eg][]{Peters2008reinf,Thomas2017actionbaseline,wu2018variance}.\footnote{A baseline is a function $f(s,a)$ such that $\EVV[a \sim \pol]{f(s,a)} = 0$, for any $s\in\Sspace$.}
 There has been a surge of recent interest in variance reduction techniques for gradient optimization in supervised learning.
-Altough, these techniques has been mainly derived for finite-sum problems, we will show in Sec.~\ref{sec:alg} how can be used in RL.
-The next section has the aim to describe variance-reduction techniques for finite-sum problems. In particular, we will present the SVRG algorithm that is at the core of this work.
+Altough these techniques has been mainly derived for finite-sum problems, we will show in Sec.~\ref{sec:alg} how they can be used in RL.
+The next section has the aim to describe variance reduction techniques for finite-sum problems. In particular, we will present the SVRG algorithm that is at the core of this work.
 
 
 \subsection{Stochastic Variance-Reduced Gradient}
@@ -260,8 +260,7 @@ This kind of optimization is very common in machine learning, where each $g_i$ m
 %% \max_{\vtheta} f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}g(x_i \vert \vtheta).
 %% \end{align*}
 A common requirement is that $g$ must be smooth and {\color{red} concave} in $\vtheta$.\footnote{Note that we are considering a maximization problem instead of the classical minimization one.} Under this hypothesis, full gradient ascent~\citep{cauchy1847methode} with a constant step size achieves an Incremental First-order Oracle (IFO) complexity~\citep{agarwal2014lower} of $O(\nicefrac{N}{\epsilon})$, \ie it requires $k = O(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[2]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$.\footnote{In the following we will omit the subscript for the $\ell_2$-norm.} 
-This can be too expensive for large values of $N$. Stochastic Gradient (SG) ascent~\citep[\eg][]{robbins1951stochastic,bottou2004large} overcomes this problem by sampling a single sample $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $O(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$. 
-\todopir{What is the reference?}
+This can be too expensive for large values of $N$. Stochastic Gradient (SG) ascent~\citep[\eg][]{robbins1951stochastic,bottou2004large} overcomes this problem by sampling a single sample $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $O(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$~\cite{nemirovskii1983problem,reddi2016stochastic}.
 Starting from SAG, a series of variations to SG have been proposed to achieve a better trade-off between convergence speed and cost per iteration: \eg SAG~\citep{roux2012stochastic}, SVRG~\cite{johnson2013accelerating}, SAGA~\cite{defazio2014saga} and Finito~\cite{defazio2014finito}, 
 The common idea is to reuse past gradient computations to reduce the variance of the current estimate.
 In particular, Stochastic Variance-Reduced Gradient (SVRG) is often preferred to other similar methods for its limited storage requirements, which can become a problem when deep and/or wide neural networks are employed.  
@@ -386,38 +385,39 @@ To obtain a method that can be used in practice, a number of additional details 
 
 \section{Convergence Guarantees}\label{sec:conv}
 In this section we adapt existing convergence guarantees for nonconvex SVRG \cite{reddi2016stochastic} \cite{allen2016variance} to the Policy Gradient framework.
-Each of the three challenges presented at the beginning of Section \ref{sec:algo} can potentially prevent convergence, so we need additional assumptions:
+Each of the three challenges presented at the beginning of Section \ref{sec:alg} can potentially prevent convergence, so we need additional assumptions:
 \begin{enumerate}
 \item \textit{Non-convexity}:
 	as already mentioned, a common assumption for nonconvex optimization is the L-smoothness of the objective. We actually require the following, which is stronger:
-	\begin{assumption}\label{ass:bounded_score}
+	\begin{restatable}[On policy derivatives]{assumption}{boundedscore}\label{ass:bounded_score}
 		For each trajectory $\tau$, value of $\vtheta$ and dimensions $i,j$ there are positive constants $G,F<\infty$ such that:
 		\begin{align*}
 		&\left|\nabla_{\theta_i}\log\pi_{\vtheta}(\tau)\right| \leq \GRADLOG \\
 		&\left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau)\right| \leq \HESSLOG
 		\end{align*}
-	\end{assumption}
-	This property is satisfied by the commonly used truncated Gaussian policy, and is a sufficient condition for the L-smoothness of the objective (see Lemma \ref{lemma:lsmooth} in the appendix).
+	\end{restatable}
+	This property is a sufficient condition for the L-smoothness of the objective (see Lemma \ref{lemma:lsmooth} in the appendix).
 \item \textit{Approximation}:
 since we can only compute an estimate of the full gradient, we require its variance to be bounded:
-	\begin{assumption}\label{ass:REINFORCE}
+	\begin{restatable}[On the variance of the gradient estimator]{assumption}{varreinforce}\label{ass:REINFORCE}
 		There is a constant $V<\infty$ such that, for each policy $\pol$:
 		\[
 		\Tr\mathbb{V}ar\left(\gradApp{\vtheta}{1}\right) \leq \VARRF.
 		\]
-	\end{assumption}
-This assumption is satisfied by the REINFORCE and G(PO)MDP estimators and Gaussian policies \cite{zhao2011analysis} \cite{pirotta2013adaptive}. The problem of full gradient approximation for SVRG has been addressed in the supervised learning framework \cite{harikandeh2015stopwasting} with results similar to ours.
+	\end{restatable}
+The problem of full gradient approximation for SVRG has been addressed in the supervised learning framework \cite{harikandeh2015stopwasting} with results similar to ours.
 \item \textit{Non-stationarity}:
 the variance introduced by importance sampling must be bounded:
-	\begin{assumption}\label{ass:M2}
+	\begin{restatable}[On the variance of importance weights]{assumption}{varweights}\label{ass:M2}
 		There is a constant $W<\infty$ such that, for each pair of policies encountered in Algorithm \ref{alg:svrpg} and for each possible trajectory,
 		\[
 		\mathbb{V}ar\left(\omega(\tau)\right) \leq \VARIS.
 		\]
-	\end{assumption}
-Differently from the previous two, this assumption must be enforced by a proper handling of the epoch size $m$.
+	\end{restatable}
+Differently from the previous two, this assumption can be enforced by a proper handling of the epoch size $m$.
 \end{enumerate}
 
+In Appendix \ref{app:gauss} we show how the commonly used Gaussian policy satisfies these assumptions.
 We can now state the following key result:
 \begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
 Under Assumptions \ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Algorithm \ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size $\alpha$ and the epoch size $m$, the following property:
@@ -513,9 +513,8 @@ The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, u
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
 \end{align*}
-where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline, provided it is constant \wrt to actions.
-\todopir{Actually it can be state-action dependant~\citep[\eg][]{Thomas2017actionbaseline,wu2018variance}.}
-The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance while preserving the unbiasedness:
+where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline provided $\EVV[a \sim \pol]{b(s,a)} = 0$, for any $s\in\Sspace$.
+The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance \cite{zhao2011analysis} while preserving the unbiasedness:
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\gamma^h r_h^n - b\right).
 \end{align*}
@@ -523,6 +522,7 @@ The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REI
 
 
 \section{Proofs}\label{app:proofs}
+In this Appendix we prove all the claims made in the paper, with the primary objective of proving Theorem \ref{theo:convergence}. Our proof is adapted from the one of Theorem 2 from \cite{reddi2016stochastic} and has a very similar structure, but with all the additional challenges and assumptions described in Section \ref{sec:conv}.
 
 \subsection*{Definitions}
 We give some additional definitions which will be useful in the proofs.
@@ -540,7 +540,7 @@ For a random variable $X$:
 			\vert\vtheta_0^{s+1}}
 		\vert\tilde{\vtheta}^s},
 \end{align*}
-where the sequence $\tilde{\vtheta}^s,\vtheta_0^{s+1},\dots,\vtheta_t^{s+1}$ is defined in Algorithm \ref{alg:svrpg}, ${\it {\bf N}}$ is the amount of trajectories sampled for the snapshot and ${\it {\bf B}}$ is the amount of trajectories sampled for a sub iteration. 
+where the sequence $\tilde{\vtheta}^s,\vtheta_0^{s+1},\dots,\vtheta_t^{s+1}$ is defined in Algorithm \ref{alg:svrpg}, ${\it {\bf N}} = [0,\dots,N)$, and ${\it {\bf B}} = [0,\dots,B)$. 
 \end{definition}
 Intuitively, the $\Ets{\cdot}$ operator computes the expected value with respect to the sampling of trajectories from the snapshot $\tilde{\vtheta}^s$ up to the $t$-th iteration included. Note that the order in which expected values are taken is important since each $\vtheta_{t}^{s+1}$ is function of previously sampled trajectories and is used to sample new ones.
 
@@ -962,8 +962,42 @@ Finally, we consider the expectation \wrt all sources of randomness, including t
 \end{align}
 \end{proof}
 
-\section{Applicability to Gaussian Policies}\label{app:pol}
-\todomat{...}
+\section{Applicability to Gaussian Policies}\label{app:gauss}
+We provide more details on the applicability of Theorem \ref{theo:convergence} on the case of Gaussian policies. We start from the case of one-dimensional bounded action space $\mathcal{A}\subset\mathbb{R}$, linear mean $\mu(s) = \vtheta^T\vphi(s)$ and fixed standard deviation $\sigma$:
+\[
+	\pi_{\vtheta}(a\vert s) = \frac{1}{\sqrt{2\pi}\sigma}\exp\left\{
+		-\frac{(\vtheta^T\vphi(s) - a)^2}{2\sigma^2}\right\},
+\]
+where $\vphi(s)\leq M_{\phi}$ is a bounded feature vector, and we see under which conditions the three assumptions of Section \ref{sec:conv} hold.
+
+\boundedscore*
+For the Gaussian policy defined above, it's easy to show that:
+\begin{align*}
+	&\nabla_{\theta_i}\log\pi_{\vtheta}(\tau) =  \phi_i(s)\frac{a-\vtheta^T\phi(s)}{\sigma^2},\\
+	&\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau) = \frac{\phi_i(s)\phi_j(s)}{\sigma^2}.
+\end{align*}
+Hence, Assumption \ref{ass:bounded_score} is automatically satisfied \footnote{This relies on the fact that $\vtheta^T\phi(s)$ lies in bounded $\Aspace$. In practice, this is usually enforced by clipping the action selected by $\pi_{\vtheta}$. A more rigorous way would be to employ the truncated Gaussian distribution.} by taking $\GRADLOG = \frac{M_{\phi}|\Aspace|}{\sigma^2}$ and $\HESSLOG = \frac{M_{\phi}^2}{\sigma^2}$.
+\par
+\varreinforce*
+As mentioned, \cite{pirotta2013adaptive} provides a bound on the variance of the REINFORCE estimator, adapted from \cite{zhao2011analysis}, which does not depend on $\vtheta$:
+\begin{align*}
+\Var\left[\gradApp{\theta_i}{N}\right] \leq \frac{R^2M_{\phi}^2H(1-\gamma^H)^2}{N\sigma^2(1-\gamma)^2}.
+\end{align*}
+The same authors provide a similar bound for G(PO)MDP.
+
+\varweights*
+It is noted in \cite{cortes2010learning} that, for any two Gaussian distributions $\mathcal{N}(\mu_1,\sigma_1)$ and $\mathcal{N}(\mu_2,\sigma_2)$, the variance of the importance weights from the latter to the former is bounded whenever $\sigma_2 > \frac{\sqrt{2}}{2}\sigma_1$. This is automatically satisfied by our fixed-variance Gaussian policies, since $\sigma_2=\sigma_1=\sigma$.
+
+We now briefly examine some generalizations of the simple Gaussian policy defined above that can be found in applications:
+
+\paragraph{Multi-dimensional actions}
+When actions are multi-dimensional, factored Gaussian policies are typically employed, so the results extends trivially from the one-dimensional case. Actual multi-variate Gaussian distributions would require more calculations, but we do not expect substantially different results.
+
+\paragraph{Non-linear mean}
+In complex continuous tasks, $\mu(s)$ often represents a deep neural network, or multi-layer perceptron, where $\vtheta$ are the weights of the network. The analysis of first and second order log-derivatives in such a scenario is beyond the scope of this paper.
+
+\paragraph{Adaptive variance}
+It is a common practice to learn also the variance of the policy in order to adapt the degree of exploration. The variance (or diagonal covariance matrix in the multi-dimensional case) can be learned as a separate parameter or be state-dependent like the mean. In any case, adaptive variance must be carefully employed since it can clearly undermine all the three assumptions of Theorem \ref{theo:convergence}.
 
 \section{Experimental Details}\label{app:exp}
 Setting specifications for all the used environments:
