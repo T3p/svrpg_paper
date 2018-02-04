@@ -377,34 +377,35 @@ Each of the three challenges presented at the beginning of Section \ref{sec:alg}
 \begin{enumerate}
 \item \textit{Non-convexity}:
 	as already mentioned, a common assumption for nonconvex optimization is the L-smoothness of the objective. We actually require the following, which is stronger:
-	\begin{assumption}\label{ass:bounded_score}
+	\begin{restatable}[On policy derivatives]{assumption}{boundedscore}\label{ass:bounded_score}
 		For each trajectory $\tau$, value of $\vtheta$ and dimensions $i,j$ there are positive constants $G,F<\infty$ such that:
 		\begin{align*}
 		&\left|\nabla_{\theta_i}\log\pi_{\vtheta}(\tau)\right| \leq \GRADLOG \\
 		&\left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau)\right| \leq \HESSLOG
 		\end{align*}
-	\end{assumption}
-	This property is satisfied by the commonly used truncated Gaussian policy, and is a sufficient condition for the L-smoothness of the objective (see Lemma \ref{lemma:lsmooth} in the appendix).
+	\end{restatable}
+	This property is a sufficient condition for the L-smoothness of the objective (see Lemma \ref{lemma:lsmooth} in the appendix).
 \item \textit{Approximation}:
 since we can only compute an estimate of the full gradient, we require its variance to be bounded:
-	\begin{assumption}\label{ass:REINFORCE}
+	\begin{restatable}[On the variance of the gradient estimator]{assumption}{varreinforce}\label{ass:REINFORCE}
 		There is a constant $V<\infty$ such that, for each policy $\pol$:
 		\[
 		\Tr\mathbb{V}ar\left(\gradApp{\vtheta}{1}\right) \leq \VARRF.
 		\]
-	\end{assumption}
-This assumption is satisfied by the REINFORCE and G(PO)MDP estimators and Gaussian policies \cite{zhao2011analysis} \cite{pirotta2013adaptive}. The problem of full gradient approximation for SVRG has been addressed in the supervised learning framework \cite{harikandeh2015stopwasting} with results similar to ours.
+	\end{restatable}
+The problem of full gradient approximation for SVRG has been addressed in the supervised learning framework \cite{harikandeh2015stopwasting} with results similar to ours.
 \item \textit{Non-stationarity}:
 the variance introduced by importance sampling must be bounded:
-	\begin{assumption}\label{ass:M2}
+	\begin{restatable}[On the variance of importance weights]{assumption}{varweights}\label{ass:M2}
 		There is a constant $W<\infty$ such that, for each pair of policies encountered in Algorithm \ref{alg:svrpg} and for each possible trajectory,
 		\[
 		\mathbb{V}ar\left(\omega(\tau)\right) \leq \VARIS.
 		\]
-	\end{assumption}
-Differently from the previous two, this assumption must be enforced by a proper handling of the epoch size $m$.
+	\end{restatable}
+Differently from the previous two, this assumption can be enforced by a proper handling of the epoch size $m$.
 \end{enumerate}
 
+In Appendix \ref{app:gauss} we show how the commonly used Gaussian policy satisfies these assumptions.
 We can now state the following key result:
 \begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
 Under Assumptions \ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Algorithm \ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size $\alpha$ and the epoch size $m$, the following property:
@@ -500,9 +501,8 @@ The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, u
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
 \end{align*}
-where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline, provided it is constant \wrt to actions.
-\todopir{Actually it can be state-action dependant~\citep[\eg][]{Thomas2017actionbaseline,wu2018variance}.}
-The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance while preserving the unbiasedness:
+where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline provided $\EVV[a \sim \pol]{b(s,a)} = 0$, for any $s\in\Sspace$.
+The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance \cite{zhao2011analysis} while preserving the unbiasedness:
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\gamma^h r_h^n - b\right).
 \end{align*}
@@ -949,8 +949,42 @@ Finally, we consider the expectation \wrt all sources of randomness, including t
 \end{align}
 \end{proof}
 
-\section{Applicability to Gaussian Policies}\label{app:pol}
-\todomat{...}
+\section{Applicability to Gaussian Policies}\label{app:gauss}
+We provide more details on the applicability of Theorem \ref{theo:convergence} on the case of Gaussian policies. We start from the case of one-dimensional bounded action space $\mathcal{A}\subset\mathbb{R}$, linear mean $\mu(s) = \vtheta^T\vphi(s)$ and fixed standard deviation $\sigma$:
+\[
+	\pi_{\vtheta}(a\vert s) = \frac{1}{\sqrt{2\pi}\sigma}\exp\left\{
+		-\frac{(\vtheta^T\vphi(s) - a)^2}{2\sigma^2}\right\},
+\]
+where $\vphi(s)\leq M_{\phi}$ is a bounded feature vector, and we see under which conditions the three assumptions of Section \ref{sec:conv} hold.
+
+\boundedscore*
+For the Gaussian policy defined above, it's easy to show that:
+\begin{align*}
+	&\nabla_{\theta_i}\log\pi_{\vtheta}(\tau) =  \phi_i(s)\frac{a-\vtheta^T\phi(s)}{\sigma^2},\\
+	&\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau) = \frac{\phi_i(s)\phi_j(s)}{\sigma^2}.
+\end{align*}
+Hence, Assumption \ref{ass:bounded_score} is automatically satisfied \footnote{This relies on the fact that $\vtheta^T\phi(s)$ lies in bounded $\Aspace$. In practice, this is usually enforced by clipping the action selected by $\pi_{\vtheta}$. A more rigorous way would be to employ the truncated Gaussian distribution.} by taking $\GRADLOG = \frac{M_{\phi}|\Aspace|}{\sigma^2}$ and $\HESSLOG = \frac{M_{\phi}^2}{\sigma^2}$.
+\par
+\varreinforce*
+As mentioned, \cite{pirotta2013adaptive} provides a bound on the variance of the REINFORCE estimator, adapted from \cite{zhao2011analysis}, which does not depend on $\vtheta$:
+\begin{align*}
+\Var\left[\gradApp{\theta_i}{N}\right] \leq \frac{R^2M_{\phi}^2H(1-\gamma^H)^2}{N\sigma^2(1-\gamma)^2}.
+\end{align*}
+The same authors provide a similar bound for G(PO)MDP.
+
+\varweights*
+It is noted in \cite{cortes2010learning} that, for any two Gaussian distributions $\mathcal{N}(\mu_1,\sigma_1)$ and $\mathcal{N}(\mu_2,\sigma_2)$, the variance of the importance weights from the latter to the former is bounded whenever $\sigma_2 > \frac{\sqrt{2}}{2}\sigma_1$. This is automatically satisfied by our fixed-variance Gaussian policies, since $\sigma_2=\sigma_1=\sigma$.
+
+We now briefly examine some generalizations of the simple Gaussian policy defined above that can be found in applications:
+
+\paragraph{Multi-dimensional actions}
+When actions are multi-dimensional, factored Gaussian policies are typically employed, so the results extends trivially from the one-dimensional case. Actual multi-variate Gaussian distributions would require more calculations, but we do not expect substantially different results.
+
+\paragraph{Non-linear mean}
+In complex continuous tasks, $\mu(s)$ often represents a deep neural network, or multi-layer perceptron, where $\vtheta$ are the weights of the network. The analysis of first and second order log-derivatives in such a scenario is beyond the scope of this paper.
+
+\paragraph{Adaptive variance}
+It is a common practice to learn also the variance of the policy in order to adapt the degree of exploration. The variance (or diagonal covariance matrix in the multi-dimensional case) can be learned as a separate parameter or be state-dependent like the mean. In any case, adaptive variance must be carefully employed since it can clearly undermine all the three assumptions of Theorem \ref{theo:convergence}.
 
 \section{Experimental Details}\label{app:exp}
 Setting specifications for all the used environments:
