@@ -188,28 +188,33 @@
 \printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
 
 \begin{abstract}
-Why we need variance-reduced gradient in RL?
+        We present and analyse stochastic variance-reduced gradient (SVRG) in the context of Markov Decision Processes (MDPs).
+        We first show how to account for I) non-concativity of the objective function; II) approximations in the full gradient computation; and III) non-stationarity of the sampling process.
+        These characteristics make the application of SVRG to MDPs challenging.
+        We propose SVRPG, a stochastic variance-reduced policy gradient algorithm that leverages on importance weight to preserve the unbiasedness of the gradient estimate.
+        We further analyse its convergence guarantees under common assumptions on the MDP.
+        Finally, we investigate practical variants of SVRPG and we empirically evaluate them on continuous MDPs.
 \end{abstract}
 
 \section{Introduction}
 %Similarities between RL and SL
 On a very general level, machine learning addresses the problem of an agent that must select the right actions to solve a task. The approach of Reinforcement Learning~\citep{sutton1998reinforcement} is to learn the best actions by direct interaction with the environment and evaluation of the performance in the form of a reward signal. This makes RL fundamentally different from Supervised Learning (SL), where correct actions are explicitly prescribed by a human teacher (\eg for classification, in the form of class labels). However, the two approaches share many challenges and tools. The problem of estimating a model from samples, which is at the core of SL, is equally fundamental in RL, whether we choose to model the environment, a value function, or a policy of behaviour directly. Moreover, when the tasks are characterized by large or continuous state-action spaces, RL needs to borrow the powerful function approximators that are the main subject of study of SL, such as neural networks.
 % SL needs SVRG so RL
-In a typical SL setting, a performance function $J(\vtheta)$ has to be optimized \wrt to model parameters $\vtheta$. The set of data that are available for training is often a subset of all the cases of interest, which may even be infinite, leading to optimization of finite sums to approximate expected performance over an unknown data distribution. When generalization to the complete dataset is not taken into consideration we talk about Empirical Risk Minization (ERM). Even in this case, stochastic optimization is often used for reasons of efficiency. The idea of stochastic gradient ascent \cite{nesterov2013introductory} is to iteratively focus on a random subset of the available data to obtain an approximate improvement direction. At the level of the single iteration, this can be much less expensive than taking into account all the data. However, the sub-sampling of data samples is a source of variance that can potentially compromise convergence, so that per-iteration efficiency and convergence rate must be traded off with proper handling of meta-parameters.
-Variance-reduced gradient algorithms such as SAG \cite{roux2012stochastic}, SVRG \cite{johnson2013accelerating} and SAGA \cite{defazio2014saga} offer better ways of addressing this trade-off, with significant results both in theory and practice. Although designed explicitly for ERM, this algorithms address a problem that affects more general machine learning problems. 
+In a typical SL setting, a performance function $J(\vtheta)$ has to be optimized \wrt to model parameters $\vtheta$. The set of data that are available for training is often a subset of all the cases of interest, which may even be infinite, leading to optimization of finite sums to approximate expected performance over an unknown data distribution. When generalization to the complete dataset is not taken into consideration we talk about Empirical Risk Minization (ERM). Even in this case, stochastic optimization is often used for reasons of efficiency. The idea of stochastic gradient (SG) ascent \cite{nesterov2013introductory} is to iteratively focus on a random subset of the available data to obtain an approximate improvement direction. At the level of the single iteration, this can be much less expensive than taking into account all the data. However, the sub-sampling of data is a source of variance that can potentially compromise convergence, so that per-iteration efficiency and convergence rate must be traded off with proper handling of meta-parameters.
+Variance-reduced gradient algorithms such as SAG \cite{roux2012stochastic}, SVRG \cite{johnson2013accelerating} and SAGA \cite{defazio2014saga} offer better ways of addressing this trade-off, with significant results both in theory and practice. Although designed explicitly for ERM, these algorithms address a problem that affects more general machine learning problems. 
 In RL, stochastic optimization is rarely a matter of choice, since data must be actively sampled by interacting with an initially unknown environment. In this scenario, containing the variance of the estimates is a problem that cannot be avoided, which makes variance-reduced algorithms very interesting.
 % Potential advantages of SVRG
-Among RL approaches, policy gradient \cite{sutton2000policy} is the one that bears the closest similarity to SL solutions. The fundamental principle of this methods is to optimize a parametric policy by means of stochastic gradient ascent. Compared to other applications of SGD, the cost of collecting samples can be very high since it requires to interact with the environment. This makes SVRG-like methods potentially much more efficient than, \eg batch learning.
+Among RL approaches, policy gradient \cite{sutton2000policy} is the one that bears the closest similarity to SL solutions. The fundamental principle of this methods is to optimize a parametric policy by means of stochastic gradient ascent. Compared to other applications of SG, the cost of collecting samples can be very high since it requires to interact with the environment. This makes SVRG-like methods potentially much more efficient than, \eg batch learning.
 % Difficulties in RL \wrt SL
 Unfortunately, RL has a series of difficulties that are not present in ERM. First, in SL the objective can often be designed to be strongly concave. This is not possible in RL, so we have to deal with non-concavities. Then, as mentioned, the dataset is not initially available and may even be infinite, which  makes approximations unavoidable. This also rules out SAG and SAGA because of their storage requirements, which leaves SVRG as the most promising choice. Finally, the distribution used to sample data is not under direct control of the algorithm designer, but is a function of policy parameters that changes over time as the policy is optimized, which is a form of nonstationarity.
 
 % Related work?
 
 %Paper structure
-After providing a background on policy gradient and SVRG in Section \ref{sec:pre}, in Section \ref{sec:alg} we address the aforementioned difficulties to design SVRPG, a variant of SVRG for the policy gradient framework. In Section \ref{sec:conv} we provide convergence guarantees for our algorithm which also offers insights on the challenges of variance reduction in RL. In Section \ref{sec:stopping} we suggests how to set the hyperparameters of SVRPG, while in Section \ref{sec:prac} we discuss some practical variants of the algorithm. Finally, in Section \ref{sec:exp} we empirically evaluate the performance of our method on popular continuous RL benchmark tasks.
+After providing a background on policy gradient and SVRG in Section \ref{sec:pre}, in Section \ref{sec:alg} we address the aforementioned difficulties to design SVRPG, a variant of SVRG for the policy gradient framework. In Section \ref{sec:conv} we provide convergence guarantees for our algorithm which also offers insights on the challenges of variance reduction in RL. In Section \ref{sec:stopping} we suggests how to set the meta-parameters of SVRPG, while in Section \ref{sec:prac} we discuss some practical variants of the algorithm. Finally, in Section \ref{sec:exp} we empirically evaluate the performance of our method on popular continuous RL tasks.
 
 \section{Preliminaries}\label{sec:pre}
-We start providing the essential background on policy gradient methods for Reinforcement Learning and stochastic variance-reduced gradient methods for finite-sum optimization.
+We start providing the essential background on policy gradient methods and stochastic variance-reduced gradient methods for finite-sum optimization.
 %In the next section we will show how these methods can be combined to solve Reinforcement Learning tasks.
 
 \subsection{Policy Gradient}\label{subsec:PolicyGradient}
@@ -244,7 +249,6 @@ The policy is then updated as $\vtheta_{k+1}  = \vtheta_k + \alpha\gradApp{\vthe
         \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N} g(\tau_i|\vtheta), \quad \tau_i \in \mathcal{D}_N^k.
 \end{align}
 The most widespread gradient estimators are REINFORCE~\citep{williams1992simple} and G(PO)MDP~\citep{baxter2001infinite}.
-For example, REINFORCE is such that $g(\tau|\vtheta) = \nabla \log\pi(\tau|\vtheta) \mathcal{R}(\tau)$. 
 Although REINFORCE definition is simpler, G(PO)MDP is often preferred due to its lower variance.
 We refer the reader to App.~\ref{A:gradient_estimators} for details.
 
@@ -325,7 +329,7 @@ However, a direct application of SVRG to RL is not possible due to the following
 %    \item[Approximation:] the dataset $\mathcal{T}$ can be infinite, but we can only sample a finite number of trajectories;
         \item[Non-stationarity:] the distribution of the samples changes over time. In particular, the value of the parameter $\vtheta$ influences the sampling process.
 \end{description}
-To deal with non-concavity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and softmax~\citep[\eg][]{Furmston2012unifying,pirotta2015lipschitz}, see App.~\ref{app:gauss} for the derivation.\todopir{this should be shown in appendix}
+To deal with non-concavity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and softmax~\citep[\eg][]{Furmston2012unifying,pirotta2015lipschitz}, see App.~\ref{app:gauss} for the derivation.
 Because of the infinite dataset, we can only rely on an estimate of the full gradient.
 \citet{harikandeh2015stopwasting} analysed this scenario under the assumptions of $z$ being \textcolor{red}{concave}, showing that SVRG is robust to inexact computation of the full gradient. In particular, it is still possible to recover the original convergence rate if the error decreases at an appropriate rate. {\color{red}Later on we will show how the estimation accuracy impacts on the convergence results with non-concave objective.} 
 Finally, the unbiasedness of Eq.~\ref{E:svrg.gradient.correction} is broken by the non-stationarity of the optimization problem.
@@ -352,6 +356,8 @@ Our update is still fundamentally on-policy, since the weighting concerns only t
         g(\tau_i|\vtheta_t) - \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
         \right].
 \end{align}
+We want just to underlying that $\EVV[\tau_i \sim \pi_{\vtheta_t}]{\frac{1}{B} \sum_{i=0}^{B-1} \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} = \nabla J(\wt{\vtheta})$~\citep[\eg][]{jurvcivcek2012reinforcement}.\footnote{The reader can refer to App.~\ref{} for off-policy variants of REINFORCE and G(PO)MDP.}
+This property will be used to prove Lem.~\ref{L:svrpg.properties}.
 %\begin{align*}
 %&\blacktriangledown J(\vtheta) = \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \vert \tilde{\vtheta})\Reward(\tau_j) +\\
 %&\quad\frac{1}{B}\left[\sum_{i=0}^{B-1}
@@ -359,19 +365,19 @@ Our update is still fundamentally on-policy, since the weighting concerns only t
 %- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \tilde{\vtheta})\Reward(\tau_i)\right].
 %\end{align*}
 The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case~\citep{harikandeh2015stopwasting,konevcny2016mini}. It is easy to show that the SVRPG estimator has the following, desirable properties (see App.~\ref{app:proofs}):
-\begin{lemma}
+\begin{lemma}\label{L:svrpg.properties}
 Denote by $\wh{\nabla}_N^{\textsc{RF}} J(\vtheta)$ the REINFORCE estimator in~\eqref{E:policygradient.estimate} and let $\vtheta^* \in \argmin_{\vtheta} \{J(\vtheta)\}$. Then, the SVRG estimate in~\eqref{E:svrpg.estimate.batch} is \emph{unbiased}
 \[
 \mathop{\mathbb{E}}
 \left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
 \]
-and regardless of the mini-batch size $B$:
+and regardless of the mini-batch size $B$:\footnote{
+For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of the covariance matrix, \ie $\Tr\EVV[]{(\mathbf{x}-\EVV[]{\mathbf{x}})(\mathbf{x}-\EVV[]{\mathbf{x}})^T}$.}
 \[
 	\Var\left[\gradBlack{\vtheta^*}\right] = 
     \Var\left[\wh{\nabla}_N^{\textsc{RF}}J(\vtheta^*)\right].
 \]
 \end{lemma}
-For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of the covariance matrix, \ie $\Tr\EVV[]{(\mathbf{x}-\EVV[]{\mathbf{x}})(\mathbf{x}-\EVV[]{\mathbf{x}})^T}$.
 
 %\begin{restatable}{lemma}{unbias}\label{lemma:unbias}
 %The SVRPG estimator is unbiased:
@@ -488,7 +494,7 @@ Since the optimal configuration may be task-dependent, we leave this choice to t
 \textbf{G(PO)MDP.} A similar result to the one stated in Thm~\ref{theo:convergence} can be derived for the G(PO)MDP estimator. A sketch of the proof is reported in~\ref{app:gpomdpproof}.
 In practice, due to the lower variance G(PO)MDP is preferred to REINFORCE.
 For this reason we will use G(PO)MDP for the experiments (see Sec.~\ref{sec:exp}).
-\todopir{sketch of proof for GPOMDP in appendix}
+\todopir{sketch of proof for GPOMDP in appendix, probably can be unified with the one of REINFORCE}
 
 \section{Remarks on SVRPG}
 The convergence guarantees presented in the previous section come with requirements on the meta-parameters (\ie $\alpha$ and $m$) that may be too conservative for practical applications.
@@ -536,7 +542,6 @@ Thus, we aim to facilitate sub-iterations rather than snapshots.
 
 \subsection{Normalized Importance Sampling}\label{sec:prac}
 \todopir{TODO: This section should be generic for normalized importance sampling trying to explain when and where are the advantages of doing this. Explicit formulation can be postponed in appendix.}
-\todomat{Missing opening to section}
 We introduce a term with importance weights to guarantee proper sampling of trajectories.
 This term's variance is subjected to the variance of importance weights. 
 There are some methods to reduce this variance.
@@ -557,6 +562,7 @@ where:
 \end{align*}
 \todomat{why should we use it? What advantages do we expect? At what cost? Pointer to experiments}
 \section{Related Work}
+\todopir{I think that this section is worth here}
 
 \section{Experiments}\label{sec:exp}
 We have designed our experiments to investigate whether:
@@ -592,6 +598,7 @@ The neural networks is composed of one layer with 8 neurons for Cart-Pole enviro
 \section{Policy Gradient Estimators} \label{A:gradient_estimators}
 
 
+\subsection{On-policy}
 The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, unbiased way of estimating the gradient:
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
@@ -601,6 +608,9 @@ The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REI
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\gamma^h r_h^n - b\right).
 \end{align*}
+
+\subsection{Off-Policy}
+\todopir{Make ref to Luca's thesis and describe in brief the derivations}
 
 
 
