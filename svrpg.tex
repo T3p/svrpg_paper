@@ -122,16 +122,21 @@
 \newcommand{\GRADLOG}{G}
 \newcommand{\VARIS}{W}
 \newcommand{\HESSLOG}{F}
+% short forms 
+\newcommand{\wt}[1]{\widetilde{#1}}
+\newcommand{\wh}[1]{\widehat{#1}}
+\newcommand{\wo}[1]{\overline{#1}}
+\newcommand{\wb}[1]{\overline{#1}}
 %%%%%%
 
 % The \icmltitle you define below is probably too long as a header.
 % Therefore, a short form for the running title is supplied here:
-\icmltitlerunning{SVRPG}
+\icmltitlerunning{Stochastic Variance-Reduced Policy Gradient}
 
 \begin{document}
 
 \twocolumn[
-\icmltitle{Stochastic Variance Reduced Policy Gradient}
+\icmltitle{Stochastic Variance-Reduced Policy Gradient}
 
 % It is OKAY to include author information, even for blind
 % submissions: the style file will automatically remove it for you
@@ -236,30 +241,31 @@ In this setting, stochastic gradient ascent is typically employed.
 At each iteration $k >0$, a batch $\mathcal{D}_N^k = \{\tau_i\}_{i=0}^N$ of $N>0$ trajectories is collected using policy $\pi_{\vtheta_k}$.
 The policy is then updated as $\vtheta_{k+1}  = \vtheta_k + \alpha\gradApp{\vtheta_k}{N}$, where $\alpha$ is a step size and $\gradApp{\vtheta}{N}$ is an estimate of~\eqref{E:policygradient} using $\mathcal{D}_N^k$, \ie
 \begin{align} \label{E:policygradient.estimate}
-        \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N} \nabla f(\tau_i), \quad \tau_i \in \mathcal{D}_N^k.
+        \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N} g(\tau_i|\vtheta), \quad \tau_i \in \mathcal{D}_N^k.
 \end{align}
 The most widespread gradient estimators are REINFORCE~\citep{williams1992simple} and G(PO)MDP~\citep{baxter2001infinite}.
-We refer the reader to App.~\ref{A:gradient_estimators} for a formal definition.
+REINFORCE is such that $g(\tau|\vtheta) = \nabla \log\pi(\tau|\vtheta) \mathcal{R}(\tau)$,  we refer the reader to App.~\ref{A:gradient_estimators} for details.
 
 The main limitation of plain policy gradient has been the high variance of these estimators.
 The naive approach of increasing the batch size is not an option in RL due to the high cost of collecting samples, \ie by interacting with the environment.
 For this reason, literature has focused on the introduction of baselines aiming to reduce the variance~\citep[\eg][]{Peters2008reinf,Thomas2017actionbaseline,wu2018variance}.\footnote{A baseline is a function $f(s,a)$ such that $\EVV[a \sim \pol]{f(s,a)} = 0$, for any $s\in\Sspace$.}
 There has been a surge of recent interest in variance reduction techniques for gradient optimization in supervised learning.
-Altough these techniques has been mainly derived for finite-sum problems, we will show in Sec.~\ref{sec:alg} how they can be used in RL.
+Although these techniques has been mainly derived for finite-sum problems, we will show in Sec.~\ref{sec:alg} how they can be used in RL.
 The next section has the aim to describe variance reduction techniques for finite-sum problems. In particular, we will present the SVRG algorithm that is at the core of this work.
 
 
 \subsection{Stochastic Variance-Reduced Gradient}
 Finite-sum optimization is the problem of maximizing an objective function $f(\vtheta)$ which can be decomposed into the sum or average of a finite number of functions $g_i(\cdot|\vtheta)$:
 \begin{align*}
-        \max_{\vtheta} \left\{ f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}g_i(\vtheta)\right\}.
+        \max_{\vtheta} \left\{ f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}z_i(\vtheta)\right\}.
 \end{align*}
-This kind of optimization is very common in machine learning, where each $g_i$ may correspond to a data sample $x_i$ from a dataset $\mathcal{D}_N$ of size $N$ (\ie $g_i(\vtheta) = g(x_i|\vtheta)$). 
+This kind of optimization is very common in machine learning, where each $z_i$ may correspond to a data sample $x_i$ from a dataset $\mathcal{D}_N$ of size $N$ (\ie $z_i(\vtheta) = z(x_i|\vtheta)$). 
 %% In this case, we adopt the following, more meaningful notation:
 %% \begin{align*}
 %% \max_{\vtheta} f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}g(x_i \vert \vtheta).
 %% \end{align*}
-A common requirement is that $g$ must be smooth and {\color{red} concave} in $\vtheta$.\footnote{Note that we are considering a maximization problem instead of the classical minimization one.} Under this hypothesis, full gradient ascent~\citep{cauchy1847methode} with a constant step size achieves an Incremental First-order Oracle (IFO) complexity~\citep{agarwal2014lower} of $O(\nicefrac{N}{\epsilon})$, \ie it requires $k = O(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[2]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$.\footnote{In the following we will omit the subscript for the $\ell_2$-norm.} 
+A common requirement is that $z$ must be smooth and {\color{red} concave} in $\vtheta$.\footnote{Note that we are considering a maximization problem instead of the classical minimization one.} 
+Under this hypothesis, full gradient (FG) ascent~\citep{cauchy1847methode} with a constant step size achieves an Incremental First-order Oracle (IFO) complexity~\citep{agarwal2014lower} of $O(\nicefrac{N}{\epsilon})$, \ie it requires $k = O(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[2]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$.\footnote{In the following we will omit the subscript for the $\ell_2$-norm.} 
 This can be too expensive for large values of $N$. Stochastic Gradient (SG) ascent~\citep[\eg][]{robbins1951stochastic,bottou2004large} overcomes this problem by sampling a single sample $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $O(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$~\cite{nemirovskii1983problem,reddi2016stochastic}.
 Starting from SAG, a series of variations to SG have been proposed to achieve a better trade-off between convergence speed and cost per iteration: \eg SAG~\citep{roux2012stochastic}, SVRG~\cite{johnson2013accelerating}, SAGA~\cite{defazio2014saga} and Finito~\cite{defazio2014finito}, 
 The common idea is to reuse past gradient computations to reduce the variance of the current estimate.
@@ -268,16 +274,13 @@ In particular, Stochastic Variance-Reduced Gradient (SVRG) is often preferred to
 The idea of SVRG is to alternate full and stochastic gradient updates. 
 Each $m = O(N)$ iterations, a snapshot $\widetilde{\vtheta}$ of the current parameter is saved together with its full gradient $\nabla f(\widetilde{\vtheta}) = \frac{1}{N} \sum_i g(x_i|\widetilde{\vtheta})$.
 Between snapshots, the parameter is updated with a gradient estimate corrected using stochastic gradient, for any $t \in \{0,\ldots,m-1\}$
-\begin{align}\label{E:svrg.gradient.correction}
-        \blacktriangledown f(\vtheta_{t+1}) = 
-	\nabla f(\tilde{\vtheta}) + 
-	\nabla g(x_i | \vtheta_t) -
-	\nabla g(x_i | \tilde{\vtheta}),
-\end{align} 
+\begin{equation}\label{E:svrg.gradient.correction}
+        \blacktriangledown f(\vtheta_{t+1}) = \nabla f(\tilde{\vtheta}) + \nabla z(x_i | \vtheta_t) - \nabla z(x_i | \tilde{\vtheta}),
+\end{equation} 
 where $x_i$ is sampled uniformly at random from $\mathcal{D}_N$ (\ie $x_i \sim \mathcal{U}(\mathcal{D}_N)$). The corrected gradient $\blacktriangledown f(\vtheta)$ is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, without resorting to plain full gradient. The resulting IFO complexity is $O(N+\nicefrac{\sqrt{N}}{\epsilon})$ \cite{reddi2016stochastic}.
 
 More recently, some extensions of variance reduction algorithms to the non-convex objectives have been proposed~\citep[\eg][]{reddi2016stochastic,allen2016variance,reddi2016stochastic,reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the IFO complexity of full gradient  and of stochastic gradient ascent are the same as in the \textcolor{red}{concave} case~\citep{nesterov2013introductory,ghadimi2013stochastic}. Also in this case, SVRG yields an advantageous trade-off, with an IFO complexity of $O(N + \nicefrac{N^{\nicefrac{2}{3}}}{N})$~\citep{reddi2016stochastic}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value. Pseudocode of SVRG for both the convex and the non-convex case is provided in Alg.~\ref{alg:svrg}. 
-\todopir{SVRG for non-convex optimization requires to mix the parameter $\widetilde{\vtheta}^{s+1}$?}
+\todopir{SVRG for non-convex optimization requires to mix the parameter $\wt{\vtheta}^{s+1}$?}
 
 
 \begin{algorithm}[tb]
@@ -286,16 +289,16 @@ More recently, some extensions of variance reduction algorithms to the non-conve
 	\begin{algorithmic}
             \STATE {\bfseries Input:} a dataset $\mathcal{D}_N$, number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{m}^0$
 		\FOR{$s=0$ {\bfseries to} $S-1$}
-		\STATE $\vtheta_0^{s+1} := \widetilde{\vtheta}^s := \vtheta_{m}^s$
+		\STATE $\vtheta_0^{s+1} := \wt{\vtheta}^s := \vtheta_{m}^s$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
 %		\STATE Pick $i$ uniformly at random from $[1,N]$
         \STATE $x_i \sim \mathcal{U}\left(\mathcal{D}_N\right)$
-		\STATE $v^{s+1} = 
-			\nabla f(\widetilde{\vtheta}^s) + 
+		\STATE $v^{s+1}_t = 
+			\nabla f(\wt{\vtheta}^s) + 
 			\nabla g(x_i|\vtheta_t^{s+1}) -
-			\nabla g(x_i|\widetilde{\vtheta}^{s})
+			\nabla g(x_i|\wt{\vtheta}^{s})
 		$
-        \STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha v^{s+1}$
+        \STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha v^{s+1}_t$
 		\ENDFOR
 		\ENDFOR
 		\STATE {\bfseries Convex case: return} $\vtheta_{m}^S$
@@ -304,7 +307,7 @@ More recently, some extensions of variance reduction algorithms to the non-conve
 \end{algorithm}
 
 
-\section{Algorithm}\label{sec:alg}
+\section{SVRG in Reinforcement Learning}\label{sec:alg}
 In online RL problems the usual approach is to tune the batch size of SG in order to find the optimal trade-off between variance and speed.
 Recall that compared to SL, the samples are not fixed in advance but need to be collected at each policy change.
 Since this operation may be costly, we would like to minimize the number of interactions with the environment.
@@ -313,77 +316,109 @@ However, a direct application of SVRG to RL is not possible due to the following
 % In on-line policy gradient problems, SG is not really a choice, but is dictated by the necessity of interacting with an unknown environment.\todopir{I do not understand the meaning of this sentence. I would say that SG is not a choice by referring to papers that uses batches}
 % We would like to apply SVRG to the policy gradient framework in order to limit the variance introduced by sampling trajectories, which would ultimately lead to faster convergence. In this scenario, the function $f(\vtheta)$ to optimize is $J(\vtheta)$ and the (implicit) dataset $\mathcal{D}$ is the set of all possible trajectories $\mathcal{T}$. Compared to the typical finite sum optimization scenario, we have the following additional challenges:
 \begin{description}
-        \item[Non-convexity:] the objective function $J(\vtheta)$ is typically non-convex;
+        \item[Non-concavity:] the objective function $J(\vtheta)$ is typically non-concave.
         \item[Infinite dataset:] the RL optimization cannot be expressed as a finite-sum problem. The actual dataset is infinite and coincide with $\pi_{\vtheta}(\tau)$.
 %    \item[Approximation:] the dataset $\mathcal{T}$ can be infinite, but we can only sample a finite number of trajectories;
         \item[Non-stationarity:] the distribution of the samples changes over time. In particular, the value of the parameter $\vtheta$ influences the sampling process.
 \end{description}
-To deal with non-convexity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and softmax (see App.~\ref{app:lsmoothness}).\todopirout{search for ref}
-Because of the infinite dataset, we can only rely on an estimate of the full gradient. \citet{harikandeh2015stopwasting} analyzed this scenario under concavity \textcolor{red}{assumptions} of $g$, showing that SVRG is robust to inexact computation of the full gradient. In particular, it is still possible to recover the original convergence rate is the error decreases at an appropriate rate. {\color{red}Later on we will show how the estimation accuracy impacts on the convergence results with smooth objective.} 
-\todopir{This should be argumented more via stop wasting my gradients}
-Finally, the unbiasedness of Eq.~\ref{E:svrg.gradients.correction} is broken by the non-stationarity of the optimization problem.
+To deal with non-concavity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and softmax~\citep[\eg][]{Furmston2012unifying,pirotta2015lipschitz}, see App.~\ref{app:lsmoothness} for the derivation.\todopir{this should be shown in appendix}
+Because of the infinite dataset, we can only rely on an estimate of the full gradient.
+\citet{harikandeh2015stopwasting} analysed this scenario under the assumptions of $z$ being \textcolor{red}{concave}, showing that SVRG is robust to inexact computation of the full gradient. In particular, it is still possible to recover the original convergence rate if the error decreases at an appropriate rate. {\color{red}Later on we will show how the estimation accuracy impacts on the convergence results with non-concave objective.} 
+Finally, the unbiasedness of Eq.~\ref{E:svrg.gradient.correction} is broken by the non-stationarity of the optimization problem.
 To overcome this limitation we employ importance weighting~\citep[\eg][]{rubinstein1981simulation,precup2000eligibility} to correct the distribution shift.
 %Finally, we employ importance weighting~\citep[\eg]{rubinstein1981simulation,precup2000eligibility} to guarantee proper sampling of trajectories. 
-We focus on the REINFORCE gradient estimator for simplicity, but the extension to G(PO)MDP is straightforward. The proposed SVRG-like gradient estimate, which we call Stochastic Variance Reduced Policy Gradient (SVRPG), is the following:
+
+We can now introduce Stochastic Variance-Reduced Policy Gradient (SVRPG).
+% For simplicity, we focus on the REINFORCE estimator but the extension to G(PO)MDP is straightforward.
+Between snapshots, the SVRPG estimate is corrected using importance weighting, for any $t \in \{0,\ldots,m-1\}$
 \begin{align*}
-	\blacktriangledown J(\vtheta) &= \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \vert \tilde{\vtheta})\Reward(\tau_j) \\
-		&+ \nabla\log\pi(\tau_i \vert \vtheta)\Reward(\tau_i) 
-		- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \tilde{\vtheta})\Reward(\tau_i),
+        \blacktriangledown J(\vtheta_{t+1}) &= \wh{\nabla}_N J(\wt{\vtheta}) + g(\tau_i|\vtheta_t) - \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
 \end{align*}
-where trajectories $\tau_j$ for $j=1,\dots,N$ are sampled from a snapshot policy $\pi_{\tilde{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pol$, and $\omega(\tau) = \frac{\pi(\tau\vert\tilde{\vtheta})}{\pi(\tau\vert\vtheta)}$ is an importance weight from $\pol$ to the snapshot policy $\pi_{\tilde{\vtheta}}$. 
-Our update is still fundamentally on-policy, since the weighting concerns only the correction term. However, this partial "off-policyness" is enough to introduce variance. To mitigate it, we use mini-batches of trajectories of size B to compute the second and the third term, as follows:
-\begin{align*}
-&\blacktriangledown J(\vtheta) = \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \vert \tilde{\vtheta})\Reward(\tau_j) +\\
-&\quad\frac{1}{B}\left[\sum_{i=0}^{B-1}
-\nabla\log\pi(\tau_i \vert \vtheta)\Reward(\tau_i) 
-- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \tilde{\vtheta})\Reward(\tau_i)\right].
-\end{align*}
-The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case \cite{konevcny2016mini} \cite{harikandeh2015stopwasting}. It is easy to show that the SVRPG gradient estimator has the following, desirable properties (detailed proofs in Appendix \ref{app:proofs}):
-\begin{restatable}{lemma}{unbias}\label{lemma:unbias}
-The SVRPG estimator is unbiased:
+% \begin{align*}
+% 	\blacktriangledown J(\vtheta) &= \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \vert \tilde{\vtheta})\Reward(\tau_j) \\
+% 		&+ \nabla\log\pi(\tau_i \vert \vtheta)\Reward(\tau_i) 
+% 		- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \tilde{\vtheta})\Reward(\tau_i),
+% \end{align*}
+where $\wh{\nabla}_N J(\wt{\vtheta})$ is as in~\eqref{E:policygradient.estimate} where $\mathcal{D}_N$ is sampled using the snapshot policy $\pi_{\wt{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pi_{\vtheta_t}$, and $\omega(\tau|\vtheta_t, \wt{\vtheta}) = \frac{\pi(\tau|\wt{\vtheta})}{\pi(\tau|\vtheta_t)}$ is an importance weight from $\pi_{\vtheta_t}$ to the snapshot policy $\pi_{\wt{\vtheta}}$. 
+Our update is still fundamentally on-policy, since the weighting concerns only the correction term. However, this partial ``off-policyness'' is enough to introduce variance. This is a well-known issue of importance sampling~\citep[\eg][]{thomas2015high}. To mitigate it, we use mini-batches of trajectories of size $B \ll N$ to average the correction, \ie
+\begin{align}\label{E:svrpg.estimate.batch}
+        \blacktriangledown J(\vtheta_{t+1}) &= \wh{\nabla}_N J(\wt{\vtheta})\\ \notag
+                                            & \quad{} + \frac{1}{B} \sum_{i=0}^{B-1} \left[
+        g(\tau_i|\vtheta_t) - \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
+        \right].
+\end{align}
+%\begin{align*}
+%&\blacktriangledown J(\vtheta) = \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \vert \tilde{\vtheta})\Reward(\tau_j) +\\
+%&\quad\frac{1}{B}\left[\sum_{i=0}^{B-1}
+%\nabla\log\pi(\tau_i \vert \vtheta)\Reward(\tau_i) 
+%- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \tilde{\vtheta})\Reward(\tau_i)\right].
+%\end{align*}
+The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case~\citep{harikandeh2015stopwasting,konevcny2016mini}. It is easy to show that the SVRPG estimator has the following, desirable properties (see App.~\ref{app:proofs}):
+\begin{lemma}
+Denote by $\wh{\nabla}_N^{\textsc{RF}} J(\vtheta)$ the REINFORCE estimator in~\eqref{E:policygradient.estimate} and let $\vtheta^* \in \argmin_{\vtheta} \{J(\vtheta)\}$. Then, the SVRG estimate in~\eqref{E:svrpg.estimate.batch} is \emph{unbiased}
 \[
 \mathop{\mathbb{E}}
 \left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
 \]
-\end{restatable}
-\begin{restatable}{lemma}{zerovar}\label{lemma:zerovar}
-At convergence, the variance of the SVRPG estimator is equal to the variance of the REINFORCE estimator, regardless of the mini-batch size $B$:
+and regardless of the mini-batch size $B$:
 \[
 	\mathbb{V}ar\left[\gradBlack{\vtheta^*}\right] = 
-	\mathbb{V}ar\left[\gradApp{\vtheta^*}{N}\right].
+    \mathbb{V}ar\left[\wh{\nabla}_N^{\textsc{RF}}J(\vtheta^*)\right].
 \]
-\end{restatable}
-In particular, the latter suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can actually achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance, at least asymptotically.
-The resulting SVRPG policy optimization method is detailed in Algorithm \ref{alg:svrpg}.
-To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$. Adaptive selection of these meta-parameters is also possible, and is explored in Section \ref{sec:stopping}. However, the next section will focus on providing general converge guarantees for Algorithm \ref{alg:svrpg}.
+\end{lemma}
+
+%\begin{restatable}{lemma}{unbias}\label{lemma:unbias}
+%The SVRPG estimator is unbiased:
+%\[
+%\mathop{\mathbb{E}}
+%\left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
+%\]
+%\end{restatable}
+%\begin{restatable}{lemma}{zerovar}\label{lemma:zerovar}
+%At convergence, the variance of the SVRPG estimator is equal to the variance of the REINFORCE estimator, regardless of the mini-batch size $B$:
+%\[
+%	\mathbb{V}ar\left[\gradBlack{\vtheta^*}\right] = 
+%	\mathbb{V}ar\left[\gradApp{\vtheta^*}{N}\right].
+%\]
+%\end{restatable}
+In particular, the latter result suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can actually achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance (at least asymptotically).
+The resulting SVRPG policy optimization method is detailed in Alg.~\ref{alg:svrpg}.
+To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$.
+Adaptive selection of these meta-parameters is also possible, and is explored in Sec.~\ref{sec:stopping}.
+However, the next section will provide general converge guarantees for SVRPG as in Alg.~\ref{alg:svrpg}.
 
 \begin{algorithm}[tb]
-	\caption{SVRPG}
+        \caption{SVRPG based on REINFORCE}
 	\label{alg:svrpg}
 	\begin{algorithmic}
-		\STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{m-1}^0$, batch size $N$, mini-batch size B
+		\STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{m}^0$, batch size $N$, mini-batch size B
 		\FOR{$s=0$ {\bfseries to} $S-1$}
-		\STATE Sample N trajectories $\tau_j$ from $\pi(\cdot\vert\tilde{\vtheta}^{s})$
+        \STATE Sample $N$ trajectories $\{\tau_j\}$ from $\pi(\cdot\vert\tilde{\vtheta}^{s})$
 		\STATE $\gradApp{\tilde{\vtheta}^{s}}{N} = \frac{1}{N}\sum_{j=0}^{N-1}\score{}{\tau_j\vert\tilde{\vtheta}^{s}}\Reward(\tau_j)$
-		\STATE $\vtheta_0^{s+1} = \tilde{\vtheta}^s = \vtheta_{m-1}^s$
+		\STATE $\vtheta_0^{s+1} = \tilde{\vtheta}^s = \vtheta_{m}^s$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
-		\STATE Sample $B$ trajectories $\tau_i$ from 				$\pi(\cdot\vert\vtheta_t^{s+1})$
-		\STATE 
-		\begin{align*}
-		\blacktriangledown J(\vtheta_t^{s+1}) = 
-		&\gradApp{\tilde{\vtheta}^s}{N} \\
-		&+\frac{1}{B}\sum_{i=0}^{B-1}\left[ 
-		\score{}{\tau_i\vert\vtheta_t^{s+1}}\Reward(\tau_i)\right. \\
-		&\left. - \omega(\tau_i)\score{}{\tau_i \vert \tilde{\vtheta}^{s}}\Reward(\tau_i)\right]
-		\end{align*}
-		\STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha\blacktriangledown J(\vtheta_t^{s+1})$
+        \STATE Sample $B$ trajectories $\{\tau_i\}$ from $\pi(\cdot\vert\vtheta_t^{s+1})$
+        \STATE $c^{s+1}_t = \frac{1}{B} \sum\limits_{i=0}^{B-1}
+        \begin{aligned}[t]
+                & \Reward(\tau_i) \Big[ \score{}{\tau_i|\vtheta_t^{s+1}} \\
+                &- \omega(\tau|\vtheta^{s+1}_t, \wt{\vtheta}^s)\score{}{\tau_i|\wt{\vtheta}^{s}} \Big]
+        \end{aligned}$
+        \STATE $v^{s+1}_t = \gradApp{\wt{\vtheta}^{s}}{N} + c^{s+1}_t$
+%%		\begin{align*}
+%%		\blacktriangledown J(\vtheta_t^{s+1}) = 
+%%		&\gradApp{\tilde{\vtheta}^s}{N} \\
+%%		&+\frac{1}{B}\sum_{i=0}^{B-1}\left[ 
+%%		\score{}{\tau_i\vert\vtheta_t^{s+1}}\Reward(\tau_i)\right. \\
+%%		&\left. - \omega(\tau_i)\score{}{\tau_i \vert \tilde{\vtheta}^{s}}\Reward(\tau_i)\right]
+%%		\end{align*}
+        \STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha v^{s+1}_t$
 		\ENDFOR
 		\ENDFOR
 		\STATE {\bfseries return} $\vtheta_t^s$ with $(s,t)$ picked uniformly at random from $[0,S)\times[0,m)$
 	\end{algorithmic}
 \end{algorithm}
 
-\section{Convergence Guarantees}\label{sec:conv}
+\section{Convergence Guarantees of SVRPG}\label{sec:conv}
 In this section we adapt existing convergence guarantees for nonconvex SVRG \cite{reddi2016stochastic} \cite{allen2016variance} to the Policy Gradient framework.
 Each of the three challenges presented at the beginning of Section \ref{sec:alg} can potentially prevent convergence, so we need additional assumptions:
 \begin{enumerate}
@@ -567,7 +602,14 @@ The ideal SVRPG gradient estimate is:
 \subsection*{Basic Lemmas}
 We prove two basic properties of the SVRPG update.
 
-\unbias*
+%\unbias*
+\begin{restatable}{lemma}{unbias}\label{lemma:unbias}
+The SVRPG estimator is unbiased:
+\[
+\mathop{\mathbb{E}}
+\left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
+\]
+\end{restatable}
 \begin{proof}
 \begin{align*}
 \EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\tilde{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} - \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i)\score{\tilde{\vtheta}}{\tau_i}R(\tau_i)} \\
@@ -576,7 +618,14 @@ We prove two basic properties of the SVRPG update.
 Note that the importance weight is necessary to guarantee unbiasedness, since the $\tau_i$ are sampled from $\pi_{\vtheta}$.
 \end{proof}
 
-\zerovar*
+% \zerovar*
+\begin{restatable}{lemma}{zerovar}\label{lemma:zerovar}
+At convergence, the variance of the SVRPG estimator is equal to the variance of the REINFORCE estimator, regardless of the mini-batch size $B$:
+\[
+	\mathbb{V}ar\left[\gradBlack{\vtheta^*}\right] = 
+	\mathbb{V}ar\left[\gradApp{\vtheta^*}{N}\right].
+\]
+\end{restatable}
 \begin{proof}
 As $\vtheta\to\vtheta^*$, also $\tilde{\vtheta}\to\vtheta^*$. Hence, by continuity of $J(\vtheta)$:
 \begin{align*}
