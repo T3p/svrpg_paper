@@ -318,10 +318,10 @@ However, a direct application of SVRG to RL is not possible due to the following
 %    \item[Approximation:] the dataset $\mathcal{T}$ can be infinite, but we can only sample a finite number of trajectories;
         \item[Non-stationarity:] the distribution of the samples changes over time. In particular, the value of the parameter $\vtheta$ influences the sampling process.
 \end{description}
-To deal with non-convexity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and softmax (see App.~\ref{app:lsmoothness}).\todopirout{search for ref}
-Because of the infinite dataset, we can only rely on an estimate of the full gradient. \citet{harikandeh2015stopwasting} analyzed this scenario under concavity \textcolor{red}{assumptions} of $g$, showing that SVRG is robust to inexact computation of the full gradient. In particular, it is still possible to recover the original convergence rate is the error decreases at an appropriate rate. {\color{red}Later on we will show how the estimation accuracy impacts on the convergence results with smooth objective.} 
+To deal with non-convexity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as the truncated Gaussian (see App.~\ref{app:gauss}).
+Because of the infinite dataset, we can only rely on an estimate of the full gradient. \citet{harikandeh2015stopwasting} analyzed this scenario under concavity \textcolor{red}{assumptions} of $g$, showing that SVRG is robust to inexact computation of the full gradient. In particular, it is still possible to recover the original convergence rate if the error decreases at an appropriate rate. {\color{red}Later on we will show how the estimation accuracy impacts on the convergence results with smooth objective.} 
 \todopir{This should be argumented more via stop wasting my gradients}
-Finally, the unbiasedness of Eq.~\ref{E:svrg.gradients.correction} is broken by the non-stationarity of the optimization problem.
+Finally, the unbiasedness of Eq.~\ref{E:svrg.gradient.correction} is broken by the non-stationarity of the optimization problem.
 To overcome this limitation we employ importance weighting~\citep[\eg][]{rubinstein1981simulation,precup2000eligibility} to correct the distribution shift.
 %Finally, we employ importance weighting~\citep[\eg]{rubinstein1981simulation,precup2000eligibility} to guarantee proper sampling of trajectories. 
 We focus on the REINFORCE gradient estimator for simplicity, but the extension to G(PO)MDP is straightforward. The proposed SVRG-like gradient estimate, which we call Stochastic Variance Reduced Policy Gradient (SVRPG), is the following:
