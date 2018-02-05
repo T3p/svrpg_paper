@@ -321,7 +321,7 @@ However, a direct application of SVRG to RL is not possible due to the following
 %    \item[Approximation:] the dataset $\mathcal{T}$ can be infinite, but we can only sample a finite number of trajectories;
         \item[Non-stationarity:] the distribution of the samples changes over time. In particular, the value of the parameter $\vtheta$ influences the sampling process.
 \end{description}
-To deal with non-concavity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and softmax~\citep[\eg][]{Furmston2012unifying,pirotta2015lipschitz}, see App.~\ref{app:lsmoothness} for the derivation.\todopir{this should be shown in appendix}
+To deal with non-concavity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and softmax~\citep[\eg][]{Furmston2012unifying,pirotta2015lipschitz}, see App.~\ref{app:gauss} for the derivation.\todopir{this should be shown in appendix}
 Because of the infinite dataset, we can only rely on an estimate of the full gradient.
 \citet{harikandeh2015stopwasting} analysed this scenario under the assumptions of $z$ being \textcolor{red}{concave}, showing that SVRG is robust to inexact computation of the full gradient. In particular, it is still possible to recover the original convergence rate if the error decreases at an appropriate rate. {\color{red}Later on we will show how the estimation accuracy impacts on the convergence results with non-concave objective.} 
 Finally, the unbiasedness of Eq.~\ref{E:svrg.gradient.correction} is broken by the non-stationarity of the optimization problem.
