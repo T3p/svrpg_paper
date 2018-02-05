@@ -486,13 +486,29 @@ Additionally, we provide variants of SVRPG exploiting variance-reduction techniq
 \subsection{Meta-Parameters Selection}\label{sec:stopping}
 \todopir{I'm here!}
 % In section \ref{sec:conv}, we introduced the practical need to properly choose $\alpha$ and $m$, which are, respectively, the step size and the number of sub-iterations to perform after a snapshot.
-At this point, the open question is how to properly select the step size $\alpha$ and the sub-iteration number $m$ in practical applications.
-The first parameter is crucial to balance the variance introduced by estimations within sub-iterations with respect to the variance introduced by estimations associated to the snapshots.
-The second one is essential to control the variance introduced by the importance weights, mainly because the farther you go from the snapshot policy the higher the variance of the importance weights will be.    
+% At this point, the open question is how to properly select the step size $\alpha$ and the sub-iteration number $m$ in practical applications.
+The step size $\alpha$ is crucial to balance the variance due to the sub-iterations and the variance associated to the estimator at the snapshot.
+% The first parameter is crucial to balance the variance introduced by estimations within sub-iterations with respect to the variance introduced by estimations associated to the snapshots.
+The number $m$ of sub-iterations controls the variance introduced by the importance weights. Low $m$ values are associated to low variance but induce lots of snapshot points (\ie lots of FG computations). High $m$ values allow to move policy $\pi_{\vtheta_t}$ away from the snapshot policy $\pi_{\wt{\vtheta}}$, causing high variance of the importance weights.
+% the farther the distance between the snapshot policy and the current one, the higher the variance of the importance weights.
 
-A common way to reduce the effect of variance is to use Adaptive Moment Estimation (Adam) \cite{kingma2014adam}, a method that computes adaptive learning rates for each parameter. Adam helps to stabilize the gradient estimate by computing adaptive learning rates for each parameter based on the history of the gradients' variance.
+\textbf{Adaptive step size.}
+A common way to deal with noisy gradients is to use adaptive strategies to compute the step size.
+ADAptive Moment estimation (ADAM)~\citep{kingma2014adam} stabilizes the parameter update by computing learning rates for each parameter based on an incremental estimate of the gradient variance.
+Due to this feature we would like to incorporate ADAM in the structure of the SVRPG update.
+Recall that SVRPG is characterized by two updates: I) FG update in the snapshot; II) corrected gradient update in the sub-iterations.
+Given this structure, we suggest to use two ADAM estimators:
+\begin{align*}
+        \vtheta^{s+1}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\wh{\nabla}_N J(\wt{\vtheta}^s)\\
+        \vtheta^{s+1}_{t+1} &= \vtheta^{s+1}_t + \alpha^{\textsc{SI}}_t v_t^{s+1}
+\end{align*}
+where $\alpha^{\textsc{FG}}$ is associated to the snapshot and $\alpha^{\textsc{SI}}$ with the sub-iterations.
+By doing so we decouple the contribution of the variance introduced by the approximate FG from the one introduced by the sub-iterations.
+Note that these two terms have different orders of magnitude since are estimated with a different number of trajectories ($B \ll N$) and w/o importance weights.
+The use of two ADAM estimators allows to capture and exploit this property.
 
-Due to this feature we can use two different adam in order to properly leverage the structure of the proposed SVRPG update. The first adam will be associated to the snapshot updates and the second one will be associated to the sub-iteration updates. By doing so we are decoupling the contribution to the variance introduced by the snapshots from that one introduced by the sub-iterations. These two variance contributions lie, respectively, on two different order of magnitude because the number of trajectories used to perform the estimates for the snapshot is greater than that used for a sub-iteration.Therefore, using two adam optimizers allows us to properly adapt the learning rate in each situation. For the above mentioned reasons let us denote by $\alpha_{snap}$ the learning rate associated to the last snapshot and by  $\alpha_{sub-iter}$ the learning rate associated to the current sub-iteration.
+
+%Due to this feature we can use two different adam in order to properly leverage the structure of the proposed SVRPG update. The first adam will be associated to the snapshot updates and the second one will be associated to the sub-iteration updates. By doing so we are decoupling the contribution to the variance introduced by the snapshots from that one introduced by the sub-iterations. These two variance contributions lie, respectively, on two different order of magnitude because the number of trajectories used to perform the estimates for the snapshot is greater than that used for a sub-iteration.Therefore, using two adam optimizers allows us to properly adapt the learning rate in each situation. For the above mentioned reasons let us denote by $\alpha_{snap}$ the learning rate associated to the last snapshot and by  $\alpha_{sub-iter}$ the learning rate associated to the current sub-iteration.
 
 We have already said that as the number of sub-iterations $m$ increases the variance of the importance weights increases too. Therefore, if $m$ is not properly set the SVRPG algorithm fails in its primary aim of stabilizing the gradient estimate.
 
