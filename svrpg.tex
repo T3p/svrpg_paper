@@ -419,57 +419,74 @@ However, the next section will provide general converge guarantees for SVRPG as 
 \end{algorithm}
 
 \section{Convergence Guarantees of SVRPG}\label{sec:conv}
-In this section we adapt existing convergence guarantees for nonconvex SVRG \cite{reddi2016stochastic} \cite{allen2016variance} to the Policy Gradient framework.
-Each of the three challenges presented at the beginning of Section \ref{sec:alg} can potentially prevent convergence, so we need additional assumptions:
-\begin{enumerate}
-\item \textit{Non-convexity}:
-	as already mentioned, a common assumption for nonconvex optimization is the L-smoothness of the objective. We actually require the following, which is stronger:
+In this section, we state the convergence guarantees for SVRPG with REINFORCE structure (see Alg.~\ref{alg:svrpg}).
+We mainly leverage on the recent analysis of \textcolor{red}{nonconcave} SVRG~\cite{reddi2016stochastic,allen2016variance}.
+Each of the three challenges presented at the beginning of Sec.~\ref{sec:alg} can potentially prevent convergence, so we need additional assumptions.
+In App.~\ref{app:gauss} we show how the widespread Gaussian policy satisfies these assumptions.
+
+\textit{1) Non-concavity.} A common assumption in this case it to assume the objective function to be $L$-smooth.
+However, in RL we can consider the following assumption which is sufficient for the $L$-smoothness of the objective (see Lem.~\ref{lemma:lsmooth}).
 	\begin{restatable}[On policy derivatives]{assumption}{boundedscore}\label{ass:bounded_score}
 		For each trajectory $\tau$, value of $\vtheta$ and dimensions $i,j$ there are positive constants $G,F<\infty$ such that:
-		\begin{align*}
-		&\left|\nabla_{\theta_i}\log\pi_{\vtheta}(\tau)\right| \leq \GRADLOG \\
-		&\left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau)\right| \leq \HESSLOG
-		\end{align*}
+\[
+		\left|\nabla_{\theta_i}\log\pi_{\vtheta}(\tau)\right| \leq \GRADLOG, \qquad
+        \left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau)\right| \leq \HESSLOG.
+\]
 	\end{restatable}
-	This property is a sufficient condition for the L-smoothness of the objective (see Lemma \ref{lemma:lsmooth} in the appendix).
-\item \textit{Approximation}:
-since we can only compute an estimate of the full gradient, we require its variance to be bounded:
+
+\textit{2) FG Approximation.}
+Since we cannot compute an exact full gradient, we require the variance of the estimator to be bounded.
+This assumption is in spirit similar to the one in~\citep{harikandeh2015stopwasting}.
 	\begin{restatable}[On the variance of the gradient estimator]{assumption}{varreinforce}\label{ass:REINFORCE}
 		There is a constant $V<\infty$ such that, for each policy $\pol$:
 		\[
 		\Tr\mathbb{V}ar\left(\gradApp{\vtheta}{1}\right) \leq \VARRF.
 		\]
+        \todopir{Why 1 as subscript?}
 	\end{restatable}
-The problem of full gradient approximation for SVRG has been addressed in the supervised learning framework \cite{harikandeh2015stopwasting} with results similar to ours.
-\item \textit{Non-stationarity}:
-the variance introduced by importance sampling must be bounded:
+
+\textit{3) Non-stationarity.} 
+Similarly to what done in SL~\citep{cortes2010learning}, we require the variance of the importance weight to be bounded.
 	\begin{restatable}[On the variance of importance weights]{assumption}{varweights}\label{ass:M2}
 		There is a constant $W<\infty$ such that, for each pair of policies encountered in Algorithm \ref{alg:svrpg} and for each possible trajectory,
 		\[
 		\mathbb{V}ar\left(\omega(\tau)\right) \leq \VARIS.
 		\]
 	\end{restatable}
-Differently from the previous two, this assumption can be enforced by a proper handling of the epoch size $m$.
-\end{enumerate}
+Differently from Ass.~\ref{ass:bounded_score} and ~\ref{ass:REINFORCE}, Ass.~\ref{ass:M2} can be enforced by a proper handling of the epoch size $m$.
 
-In Appendix \ref{app:gauss} we show how the commonly used Gaussian policy satisfies these assumptions.
-We can now state the following key result:
+We can now state the convergence guarantees for SVRPG.
+\todopir{Is it specific for REINFORCE?}
 \begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
-Under Assumptions \ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Algorithm \ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size $\alpha$ and the epoch size $m$, the following property:
+Under Ass.~\ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Alg.~\ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size $\alpha$ and the epoch size $m$, the following property:
 \begin{align*}
 	&\EVV[]
-	{\norm[]{\nabla J(\vtheta_A)}^2} 
+	{\norm[2]{\nabla J(\vtheta_A)}^2} 
 		\leq
 		\frac{J(\vtheta^*)-J(\vtheta_0)}{\psi T} +
 		\frac{\zeta}{N}
 		+\frac{\xi}{B}
 \end{align*}
 \end{restatable}
-Specific constants and meta-parameter constraints are provided in the proof of the theorem in Appendix \ref{app:proofs}. In Section \ref{sec:stopping}, instead, we propose a joint selection of step size $\alpha$ and epoch size $m$ which is more suited for applications. 
-The $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on non-convex SVRG, \eg \cite{reddi2016stochastic}; the $\mathcal{O}(\nicefrac{1}{N})$ term is due to full gradient approximation and is analogous to the one in \cite{harikandeh2015stopwasting}; the $\mathcal{O}(\nicefrac{1}{B})$ term is due to importance weighting. To achieve true convergence, both the batch size $N$ and the mini-batch size $B$ should increase over time. In practice, it is enough to choose $N$ and $B$ large enough to make the second and the third term negligible, \ie to mitigate the variance introduced by full gradient approximation and importance sampling respectively. Since the optimal configuration may be task-dependent, we leave this choice to the empirical analysis of Section \ref{sec:exp}. 
+% Specific constants and meta-parameter constraints are provided in the proof of the theorem in Appendix \ref{app:proofs}.
+Refer to App.~\ref{app:proofs} for a detailed proof involving definition of the constants and the meta-parameter constraints.
+%The theoretical settings may be too conservative.
+In Sec.~\ref{sec:stopping} we propose a joint selection of step size $\alpha$ and epoch size $m$ which is more suited for applications. 
+By analysing the upper-bound in Thm.~\ref{theo:convergence} we observe that: I) the $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on \textcolor{red}{non-concave} SVRG~\citep[\eg][]{reddi2016stochastic}; II) the $\mathcal{O}(\nicefrac{1}{N})$ term is due to the FG approximation and is analogous to the one in~\citep{harikandeh2015stopwasting}; III) the $\mathcal{O}(\nicefrac{1}{B})$ term is due to importance weighting.
+To achieve true convergence, both the batch size $N$ and the mini-batch size $B$ should increase over time. 
+In practice, it is enough to choose $N$ and $B$ large enough to make the second and the third term negligible, \ie to mitigate the variance introduced by FG approximation and importance sampling, respectively.
+Since the optimal configuration may be task-dependent, we leave this choice to the empirical analysis of Sec.~\ref{sec:exp}. 
 
-\section{Hyperparameters}\label{sec:stopping}
-In section \ref{sec:conv}, we introduced the practical need to properly choose $\alpha$ and $m$, which are, respectively, the step size and the number of sub-iterations to perform after a snapshot. The first one is crucial to balance the variance introduced by estimations within sub-iterations with respect to the variance introduced by estimations associated to the snapshots. The second one is essetial to control the variance introduced by the importance weights, mainly because the farther you go from the snapshot policy the higher the variance of the importance weights will be.    
+\section{Remarks on SVRPG}
+The convergence guarantees presented in the previous section come with requirements on the meta-parameters (\ie $m$ and $\alpha$) that may be too conservative for practical applications.
+Here we provide a practical and automatic way to choose the step size $\alpha$ and the number of sub-iterations $m$ performed between snapshots.
+Additionally, we provide variants of SVRPG exploiting variance-reduction techniques for importance weights. Despite lacking of theoretical guarantees, we will show that these methods are able to outperform the base SVRPG.
+
+\subsection{Meta-Parameters Selection}\label{sec:stopping}
+% In section \ref{sec:conv}, we introduced the practical need to properly choose $\alpha$ and $m$, which are, respectively, the step size and the number of sub-iterations to perform after a snapshot.
+At this point, the open question is how to properly select the step size $\alpha$ and the sub-iteration number $m$ in practical applications.
+The first parameter is crucial to balance the variance introduced by estimations within sub-iterations with respect to the variance introduced by estimations associated to the snapshots.
+The second one is essential to control the variance introduced by the importance weights, mainly because the farther you go from the snapshot policy the higher the variance of the importance weights will be.    
 
 A common way to reduce the effect of variance is to use Adaptive Moment Estimation (Adam) \cite{kingma2014adam}, a method that computes adaptive learning rates for each parameter. Adam helps to stabilize the gradient estimate by computing adaptive learning rates for each parameter based on the history of the gradients' variance.
 
@@ -487,7 +504,7 @@ These two weights ${\bf{\it N}}$ and ${\bf{\it B}}$ represent, respectively, the
 Another insight about this adaptive stopping condition lies within the value of the two different learning rate proposed by adam. Whenever the learning rate of a sub-iteration becomes too small with respect to that one proposed at the previous snapshot we are experiencing high variance. Hence it could be better to perform a new snapshot so to mitigate this issue.
 
 
-\section{Practical Variants}\label{sec:prac}
+\subsection{Practical Variants}\label{sec:prac}
 \todomat{Missing opening to section}
 We introduce a term with importance weights to guarantee proper sampling of trajectories.
 This term's variance is subjected to the variance of importance weights. 
