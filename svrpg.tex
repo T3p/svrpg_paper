@@ -741,14 +741,14 @@ Under Assumption \ref{ass:bounded_score}
 	\begin{align}
 	\Ets{\gradBlack{\vtheta_t^{s+1}}} 
 	&= \Ets{\norm[]{\gradApp{\tilde{\vtheta}^s}{N}
-			+\frac{1}{B}\sum_{i=0}^{B-1} \score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) 
+			+\frac{1}{B}\sum_{i=0}^{B-1} g(\tau_i\vert\vtheta_t^{s+1}) 
 			-\frac{1}{B}\sum_{i=0}^{B-1}
-			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
+			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
 	%
 	&= \mathbb{E}_{t\vert s}\left[\left\|\gradApp{\tilde{\vtheta}^s}{N}
 			+\frac{1}{B}\sum_{i=0}^{B-1}\left( 
-			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)
+			g(\tau_i\vert\vtheta_t^{s+1}) -
+			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)\right)
 			\right.\right.\nonumber\\&\qquad\left.\left.
 			-\gradJ{\vtheta_t^{s+1}} + \gradJ{\tilde{\vtheta}^s}
 			+\gradJ{\vtheta_t^{s+1}} - \gradJ{\tilde{\vtheta}^s}\right\|^2\right] \nonumber\\
@@ -758,13 +758,13 @@ Under Assumption \ref{ass:bounded_score}
 	&\qquad+ 
 	\mathbb{E}_{t\vert s}\left[\left\|
 		\frac{1}{B}\sum_{i=0}^{B-1}\left(
-		\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)
+		g(\tau_i\vert\vtheta_t^{s+1}) -
+			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)\right)
 		\right.\right.\nonumber\\&\qquad\left.\left.
 		- \Ets{
 			\frac{1}{B}\sum_{i=0}^{B-1}\left(
-			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-				\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)}\right\|^2\right] 
+			g(\tau_i\vert\vtheta_t^{s+1}) -
+				\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)\right)}\right\|^2\right] 
 	\nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
@@ -773,58 +773,58 @@ Under Assumption \ref{ass:bounded_score}
 	&\qquad+ 
 		\mathbb{E}_{t\vert s}\left[\left\|
 		\frac{1}{B}\sum_{i=0}^{B-1}\left(
-		\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-		\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)
+		g(\tau_i\vert\vtheta_t^{s+1}) -
+		\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)\right)
 		\right.\right.\nonumber\\&\qquad\left.\left.
 		- \Ets{
 			\frac{1}{B}\sum_{i=0}^{B-1}\left(
-			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)}\right\|^2\right] 
+			g(\tau_i\vert\vtheta_t^{s+1}) -
+			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)\right)}\right\|^2\right] 
 		\label{eq:1}\\%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
 	&\qquad+\Ets{\norm[]{
 			\frac{1}{B}\sum_{i=0}^{B-1}\left(
-			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)\right)}^2} \label{eq:2}\\
+			g(\tau_i\vert\vtheta_t^{s+1}) -
+			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)\right)}^2} \label{eq:2}\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
 	&\qquad+
 			\frac{1}{B^2}\sum_{i=0}^{B-1}
 			\Ets{\norm[]{
-			\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i) -
-			\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
+			g(\tau_i\vert\vtheta_t^{s+1}) -
+			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
 	%
 	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
 	&\qquad+
 			\frac{1}{B^2}\sum_{i=0}^{B-1}
-			\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i)
-			-\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)
-			+\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i) 
-			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
+			\Ets{\norm[]{g(\tau_i\vert\vtheta_t^{s+1})
+			-g(\tau_i\vert\tilde{\vtheta}^s)
+			+g(\tau_i\vert\tilde{\vtheta}^s) 
+			-\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
 	&\qquad+
 			\frac{1}{B^2}\sum_{i=0}^{B-1}
-			\Ets{\norm[]{\score{\vtheta_t^{s+1}}{\tau_i}R(\tau_i)
-			-\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
+			\Ets{\norm[]{g(\tau_i\vert\vtheta_t^{s+1})
+			-g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
 	&\qquad
 			+\frac{1}{B^2}\sum_{i=0}^{B-1}
-			\Ets{\norm[]{\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i) 
-			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \nonumber\\
+			\Ets{\norm[]{g(\tau_i\vert\tilde{\vtheta}^s) 
+			-\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
 	+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}\nonumber\\
 	&\qquad+
 		\frac{1}{B^2}\sum_{i=0}^{B-1}
-		\Ets{\norm[]{\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i) 
-			-\omega(\tau_i)\score{\tilde{\vtheta}^s}{\tau_i}R(\tau_i)}^2} \label{eq:3}
+		\Ets{\norm[]{g(\tau_i\vert\tilde{\vtheta}^s) 
+			-\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \label{eq:3}
 % ...
 \end{align}
 \begin{align}
@@ -848,7 +848,8 @@ Under Assumption \ref{ass:bounded_score}
 	+\GRADLOG^2\frac{R^2\VARRF}{(1-\gamma)^2B}, \label{eq:5}
 \end{align}
 where (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (\ref{eq:3}) is from L-smoothness, 
-(\ref{eq:4}) is from Assumption \ref{ass:bounded_score}, and (\ref{eq:5}) is from Assumption \ref{ass:M2}.
+(\ref{eq:4}) is from Assumption \ref{ass:bounded_score} 
+{\todomatout{We could generalize to GPOMDP by defining some more constants}\color{red}and the definition of REINFORCE}, and (\ref{eq:5}) is from Assumption \ref{ass:M2}.
 \end{proof}
 
 %Lemma 0
@@ -1075,6 +1076,7 @@ Finally, we consider the expectation \wrt all sources of randomness, including t
 \frac{J(\vtheta^*) - J(\vtheta^0)}{\psi T} + \frac{\zeta}{N} + \frac{\xi}{B} \nonumber.
 \end{align}
 \end{proof}
+
 
 \section{Applicability to Gaussian Policies}\label{app:gauss}
 We provide more details on the applicability of Theorem \ref{theo:convergence} on the case of Gaussian policies. We start from the case of one-dimensional bounded action space $\mathcal{A}\subset\mathbb{R}$, linear mean $\mu(s) = \vtheta^T\vphi(s)$ and fixed standard deviation $\sigma$:
