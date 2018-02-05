@@ -227,7 +227,7 @@ $\Reward(\tau) = \sum_{t=0}^{H-1}\gamma^t\Reward(s_t,a_t).$
 Policies can be ranked based on their expected total reward: $J(\pi) = \EVV[\tau \sim \pi]{\Reward(\tau)|M}$.
 Solving an MDP $M$ means finding $\pi^* \in \argmax_{\pi} \{J(\pi)\}$.
 
-Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^m\}$, with the only constraint that $\pol$ is differentiable \wrt $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity, while in some occasions we replace $\pol(\tau)$ with $\pi(\tau|\vtheta)$ for the sake of readability.\todopirout{See if it used}
+Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^m\}$, with the only constraint that $\pol$ is differentiable \wrt $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity, while in some occasions we replace $\pol(\tau)$ with $\pi(\tau|\vtheta)$ for the sake of readability.
 The search for a locally optimal policy is performed by means of gradient ascent, where the policy gradient
 %of $J(\vtheta)$ \wrt the policy parameters 
 is \cite{sutton2000policy, Peters2008reinf}:
@@ -255,7 +255,7 @@ The next section has the aim to describe variance reduction techniques for finit
 
 
 \subsection{Stochastic Variance-Reduced Gradient}
-Finite-sum optimization is the problem of maximizing an objective function $f(\vtheta)$ which can be decomposed into the sum or average of a finite number of functions $g_i(\cdot|\vtheta)$:
+Finite-sum optimization is the problem of maximizing an objective function $f(\vtheta)$ which can be decomposed into the sum or average of a finite number of functions $z_i(\cdot|\vtheta)$:
 \begin{align*}
         \max_{\vtheta} \left\{ f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}z_i(\vtheta)\right\}.
 \end{align*}
@@ -265,21 +265,21 @@ This kind of optimization is very common in machine learning, where each $z_i$ m
 %% \max_{\vtheta} f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}g(x_i \vert \vtheta).
 %% \end{align*}
 A common requirement is that $z$ must be smooth and {\color{red} concave} in $\vtheta$.\footnote{Note that we are considering a maximization problem instead of the classical minimization one.} 
-Under this hypothesis, full gradient (FG) ascent~\citep{cauchy1847methode} with a constant step size achieves an Incremental First-order Oracle (IFO) complexity~\citep{agarwal2014lower} of $O(\nicefrac{N}{\epsilon})$, \ie it requires $k = O(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[2]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$.\footnote{In the following we will omit the subscript for the $\ell_2$-norm.} 
-This can be too expensive for large values of $N$. Stochastic Gradient (SG) ascent~\citep[\eg][]{robbins1951stochastic,bottou2004large} overcomes this problem by sampling a single sample $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $O(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$~\cite{nemirovskii1983problem,reddi2016stochastic}.
+Under this hypothesis, full gradient (FG) ascent~\citep{cauchy1847methode} with a constant step size achieves an Incremental First-order Oracle (IFO) complexity~\citep{agarwal2014lower} of $\mathcal{O}(\nicefrac{N}{\epsilon})$, \ie it requires $k = \mathcal{O}(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[2]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$.\footnote{In the following we will omit the subscript for the $\ell_2$-norm.} 
+This can be too expensive for large values of $N$. Stochastic Gradient (SG) ascent~\citep[\eg][]{robbins1951stochastic,bottou2004large} overcomes this problem by sampling a single sample $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $\mathcal{O}(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$~\cite{nemirovskii1983problem,reddi2016stochastic}.
 Starting from SAG, a series of variations to SG have been proposed to achieve a better trade-off between convergence speed and cost per iteration: \eg SAG~\citep{roux2012stochastic}, SVRG~\cite{johnson2013accelerating}, SAGA~\cite{defazio2014saga} and Finito~\cite{defazio2014finito}, 
 The common idea is to reuse past gradient computations to reduce the variance of the current estimate.
 In particular, Stochastic Variance-Reduced Gradient (SVRG) is often preferred to other similar methods for its limited storage requirements, which can become a problem when deep and/or wide neural networks are employed.  
 
 The idea of SVRG is to alternate full and stochastic gradient updates. 
-Each $m = O(N)$ iterations, a snapshot $\widetilde{\vtheta}$ of the current parameter is saved together with its full gradient $\nabla f(\widetilde{\vtheta}) = \frac{1}{N} \sum_i g(x_i|\widetilde{\vtheta})$.
+Each $m = \mathcal{O}(N)$ iterations, a snapshot $\widetilde{\vtheta}$ of the current parameter is saved together with its full gradient $\nabla f(\widetilde{\vtheta}) = \frac{1}{N} \sum_i g(x_i|\widetilde{\vtheta})$.
 Between snapshots, the parameter is updated with a gradient estimate corrected using stochastic gradient, for any $t \in \{0,\ldots,m-1\}$
 \begin{equation}\label{E:svrg.gradient.correction}
         \blacktriangledown f(\vtheta_{t+1}) = \nabla f(\tilde{\vtheta}) + \nabla z(x_i | \vtheta_t) - \nabla z(x_i | \tilde{\vtheta}),
 \end{equation} 
-where $x_i$ is sampled uniformly at random from $\mathcal{D}_N$ (\ie $x_i \sim \mathcal{U}(\mathcal{D}_N)$). The corrected gradient $\blacktriangledown f(\vtheta)$ is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, without resorting to plain full gradient. The resulting IFO complexity is $O(N+\nicefrac{\sqrt{N}}{\epsilon})$ \cite{reddi2016stochastic}.
+where $x_i$ is sampled uniformly at random from $\mathcal{D}_N$ (\ie $x_i \sim \mathcal{U}(\mathcal{D}_N)$). The corrected gradient $\blacktriangledown f(\vtheta)$ is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, without resorting to plain full gradient. The resulting IFO complexity is $\mathcal{O}(N+\nicefrac{\sqrt{N}}{\epsilon})$ \cite{reddi2016stochastic}.
 
-More recently, some extensions of variance reduction algorithms to the non-convex objectives have been proposed~\citep[\eg][]{reddi2016stochastic,allen2016variance,reddi2016stochastic,reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the IFO complexity of full gradient  and of stochastic gradient ascent are the same as in the \textcolor{red}{concave} case~\citep{nesterov2013introductory,ghadimi2013stochastic}. Also in this case, SVRG yields an advantageous trade-off, with an IFO complexity of $O(N + \nicefrac{N^{\nicefrac{2}{3}}}{N})$~\citep{reddi2016stochastic}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value. Pseudocode of SVRG for both the convex and the non-convex case is provided in Alg.~\ref{alg:svrg}. 
+More recently, some extensions of variance reduction algorithms to the non-convex objectives have been proposed~\citep[\eg][]{reddi2016stochastic,allen2016variance,reddi2016stochastic,reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the IFO complexity of full gradient  and of stochastic gradient ascent are the same as in the \textcolor{red}{concave} case~\citep{nesterov2013introductory,ghadimi2013stochastic}. Also in this case, SVRG yields an advantageous trade-off, with an IFO complexity of $\mathcal{O}(N + \nicefrac{N^{\nicefrac{2}{3}}}{N})$~\citep{reddi2016stochastic}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value. Pseudocode of SVRG for both the convex and the non-convex case is provided in Alg.~\ref{alg:svrg}. 
 \todopir{SVRG for non-convex optimization requires to mix the parameter $\wt{\vtheta}^{s+1}$?}
 
 
@@ -420,7 +420,7 @@ However, the next section will provide general converge guarantees for SVRPG as 
 
 \section{Convergence Guarantees of SVRPG}\label{sec:conv}
 In this section, we state the convergence guarantees for SVRPG with REINFORCE structure (see Alg.~\ref{alg:svrpg}).
-We mainly leverage on the recent analysis of \textcolor{red}{nonconcave} SVRG~\cite{reddi2016stochastic,allen2016variance}.
+We mainly leverage on the recent analysis of \textcolor{red}{non-concave} SVRG~\cite{reddi2016stochastic,allen2016variance}.
 Each of the three challenges presented at the beginning of Sec.~\ref{sec:alg} can potentially prevent convergence, so we need additional assumptions.
 In App.~\ref{app:gauss} we show how the widespread Gaussian policy satisfies these assumptions.
 
@@ -483,6 +483,7 @@ Here we provide a practical and automatic way to choose the step size $\alpha$ a
 Additionally, we provide variants of SVRPG exploiting variance-reduction techniques for importance weights. Despite lacking of theoretical guarantees, we will show that these methods are able to outperform the base SVRPG.
 
 \subsection{Meta-Parameters Selection}\label{sec:stopping}
+\todopir{I'm here!}
 % In section \ref{sec:conv}, we introduced the practical need to properly choose $\alpha$ and $m$, which are, respectively, the step size and the number of sub-iterations to perform after a snapshot.
 At this point, the open question is how to properly select the step size $\alpha$ and the sub-iteration number $m$ in practical applications.
 The first parameter is crucial to balance the variance introduced by estimations within sub-iterations with respect to the variance introduced by estimations associated to the snapshots.
