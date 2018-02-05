@@ -267,7 +267,7 @@ This kind of optimization is very common in machine learning, where each $z_i$ m
 %% \max_{\vtheta} f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}g(x_i \vert \vtheta).
 %% \end{align*}
 A common requirement is that $z$ must be smooth and {\color{red} concave} in $\vtheta$.\footnote{Note that we are considering a maximization problem instead of the classical minimization one.} 
-Under this hypothesis, full gradient (FG) ascent~\citep{cauchy1847methode} with a constant step size achieves an Incremental First-order Oracle (IFO) complexity~\citep{agarwal2014lower} of $\mathcal{O}(\nicefrac{N}{\epsilon})$, \ie it requires $k = \mathcal{O}(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[2]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$.\footnote{In the following we will omit the subscript for the $\ell_2$-norm.} 
+Under this hypothesis, full gradient (FG) ascent~\citep{cauchy1847methode} with a constant step size achieves an Incremental First-order Oracle (IFO) complexity~\citep{agarwal2014lower} of $\mathcal{O}(\nicefrac{N}{\epsilon})$, \ie it requires $k = \mathcal{O}(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[2]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$. % \footnote{In the following we will omit the subscript for the $\ell_2$-norm.} 
 This can be too expensive for large values of $N$. Stochastic Gradient (SG) ascent~\citep[\eg][]{robbins1951stochastic,bottou2004large} overcomes this problem by sampling a single sample $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $\mathcal{O}(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$~\cite{nemirovskii1983problem,reddi2016stochastic}.
 Starting from SAG, a series of variations to SG have been proposed to achieve a better trade-off between convergence speed and cost per iteration: \eg SAG~\citep{roux2012stochastic}, SVRG~\cite{johnson2013accelerating}, SAGA~\cite{defazio2014saga} and Finito~\cite{defazio2014finito}, 
 The common idea is to reuse past gradient computations to reduce the variance of the current estimate.
@@ -283,8 +283,7 @@ where $x_i$ is sampled uniformly at random from $\mathcal{D}_N$ (\ie $x_i \sim \
 Note that $t=0$ corresponds to a FG step (\ie $\blacktriangledown f(\vtheta_0) = \nabla f(\wt{\vtheta})$) since $\vtheta_0 := \wt{\vtheta}$.
 The corrected gradient $\blacktriangledown f(\vtheta)$ is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, without resorting to plain full gradient. The resulting IFO complexity is $\mathcal{O}(N+\nicefrac{\sqrt{N}}{\epsilon})$ \cite{reddi2016stochastic}.
 
-More recently, some extensions of variance reduction algorithms to the non-convex objectives have been proposed~\citep[\eg][]{reddi2016stochastic,allen2016variance,reddi2016stochastic,reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the IFO complexity of full gradient  and of stochastic gradient ascent are the same as in the \textcolor{red}{concave} case~\citep{nesterov2013introductory,ghadimi2013stochastic}. Also in this case, SVRG yields an advantageous trade-off, with an IFO complexity of $\mathcal{O}(N + \nicefrac{N^{\nicefrac{2}{3}}}{N})$~\citep{reddi2016stochastic}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value. Pseudocode of SVRG for both the convex and the non-convex case is provided in Alg.~\ref{alg:svrg}. 
-
+More recently, some extensions of variance reduction algorithms to the non-convex objectives have been proposed~\citep[\eg][]{reddi2016stochastic,allen2016variance,reddi2016stochastic,reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[2]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[2]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the IFO complexity of full gradient  and of stochastic gradient ascent are the same as in the \textcolor{red}{concave} case~\citep{nesterov2013introductory,ghadimi2013stochastic}. Also in this case, SVRG yields an advantageous trade-off, with an IFO complexity of $\mathcal{O}(N + \nicefrac{N^{\nicefrac{2}{3}}}{N})$~\citep{reddi2016stochastic}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value. Pseudocode of SVRG for both the convex and the non-convex case is provided in Alg.~\ref{alg:svrg}.
 
 \begin{algorithm}[tb]
 	\caption{SVRG}
@@ -389,7 +388,8 @@ For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of th
 %\]
 %\end{restatable}
 In particular, the latter result suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can actually achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance (at least asymptotically).
-The resulting SVRPG policy optimization method is detailed in Alg.~\ref{alg:svrpg}.
+The resulting SVRPG policy optimization method is detailed in Alg.~\ref{alg:svrpg}.\footnote{Note that when $t=0$ we can avoid to sample trajectories and instead perform directly the policy update using the FG. For sake of clarity, we have not explicitly differentiate this step from the standard update rule in Alg.~\ref{alg:svrpg}.} 
+
 To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$.
 Adaptive selection of these meta-parameters is also possible, and is explored in Sec.~\ref{sec:stopping}.
 However, the next section will provide general converge guarantees for SVRPG with REINFORCE estimator.
@@ -402,6 +402,7 @@ However, the next section will provide general converge guarantees for SVRPG wit
 		\FOR{$s=0$ {\bfseries to} $S-1$}
         \STATE Sample $N$ trajectories $\{\tau_j\}$ from $\pi(\cdot\vert\tilde{\vtheta}^{s})$
         \STATE $ \wt{\mu} = \gradApp{\wt{\vtheta}^{s}}{N}$ (see Eq.~\ref{E:policygradient.estimate})% = \frac{1}{N}\sum_{j=0}^{N-1}g(\tau_j | \wt{\vtheta}^s)$
+%        \STATE $ \vtheta^s_1 = \wt{\vtheta}^s + \alpha \wt{\mu}$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
         \STATE Sample $B$ trajectories $\{\tau_i\}$ from $\pi(\cdot\vert\vtheta_t^{s+1})$
         \STATE $c^s_t = \frac{1}{B} \sum\limits_{i=0}^{B-1} \left( g(\tau_i|\vtheta_t^s) - \omega(\tau_i|\vtheta^s_t, \wt{\vtheta}^s) g(\tau_i| \wt{\vtheta})^s\right)$
@@ -490,7 +491,7 @@ For this reason we will use G(PO)MDP for the experiments (see Sec.~\ref{sec:exp}
 \todopir{sketch of proof for GPOMDP in appendix}
 
 \section{Remarks on SVRPG}
-The convergence guarantees presented in the previous section come with requirements on the meta-parameters (\ie $m$ and $\alpha$) that may be too conservative for practical applications.
+The convergence guarantees presented in the previous section come with requirements on the meta-parameters (\ie $\alpha$ and $m$) that may be too conservative for practical applications.
 Here we provide a practical and automatic way to choose the step size $\alpha$ and the number of sub-iterations $m$ performed between snapshots.
 Additionally, we provide variants of SVRPG exploiting variance-reduction techniques for importance weights. Despite lacking of theoretical guarantees, we will show that these methods are able to outperform the baseline SVRPG (Alg.~\ref{alg:svrpg}).
 
@@ -509,30 +510,32 @@ Due to this feature we would like to incorporate ADAM in the structure of the SV
 Recall that SVRPG is characterized by two updates: I) FG update in the snapshot; II) corrected gradient update in the sub-iterations.
 Given this structure, we suggest to use two ADAM estimators:
 \begin{align*}
-        \vtheta^{s+1}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\wh{\nabla}_N J(\wt{\vtheta}^s)\\
-        \vtheta^{s+1}_{t+1} &= \vtheta^{s+1}_t + \alpha^{\textsc{SI}}_t v_t^{s+1}
+        \vtheta^{s}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\wh{\nabla}_N J(\wt{\vtheta}^s)\\
+        \vtheta^{s}_{t+1} &= \vtheta^{s}_t + \alpha^{\textsc{SI}}_{s,t} v_t^{s}
 \end{align*}
-where $\alpha^{\textsc{FG}}$ is associated to the snapshot and $\alpha^{\textsc{SI}}$ with the sub-iterations.
+where $\alpha^{\textsc{FG}}_{s}$ is associated to the snapshot and $\alpha^{\textsc{SI}}_{s,t}$ with the sub-iterations.
+{\color{red} Note that the ADAM estimator used in the sub-iterations is reset at each snapshot with the FG estimate (see App.~\ref{app:adam} for details).}
+\todopir{Add ADAM definition and explain in more details}
 By doing so we decouple the contribution of the variance introduced by the approximate FG from the one introduced by the sub-iterations.
 Note that these two terms have different orders of magnitude since are estimated with a different number of trajectories ($B \ll N$) and w/o importance weights.
 The use of two ADAM estimators allows to capture and exploit this property.
 
+\textbf{Adaptive Sub-Iterations.}
+It is easy to imagine that a predefined schedule (\eg $m$ fixed in advance or changed with a policy independent process) may poorly perform due to the high variability of the updates.
+In particular, fixed a value $m$ the variance of the updates in the sub-iterations depends on the snapshot policy and sampled trajectories.
+This variability is in part captured by the ADAM estimate. Hence, we propose to take a snapshot (\ie interrupt the sub-iterations) when the step size $\alpha^{\textsc{SI}}$ proposed by ADAM for the sub-iterations is smaller than the one for the FG (\ie $\alpha^{\textsc{FG}}$).
+If the latter condition is verified, it amounts to say that the noise in the corrected gradient has overcome the information of the FG.
+Formally, the stopping condition is as follow
+\[
+        \text{If }        \frac{\alpha^{\textsc{FG}}}{N} > \frac{\alpha^{\textsc{SI}}}{B} \textbf{ then } \text{take snapshot}
+\]
+where we have introduced $N$ and $B$ to take into account the trajectory efficiency (\ie weighted advantage).
+The less the number of trajectories used to update the policy, the better.
+This weighted approach comes from the fact that, as mentioned above, there is no advantage in having $m$ too small.
+Thus, we aim to facilitate sub-iterations rather than snapshots.
 
-%Due to this feature we can use two different adam in order to properly leverage the structure of the proposed SVRPG update. The first adam will be associated to the snapshot updates and the second one will be associated to the sub-iteration updates. By doing so we are decoupling the contribution to the variance introduced by the snapshots from that one introduced by the sub-iterations. These two variance contributions lie, respectively, on two different order of magnitude because the number of trajectories used to perform the estimates for the snapshot is greater than that used for a sub-iteration.Therefore, using two adam optimizers allows us to properly adapt the learning rate in each situation. For the above mentioned reasons let us denote by $\alpha_{snap}$ the learning rate associated to the last snapshot and by  $\alpha_{sub-iter}$ the learning rate associated to the current sub-iteration.
-
-We have already said that as the number of sub-iterations $m$ increases the variance of the importance weights increases too. Therefore, if $m$ is not properly set the SVRPG algorithm fails in its primary aim of stabilizing the gradient estimate.
-
-We have seen, sperimentally, that a fixed epoch size is not the optimal choice, but an adaptive one would better exploit the total amount of data at hand. Hence, we permorm a new snapshot anytime the weighted learning rate proposed by the adam optimizer in a sub-iteration is smaller than the weighted one proposed at the immediately previous snapshot. This stopping condition is subject to a constraint on the maximum number of sub-iterations performable, which is problem dependent.
-More precisely we stop performing sub-iterations when:
-
-\[\frac{\alpha_{snap}}{N}>\frac{\alpha_{sub-iter}}{B}\]
-
-These two weights ${\bf{\it N}}$ and ${\bf{\it B}}$ represent, respectively, the number of trajectories used for a snapshot and the number of trajectories used for an update of the parameters in a sub-iteration. Therefore, in this stopping condition, we use them to take into account the trajectories efficiency. The less trajectories we use to perform an update, the better it is from a data usage point of view. Hence we want to facilitate sub-iterations with respect to snapshots.
-
-Another insight about this adaptive stopping condition lies within the value of the two different learning rate proposed by adam. Whenever the learning rate of a sub-iteration becomes too small with respect to that one proposed at the previous snapshot we are experiencing high variance. Hence it could be better to perform a new snapshot so to mitigate this issue.
-
-
-\subsection{Practical Variants}\label{sec:prac}
+\subsection{Normalized Importance Sampling}\label{sec:prac}
+\todopir{TODO: This section should be generic for normalized importance sampling trying to explain when and where are the advantages of doing this. Explicit formulation can be postponed in appendix.}
 \todomat{Missing opening to section}
 We introduce a term with importance weights to guarantee proper sampling of trajectories.
 This term's variance is subjected to the variance of importance weights. 
