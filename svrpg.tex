@@ -244,7 +244,9 @@ The policy is then updated as $\vtheta_{k+1}  = \vtheta_k + \alpha\gradApp{\vthe
         \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N} g(\tau_i|\vtheta), \quad \tau_i \in \mathcal{D}_N^k.
 \end{align}
 The most widespread gradient estimators are REINFORCE~\citep{williams1992simple} and G(PO)MDP~\citep{baxter2001infinite}.
-REINFORCE is such that $g(\tau|\vtheta) = \nabla \log\pi(\tau|\vtheta) \mathcal{R}(\tau)$,  we refer the reader to App.~\ref{A:gradient_estimators} for details.
+For example, REINFORCE is such that $g(\tau|\vtheta) = \nabla \log\pi(\tau|\vtheta) \mathcal{R}(\tau)$. 
+Although REINFORCE definition is simpler, G(PO)MDP is often preferred due to its lower variance.
+We refer the reader to App.~\ref{A:gradient_estimators} for details.
 
 The main limitation of plain policy gradient has been the high variance of these estimators.
 The naive approach of increasing the batch size is not an option in RL due to the high cost of collecting samples, \ie by interacting with the environment.
@@ -282,29 +284,30 @@ Note that $t=0$ corresponds to a FG step (\ie $\blacktriangledown f(\vtheta_0) =
 The corrected gradient $\blacktriangledown f(\vtheta)$ is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, without resorting to plain full gradient. The resulting IFO complexity is $\mathcal{O}(N+\nicefrac{\sqrt{N}}{\epsilon})$ \cite{reddi2016stochastic}.
 
 More recently, some extensions of variance reduction algorithms to the non-convex objectives have been proposed~\citep[\eg][]{reddi2016stochastic,allen2016variance,reddi2016stochastic,reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the IFO complexity of full gradient  and of stochastic gradient ascent are the same as in the \textcolor{red}{concave} case~\citep{nesterov2013introductory,ghadimi2013stochastic}. Also in this case, SVRG yields an advantageous trade-off, with an IFO complexity of $\mathcal{O}(N + \nicefrac{N^{\nicefrac{2}{3}}}{N})$~\citep{reddi2016stochastic}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value. Pseudocode of SVRG for both the convex and the non-convex case is provided in Alg.~\ref{alg:svrg}. 
-\todopir{SVRG for non-convex optimization requires to mix the parameter $\wt{\vtheta}^{s+1}$?}
 
 
 \begin{algorithm}[tb]
 	\caption{SVRG}
 	\label{alg:svrg}
 	\begin{algorithmic}
-            \STATE {\bfseries Input:} a dataset $\mathcal{D}_N$, number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{m}^0$
+            \STATE {\bfseries Input:} a dataset $\mathcal{D}_N$, number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{0}^0:=\wt{\vtheta}^0$
 		\FOR{$s=0$ {\bfseries to} $S-1$}
-		\STATE $\vtheta_0^{s+1} := \wt{\vtheta}^s := \vtheta_{m}^s$
+        \STATE $\wt{\mu} = f(\wt{\vtheta}^s)$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
 %		\STATE Pick $i$ uniformly at random from $[1,N]$
         \STATE $x_i \sim \mathcal{U}\left(\mathcal{D}_N\right)$
-		\STATE $v^{s+1}_t = 
-			\nabla f(\wt{\vtheta}^s) + 
-			\nabla g(x_i|\vtheta_t^{s+1}) -
+		\STATE $v^{s}_t = 
+%			\nabla f(\wt{\vtheta}^s) + 
+			\wt{\mu} + 
+			\nabla g(x_i|\vtheta_t^{s}) -
 			\nabla g(x_i|\wt{\vtheta}^{s})
 		$
-        \STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha v^{s+1}_t$
+        \STATE $\vtheta_{t+1}^{s} = \vtheta_t^{s} + \alpha v^{s}_t$
 		\ENDFOR
+        \STATE $\vtheta_0^{s+1} := \wt{\vtheta}^{s+1} = \vtheta_{m}^s$
 		\ENDFOR
-		\STATE {\bfseries Convex case: return} $\vtheta_{m}^S$
-		\STATE {\bfseries Non-Convex case: return} $\vtheta_t^s$ with $(s,t)$ picked uniformly at random from $[0,S)\times[0,m)$
+        \STATE \underline{Concave case:} \textbf{return} $\vtheta_{0}^S$
+        \STATE \underline{Non-Concave case:} \textbf{return} $\vtheta_t^s$ with $(s,t)$ picked uniformly at random from $\{[0,S[\times[0,m[\} \cup \{(S,0)\}$
 	\end{algorithmic}
 \end{algorithm}
 
@@ -330,7 +333,7 @@ Finally, the unbiasedness of Eq.~\ref{E:svrg.gradient.correction} is broken by t
 To overcome this limitation we employ importance weighting~\citep[\eg][]{rubinstein1981simulation,precup2000eligibility} to correct the distribution shift.
 %Finally, we employ importance weighting~\citep[\eg]{rubinstein1981simulation,precup2000eligibility} to guarantee proper sampling of trajectories. 
 
-We can now introduce Stochastic Variance-Reduced Policy Gradient (SVRPG).
+We can now introduce Stochastic Variance-Reduced Policy Gradient (SVRPG) for a generic policy gradient estimator $g$ (see Eq.~\ref{E:policygradient.estimate}).
 % For simplicity, we focus on the REINFORCE estimator but the extension to G(PO)MDP is straightforward.
 Between snapshots, the SVRPG estimate is corrected using importance weighting, for any $t \in \{0,\ldots,m-1\}$
 \begin{align*}
@@ -389,25 +392,25 @@ In particular, the latter result suggests that an SVRG-like algorithm using $\gr
 The resulting SVRPG policy optimization method is detailed in Alg.~\ref{alg:svrpg}.
 To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$.
 Adaptive selection of these meta-parameters is also possible, and is explored in Sec.~\ref{sec:stopping}.
-However, the next section will provide general converge guarantees for SVRPG as in Alg.~\ref{alg:svrpg}.
+However, the next section will provide general converge guarantees for SVRPG with REINFORCE estimator.
 
 \begin{algorithm}[tb]
-        \caption{SVRPG based on REINFORCE}
+        \caption{SVRPG}
 	\label{alg:svrpg}
 	\begin{algorithmic}
-		\STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{m}^0$, batch size $N$, mini-batch size B
+        \STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, batch size $N$, mini-batch size $B$, gradient estimator $g$, initial parameter $\vtheta_{0}^0 := \wt{\vtheta}^0$
 		\FOR{$s=0$ {\bfseries to} $S-1$}
         \STATE Sample $N$ trajectories $\{\tau_j\}$ from $\pi(\cdot\vert\tilde{\vtheta}^{s})$
-		\STATE $\gradApp{\tilde{\vtheta}^{s}}{N} = \frac{1}{N}\sum_{j=0}^{N-1}\score{}{\tau_j\vert\tilde{\vtheta}^{s}}\Reward(\tau_j)$
-		\STATE $\vtheta_0^{s+1} = \tilde{\vtheta}^s = \vtheta_{m}^s$
+        \STATE $ \wt{\mu} = \gradApp{\wt{\vtheta}^{s}}{N}$ (see Eq.~\ref{E:policygradient.estimate})% = \frac{1}{N}\sum_{j=0}^{N-1}g(\tau_j | \wt{\vtheta}^s)$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
         \STATE Sample $B$ trajectories $\{\tau_i\}$ from $\pi(\cdot\vert\vtheta_t^{s+1})$
-        \STATE $c^{s+1}_t = \frac{1}{B} \sum\limits_{i=0}^{B-1}
-        \begin{aligned}[t]
-                & \Reward(\tau_i) \Big[ \score{}{\tau_i|\vtheta_t^{s+1}} \\
-                &- \omega(\tau|\vtheta^{s+1}_t, \wt{\vtheta}^s)\score{}{\tau_i|\wt{\vtheta}^{s}} \Big]
-        \end{aligned}$
-        \STATE $v^{s+1}_t = \gradApp{\wt{\vtheta}^{s}}{N} + c^{s+1}_t$
+        \STATE $c^s_t = \frac{1}{B} \sum\limits_{i=0}^{B-1} \left( g(\tau_i|\vtheta_t^s) - \omega(\tau_i|\vtheta^s_t, \wt{\vtheta}^s) g(\tau_i| \wt{\vtheta})^s\right)$
+%        \STATE $c^{s+1}_t = \frac{1}{B} \sum\limits_{i=0}^{B-1}
+%        \begin{aligned}[t]
+%                & \Reward(\tau_i) \Big[ \score{}{\tau_i|\vtheta_t^{s+1}} \\
+%                &- \omega(\tau|\vtheta^{s+1}_t, \wt{\vtheta}^s)\score{}{\tau_i|\wt{\vtheta}^{s}} \Big]
+%        \end{aligned}$
+        \STATE $v^{s}_t = \wt{\mu} + c^s_t$ % \gradApp{\wt{\vtheta}^{s}}{N} + c^{s}_t$
 %%		\begin{align*}
 %%		\blacktriangledown J(\vtheta_t^{s+1}) = 
 %%		&\gradApp{\tilde{\vtheta}^s}{N} \\
@@ -415,15 +418,16 @@ However, the next section will provide general converge guarantees for SVRPG as 
 %%		\score{}{\tau_i\vert\vtheta_t^{s+1}}\Reward(\tau_i)\right. \\
 %%		&\left. - \omega(\tau_i)\score{}{\tau_i \vert \tilde{\vtheta}^{s}}\Reward(\tau_i)\right]
 %%		\end{align*}
-        \STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha v^{s+1}_t$
+        \STATE $\vtheta_{t+1}^{s} = \vtheta_t^{s} + \alpha v^{s}_t$
 		\ENDFOR
+        \STATE $\vtheta_0^{s+1} := \tilde{\vtheta}^{s+1} = \vtheta_{m}^s$
 		\ENDFOR
-		\STATE {\bfseries return} $\vtheta_t^s$ with $(s,t)$ picked uniformly at random from $[0,S)\times[0,m)$
+        \STATE {\bfseries return} $\vtheta_t^s$ with $(s,t)$ picked uniformly at random from $\{[0,S[\times[0,m[\} \cup \{(S,0)\}$
 	\end{algorithmic}
 \end{algorithm}
 
 \section{Convergence Guarantees of SVRPG}\label{sec:conv}
-In this section, we state the convergence guarantees for SVRPG with REINFORCE structure (see Alg.~\ref{alg:svrpg}).
+In this section, we state the convergence guarantees for SVRPG with REINFORCE estimator (refer to Alg.~\ref{alg:svrpg} with $g(\tau|\vtheta) =  \nabla \log\pi(\tau|\vtheta) \mathcal{R}(\tau)$).\footnote{Similar results can be derived for G(PO)MDP, see App.~\ref{app:}.}
 We mainly leverage on the recent analysis of \textcolor{red}{non-concave} SVRG~\cite{reddi2016stochastic,allen2016variance}.
 Each of the three challenges presented at the beginning of Sec.~\ref{sec:alg} can potentially prevent convergence, so we need additional assumptions.
 In App.~\ref{app:gauss} we show how the widespread Gaussian policy satisfies these assumptions.
@@ -460,8 +464,8 @@ Similarly to what done in SL~\citep{cortes2010learning}, we require the variance
 Differently from Ass.~\ref{ass:bounded_score} and ~\ref{ass:REINFORCE}, Ass.~\ref{ass:M2} can be enforced by a proper handling of the epoch size $m$.
 
 We can now state the convergence guarantees for SVRPG.
-\todopir{Is it specific for REINFORCE?}
-\begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
+\begin{restatable}[Convergence of the REINFORCE-SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
+Consider the REINFORCE estimator in Eq.~\ref{E:policygradient.estimate}.
 Under Ass.~\ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Alg.~\ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size $\alpha$ and the epoch size $m$, the following property:
 \begin{align*}
 	&\EVV[]
@@ -481,13 +485,17 @@ To achieve true convergence, both the batch size $N$ and the mini-batch size $B$
 In practice, it is enough to choose $N$ and $B$ large enough to make the second and the third term negligible, \ie to mitigate the variance introduced by FG approximation and importance sampling, respectively.
 Since the optimal configuration may be task-dependent, we leave this choice to the empirical analysis of Sec.~\ref{sec:exp}. 
 
+\textbf{G(PO)MDP.} A similar result to the one stated in Thm~\ref{theo:convergence} can be derived for the G(PO)MDP estimator. A sketch of the proof is reported in~\ref{app:gpomdpproof}.
+In practice, due to the lower variance G(PO)MDP is preferred to REINFORCE.
+For this reason we will use G(PO)MDP for the experiments (see Sec.~\ref{sec:exp}).
+\todopir{sketch of proof for GPOMDP in appendix}
+
 \section{Remarks on SVRPG}
 The convergence guarantees presented in the previous section come with requirements on the meta-parameters (\ie $m$ and $\alpha$) that may be too conservative for practical applications.
 Here we provide a practical and automatic way to choose the step size $\alpha$ and the number of sub-iterations $m$ performed between snapshots.
-Additionally, we provide variants of SVRPG exploiting variance-reduction techniques for importance weights. Despite lacking of theoretical guarantees, we will show that these methods are able to outperform the base SVRPG.
+Additionally, we provide variants of SVRPG exploiting variance-reduction techniques for importance weights. Despite lacking of theoretical guarantees, we will show that these methods are able to outperform the baseline SVRPG (Alg.~\ref{alg:svrpg}).
 
 \subsection{Meta-Parameters Selection}\label{sec:stopping}
-\todopir{I'm here!}
 % In section \ref{sec:conv}, we introduced the practical need to properly choose $\alpha$ and $m$, which are, respectively, the step size and the number of sub-iterations to perform after a snapshot.
 % At this point, the open question is how to properly select the step size $\alpha$ and the sub-iteration number $m$ in practical applications.
 The step size $\alpha$ is crucial to balance the variance due to the sub-iterations and the variance associated to the estimator at the snapshot.
