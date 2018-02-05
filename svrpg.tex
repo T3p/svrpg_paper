@@ -227,7 +227,7 @@ $\Reward(\tau) = \sum_{t=0}^{H-1}\gamma^t\Reward(s_t,a_t).$
 Policies can be ranked based on their expected total reward: $J(\pi) = \EVV[\tau \sim \pi]{\Reward(\tau)|M}$.
 Solving an MDP $M$ means finding $\pi^* \in \argmax_{\pi} \{J(\pi)\}$.
 
-Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^m\}$, with the only constraint that $\pol$ is differentiable \wrt $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity, while in some occasions we replace $\pol(\tau)$ with $\pi(\tau|\vtheta)$ for the sake of readability.
+Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^d\}$, with the only constraint that $\pol$ is differentiable \wrt $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity, while in some occasions we replace $\pol(\tau)$ with $\pi(\tau|\vtheta)$ for the sake of readability.
 The search for a locally optimal policy is performed by means of gradient ascent, where the policy gradient
 %of $J(\vtheta)$ \wrt the policy parameters 
 is \cite{sutton2000policy, Peters2008reinf}:
@@ -272,7 +272,7 @@ The common idea is to reuse past gradient computations to reduce the variance of
 In particular, Stochastic Variance-Reduced Gradient (SVRG) is often preferred to other similar methods for its limited storage requirements, which can become a problem when deep and/or wide neural networks are employed.  
 
 The idea of SVRG is to alternate full and stochastic gradient updates. 
-Each $m = \mathcal{O}(N)$ iterations, a snapshot $\widetilde{\vtheta}$ of the current parameter is saved together with its full gradient $\nabla f(\widetilde{\vtheta}) = \frac{1}{N} \sum_i g(x_i|\widetilde{\vtheta})$.
+Each $m = \mathcal{O}(N)$ iterations, a snapshot $\widetilde{\vtheta}$ of the current parameter is saved together with its full gradient $\nabla f(\widetilde{\vtheta}) = \frac{1}{N} \sum_i z(x_i|\widetilde{\vtheta})$.
 Between snapshots, the parameter is updated with a gradient estimate corrected using stochastic gradient, for any $t \in \{0,\ldots,m-1\}$
 \begin{equation}\label{E:svrg.gradient.correction}
         \blacktriangledown f(\vtheta_{t+1}) = \nabla f(\tilde{\vtheta}) + \nabla z(x_i | \vtheta_t) - \nabla z(x_i | \tilde{\vtheta}),
@@ -365,6 +365,7 @@ and regardless of the mini-batch size $B$:
 	\mathbb{V}ar\left[\gradBlack{\vtheta^*}\right] = 
     \mathbb{V}ar\left[\wh{\nabla}_N^{\textsc{RF}}J(\vtheta^*)\right].
 \]
+\todopir{Definition of Var??}
 \end{lemma}
 
 %\begin{restatable}{lemma}{unbias}\label{lemma:unbias}
@@ -438,7 +439,7 @@ However, in RL we can consider the following assumption which is sufficient for 
 Since we cannot compute an exact full gradient, we require the variance of the estimator to be bounded.
 This assumption is in spirit similar to the one in~\citep{harikandeh2015stopwasting}.
 	\begin{restatable}[On the variance of the gradient estimator]{assumption}{varreinforce}\label{ass:REINFORCE}
-		There is a constant $V<\infty$ such that, for each policy $\pol$:
+		There is a constant $V<\infty$ such that, for any policy $\pol$:
 		\[
 		\Tr\mathbb{V}ar\left(\gradApp{\vtheta}{1}\right) \leq \VARRF.
 		\]
@@ -448,9 +449,9 @@ This assumption is in spirit similar to the one in~\citep{harikandeh2015stopwast
 \textit{3) Non-stationarity.} 
 Similarly to what done in SL~\citep{cortes2010learning}, we require the variance of the importance weight to be bounded.
 	\begin{restatable}[On the variance of importance weights]{assumption}{varweights}\label{ass:M2}
-		There is a constant $W<\infty$ such that, for each pair of policies encountered in Algorithm \ref{alg:svrpg} and for each possible trajectory,
+		There is a constant $W<\infty$ such that, for each pair of policies encountered in Alg.~\ref{alg:svrpg} and for each possible trajectory,
 		\[
-		\mathbb{V}ar\left(\omega(\tau)\right) \leq \VARIS.
+                \mathbb{V}ar\left(\omega(\tau| \vtheta_1, \vtheta_2)\right) \leq \VARIS, \quad \forall \vtheta_1,\vtheta_2 \in \realspace^d , \tau \sim \pi_{\vtheta_1}.
 		\]
 	\end{restatable}
 Differently from Ass.~\ref{ass:bounded_score} and ~\ref{ass:REINFORCE}, Ass.~\ref{ass:M2} can be enforced by a proper handling of the epoch size $m$.
