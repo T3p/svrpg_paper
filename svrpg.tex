@@ -946,7 +946,7 @@ Under Assumptions \ref{ass:bounded_score} ans \ref{ass:M2}, the expected squared
 \begin{align*}
 	&R_t^{s+1}\coloneqq \Ets{J(\vtheta_t^{s+1}) - c_t\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}, \\
 	&c_{m-1} = 0, \\
-	&c_t = c_{t+1}\left(\frac{3}{2}+\alpha_t\beta_t+\alpha_t^2\right) + \alpha_t\frac{L^2}{B}+\frac{\alpha_t^2L^3}{2}, \\
+	&c_t = c_{t+1}\left(\frac{3}{2}+\alpha_t\beta_t+\frac{\alpha_t^2L^2}{B}\right) + \alpha_tL^2+\frac{\alpha_t^2L^3}{2B}, \\
 	&\Psi_t = \alpha_t\left(1-\frac{c_{t+1}}{\beta_t}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right), \\
 	&d_t = \frac{\alpha_t}{2}\left(1+2c_{t+1}+\alpha_t^2L+2\alpha_t^2c_{t+1}\right), \\
 	&f_t = \alpha_t^2\frac{\Gamma(L+2c_{t+1})}{2}.
@@ -1028,12 +1028,12 @@ Finally:
 	-\alpha_t^2\left(\frac{L}{2}+c_{t+1}\right)\left(\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
 	\right.\nonumber\\
-	&\left.\qquad+\frac{L^2}{b}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	&\left.\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\frac{\Gamma W}{B}\right)
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}\right)\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} \label{eq:19}\\
 	%
-	& = \Ets{J(\vtheta_t^{s+1}) - \left(c_{t+1}\left(\frac{3}{2}+\alpha_t\beta+\alpha_t^2\right)+\alpha_t\frac{L^2}{b}+\frac{\alpha_t^2L^3}{2}\right)\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
+	& = \Ets{J(\vtheta_t^{s+1}) - \left(c_{t+1}\left(\frac{3}{2}+\alpha_t\beta+\frac{\alpha_t^2L^2}{B}\right)+\alpha_tL^2+\frac{\alpha_t^2L^3}{2B}\right)\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
 	&\qquad
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}+\alpha_t^2L+2\alpha_t^2c_{t+1}\right)\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
