@@ -436,7 +436,7 @@ However, the next section will provide general converge guarantees for SVRPG \te
 \end{algorithm}
 
 \section{Convergence Guarantees of SVRPG}\label{sec:conv}
-In this section, we state the convergence guarantees for SVRPG with REINFORCE estimator.\footnote{Similar results can be derived for G(PO)MDP, see App.~\ref{app:}.}
+In this section, we state the convergence guarantees for SVRPG {\color{red}with REINFORCE estimator}.\footnote{\color{red}Similar results can be derived for G(PO)MDP, see App.~\ref{app:}.}
 We mainly leverage on the recent analysis of \textcolor{red}{non-concave} SVRG~\cite{reddi2016stochastic,allen2016variance}.
 Each of the three challenges presented at the beginning of Sec.~\ref{sec:alg} can potentially prevent convergence, so we need additional assumptions.
 In App.~\ref{app:gauss} we show how the widespread Gaussian policy satisfies these assumptions.
@@ -444,10 +444,10 @@ In App.~\ref{app:gauss} we show how the widespread Gaussian policy satisfies the
 \textit{1) Non-concavity.} A common assumption in this case it to assume the objective function to be $L$-smooth.
 However, in RL we can consider the following assumption which is sufficient for the $L$-smoothness of the objective (see Lem.~\ref{lemma:lsmooth}).
 	\begin{restatable}[On policy derivatives]{assumption}{boundedscore}\label{ass:bounded_score}
-		For each trajectory $\tau$, value of $\vtheta$ and dimensions $i,j$ there are positive constants $G,F<\infty$ such that:
+		For each state-action pair $(s,a)$, value of $\vtheta$ and dimensions $i,j$ there are positive constants $G,F<\infty$ such that:
 \[
-		\left|\nabla_{\theta_i}\log\pi_{\vtheta}(\tau)\right| \leq \GRADLOG, \qquad
-        \left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(\tau)\right| \leq \HESSLOG.
+		\left|\nabla_{\theta_i}\log\pi_{\vtheta}(a\vert s)\right| \leq \GRADLOG, \qquad
+        \left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(a \vert s)\right| \leq \HESSLOG.
 \]
 	\end{restatable}
 
@@ -472,8 +472,8 @@ Similarly to what done in SL~\citep{cortes2010learning}, we require the variance
 Differently from Ass.~\ref{ass:bounded_score} and ~\ref{ass:REINFORCE}, Ass.~\ref{ass:M2} can be enforced by a proper handling of the epoch size $m$.
 
 We can now state the convergence guarantees for SVRPG.
-\begin{restatable}[Convergence of the REINFORCE-SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
-Consider the REINFORCE estimator in Eq.~\ref{E:policygradient.estimate}.
+\begin{restatable}[Convergence of the {\color{red}REINFORCE-}SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
+{\color{red}Consider the REINFORCE estimator in Eq.~\ref{E:policygradient.estimate}.}
 Under Ass.~\ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Alg.~\ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size $\alpha$ and the epoch size $m$, the following property:
 \begin{align*}
 	&\EVV[]
@@ -522,7 +522,7 @@ Given this structure, we suggest to use two ADAM estimators:
         \vtheta^{s}_{t+1} &= \vtheta^{s}_t + \alpha^{\textsc{SI}}_{s,t} v_t^{s}
 \end{align*}
 where $\alpha^{\textsc{FG}}_{s}$ is associated to the snapshot and $\alpha^{\textsc{SI}}_{s,t}$ with the sub-iterations.
-{\color{red} Note that the ADAM estimator used in the sub-iterations is reset at each snapshot with the FG estimate (see App.~\ref{app:adam} for details).}
+{\color{red} Note that the ADAM estimator used in the sub-iterations is reset at each snapshot \todomatout{actually not reset} with the FG estimate (see App.~\ref{app:adam} for details).}
 \todopir{Add ADAM definition and explain in more details}
 By doing so we decouple the contribution of the variance introduced by the approximate FG from the one introduced by the sub-iterations.
 Note that these two terms have different orders of magnitude since are estimated with a different number of trajectories ($B \ll N$) and w/o importance weights.
@@ -703,7 +703,7 @@ Note that the importance weight is necessary to guarantee unbiasedness, since th
 
 % \zerovar*
 \begin{restatable}{lemma}{zerovar}\label{lemma:zerovar}
-At convergence, the variance of the SVRPG estimator is equal to the variance of the REINFORCE estimator, regardless of the mini-batch size $B$:
+At convergence, the variance of the SVRPG estimator is equal to the variance of the gradient estimator, regardless of the mini-batch size $B$:
 \[
 	\Var\left[\gradBlack{\vtheta^*}\right] = 
 	\Var\left[\gradApp{\vtheta^*}{N}\right].
@@ -732,13 +732,28 @@ By definition of $J(\vtheta)$:
 &= \int_{\Tspace}\Dij{}{\theta}\pol(\tau)\Reward(\tau)\de \tau
 \nonumber\\ 
 &= \int_{\Tspace}\pol(\tau)\score{\theta}{\tau}\score{\theta}{\tau}^T\Reward(\tau)\de \tau + \int_{\Tspace}\pol(\tau)\Dij{}{\theta}\log\pol(\tau)\Reward(\tau)\de \tau \nonumber\\
-&\leq \sup_{\tau} \left\{\left|\Reward(\tau)\right|\right\} \left(\GRADLOG^2+\HESSLOG\right) \label{eq:0}\\
-&= \frac{R}{1-\gamma}\left(\GRADLOG^2+\HESSLOG\right),\nonumber
+&\leq \sup_{\tau} \left\{\left|\Reward(\tau)\right|\right\} \left(H^2\GRADLOG^2+H\HESSLOG\right) \label{eq:0}\\
+&= \frac{1-\gamma^H}{1-\gamma}RH\left(H\GRADLOG^2+\HESSLOG\right),\nonumber
 \end{align}
 where \ref{eq:0} is from Assumption \ref{ass:bounded_score}.
 Since the Hessian is bounded, $J(\vtheta)$ is Lipschitz-smooth.
 \end{proof}
 
+\begin{restatable}[]{lemma}{bounded-g}\label{lemma:gbound}
+Under Assumption \ref{ass:bounded_score}, whether we use the REINFORCE or the G(PO)MDP gradient estimator, for every $\tau\in\Tspace$ and $\vtheta\in\Theta$, there is a positive constant $\Gamma<\infty$ such that:
+\[
+	\norm[]{g(\tau\vert\vtheta)}^2 \leq \Gamma.
+\]
+\end{restatable}
+\begin{proof}
+For REINFORCE we have, from Assumption \ref{ass:bounded_score}:
+\begin{align*}
+	\norm[]{g(\tau\vert\vtheta)}^2 &=
+	\norm[]{\score{\vtheta}{\tau}R(\tau)}^2 \\
+	&=\norm[]{\left(\sum_{t=0}^{H-1}\score{\vtheta}{a_t\vert s_t}\right)\left(\sum_{t=0}^{H-1}\gamma^t r_t\right)}^2\leq H^2G^2\frac{(1-\gamma^H)^2}{(1-\gamma)^2}R^2\dim(\vTheta) \coloneqq \Gamma
+\end{align*}
+For G(PO)MDP, we do not have a compact expression for $g$, but since it is derived from REINFORCE by neglecting some terms of the kind $\score{\vtheta}{a_t\vert s_t}\gamma^t r_t$ \cite{baxter2001infinite}\cite{peters2008reinforcement}, the above bound still holds.
+\end{proof}
 %Lemma 2
 \begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
 Under Assumption \ref{ass:bounded_score}
@@ -749,7 +764,7 @@ Under Assumption \ref{ass:bounded_score}
 +L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 +\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
 \nonumber 
-+\frac{G^2R^2W}{(1-\gamma)^2B}
++\frac{\Gamma\VARIS}{B}
 \]
 \end{restatable}
 \begin{proof}
@@ -848,23 +863,22 @@ Under Assumption \ref{ass:bounded_score}
 	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
 	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+\GRADLOG^2\frac{R^2}{(1-\gamma)^2}\frac{1}{B^2}\sum_{i=0}^{B-1}\Ets{(\omega(\tau_i)-1)^2} \label{eq:4}\\
+	+\Gamma\frac{1}{B^2}\sum_{i=0}^{B-1}\Ets{(\omega(\tau_i)-1)^2} \label{eq:4}\\
 	%
 	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
 	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+\GRADLOG^2\frac{R^2}{(1-\gamma)^2b^2}\sum_{i=0}^{B-1}\Varts{\omega(\tau_i)} \nonumber\\
+	+\frac{\Gamma}{B^2}\sum_{i=0}^{B-1}\Varts{\omega(\tau_i)} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
 	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+\GRADLOG^2\frac{R^2\VARRF}{(1-\gamma)^2B}, \label{eq:5}
+	+\frac{\Gamma\VARIS}{B}, \label{eq:5}
 \end{align}
 where (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (\ref{eq:3}) is from L-smoothness, 
-(\ref{eq:4}) is from Assumption \ref{ass:bounded_score} 
-{\todomatout{We could generalize to GPOMDP by defining some more constants}\color{red}and the definition of REINFORCE}, and (\ref{eq:5}) is from Assumption \ref{ass:M2}.
+(\ref{eq:4}) is from Lemma \ref{lemma:gbound}, and (\ref{eq:5}) is from Assumption \ref{ass:M2}.
 \end{proof}
 
 %Lemma 0
@@ -926,16 +940,16 @@ Under Assumptions \ref{ass:bounded_score} ans \ref{ass:M2}, the expected squared
 \[
 	\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \leq
 	\frac{R_{t+1}^{s+1} - R_t^{s+1}}{\Psi_t} + \frac{d_tV}{N\Psi_t}
-	+\frac{f_tW}{b\Psi_t},
+	+\frac{f_tW}{B\Psi_t},
 \]
 	where
 \begin{align*}
 	&R_t^{s+1}\coloneqq \Ets{J(\vtheta_t^{s+1}) - c_t\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}, \\
 	&c_{m-1} = 0, \\
-	&c_t = c_{t+1}\left(\frac{3}{2}+\alpha_t\beta_t+\alpha_t^2\right) + \alpha_t\frac{L^2}{b}+\frac{\alpha_t^2L^3}{2}, \\
+	&c_t = c_{t+1}\left(\frac{3}{2}+\alpha_t\beta_t+\alpha_t^2\right) + \alpha_t\frac{L^2}{B}+\frac{\alpha_t^2L^3}{2}, \\
 	&\Psi_t = \alpha_t\left(1-\frac{c_{t+1}}{\beta_t}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right), \\
 	&d_t = \frac{\alpha_t}{2}\left(1+2c_{t+1}+\alpha_t^2L+2\alpha_t^2c_{t+1}\right), \\
-	&f_t = \alpha_t^2\frac{G^2R^2(L+2c_{t+1})}{2(1-\gamma)^2}.
+	&f_t = \alpha_t^2\frac{\Gamma(L+2c_{t+1})}{2}.
 \end{align*}
 In particular, the following constraints on $\alpha_t$ and $\beta_t$ are sufficient:
 \begin{align*}
@@ -1015,7 +1029,7 @@ Finally:
 	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
 	\right.\nonumber\\
 	&\left.\qquad+\frac{L^2}{b}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-	+G^2\frac{R^2}{(1-\gamma)^2b}W\right)
+	+\frac{\Gamma W}{B}\right)
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}\right)\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} \label{eq:19}\\
 	%
@@ -1023,7 +1037,7 @@ Finally:
 	&\qquad
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}+\alpha_t^2L+2\alpha_t^2c_{t+1}\right)\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
-	&\qquad-\alpha_t^2\frac{(L+2c_{t+1})G^2R^2\VARIS}{2(1-\gamma)^2b} \nonumber\\
+	&\qquad-\alpha_t^2\frac{(L+2c_{t+1})\Gamma\VARIS}{2B} \nonumber\\
 	%
 	&= R_t^{s+1}
 	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
@@ -1034,7 +1048,7 @@ Finally:
 	-\frac{d_t}{N}\VARRF
 	-\frac{f_t}{b}\VARIS, \label{eq:20}
 \end{align}
-where (\ref{eq:17}) is from (\ref{eq:13}), (\ref{eq:18}) is from (\ref{eq:16}), (\ref{eq:19}) is from Lemma \ref{lemma:aux0}, and (\ref{eq:20}) is from Assumption \ref{ass:REINFORCE}.
+where (\ref{eq:17}) is from (\ref{eq:13}), (\ref{eq:18}) is from (\ref{eq:16}), (\ref{eq:19}) is from Lemma \ref{lemma:aux2}, and (\ref{eq:20}) is from Assumption \ref{ass:REINFORCE}.
 To complete the proof, besides rearranging terms, we have to ensure that $\Psi_t>0$ for each $t$. This gives the constraints on $\alpha_t$ and $\beta_t$.
 \end{proof}
 
