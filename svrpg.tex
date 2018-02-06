@@ -114,8 +114,11 @@
 \newcommand{\Dataset}{\mathcal{D}}
 %Specific
 \newcommand{\Ets}[2][t]{\mathbb{E}_{#1\vert s}\left[#2\right]}
+\newcommand{\Es}[1]{\mathbb{E}_{s}\left[#1\right]}
 \newcommand{\Covts}[3][t]{{\mathbb{C}\text{ov}}_{#1\vert s}\left(#2,#3\right)}
+\newcommand{\Covs}[2]{{\mathbb{C}\text{ov}}_{s}\left(#1,#2\right)}
 \newcommand{\Varts}[2][t]{{\mathbb{V}\text{ar}}_{#1\vert s}\left[#2\right]}
+\newcommand{\Vars}[1]{{\mathbb{V}\text{ar}}_{s}\left[#1\right]}
 \newcommand{\gradBlack}[1]{\blacktriangledown J(#1)}
 \newcommand{\gradIdeal}[1]{\dnabla J(#1)}
 \newcommand{\VARRF}{V}
@@ -274,7 +277,7 @@ This kind of optimization is very common in machine learning, where each $z_i$ m
 %% \end{align*}
 A common requirement is that $z$ must be smooth and {\color{red} concave} in $\vtheta$.\footnote{Note that we are considering a maximization problem instead of the classical minimization one.} 
 Under this hypothesis, full gradient (FG) ascent~\citep{cauchy1847methode} with a constant step size achieves an Incremental First-order Oracle (IFO) complexity~\citep{agarwal2014lower} of $\mathcal{O}(\nicefrac{N}{\epsilon})$, \ie it requires $k = \mathcal{O}(\nicefrac{N}{\epsilon})$ gradient computations to achieve $\norm[2]{\nabla_{\vtheta}f(\vtheta_k)}^2\leq\epsilon$. % \footnote{In the following we will omit the subscript for the $\ell_2$-norm.} 
-This can be too expensive for large values of $N$. Stochastic Gradient (SG) ascent~\citep[\eg][]{robbins1951stochastic,bottou2004large} overcomes this problem by sampling a single sample $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $\mathcal{O}(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$~\cite{nemirovskii1983problem,reddi2016stochastic}.
+This can be too expensive for large values of $N$. Stochastic Gradient (SG) ascent~\citep[\eg][]{robbins1951stochastic,bottou2004large} overcomes this problem by sampling a single sample $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. The resulting IFO complexity is $\mathcal{O}(\nicefrac{1}{\epsilon^2})$ in expectation, which does not depend on $N$, but has a worse dependency on $\epsilon$~\cite{nemirovskii1983problem,reddi2016stochastic}. \todomat{We are not interested in IFO complexity, report convergence rate instead}
 Starting from SAG, a series of variations to SG have been proposed to achieve a better trade-off between convergence speed and cost per iteration: \eg SAG~\citep{roux2012stochastic}, SVRG~\cite{johnson2013accelerating}, SAGA~\cite{defazio2014saga} and Finito~\cite{defazio2014finito}, 
 The common idea is to reuse past gradient computations to reduce the variance of the current estimate.
 In particular, Stochastic Variance-Reduced Gradient (SVRG) is often preferred to other similar methods for its limited storage requirements, which can become a problem when deep and/or wide neural networks are employed.  
@@ -315,7 +318,7 @@ More recently, some extensions of variance reduction algorithms to the non-conve
         \STATE \underline{Non-Concave case:} \textbf{return} $\vtheta_t^s$ with $(s,t)$ picked uniformly at random from $\{[0,S[\times[0,m[\} \cup \{(S,0)\}$
 	\end{algorithmic}
 \end{algorithm}
-
+\todomat{Mention the fact that we return last parameter in practice}
 
 \section{SVRG in Reinforcement Learning}\label{sec:alg}
 In online RL problems the usual approach is to tune the batch size of SG in order to find the optimal trade-off between variance and speed.
@@ -632,6 +635,15 @@ In this Appendix we prove all the claims made in the paper, with the primary obj
 We give some additional definitions which will be useful in the proofs.
 
 \begin{definition}
+For a random variable X:
+\[
+	\Es{X} = \EVV[\tau_j\sim\pi(\cdot\vert\tilde{\vtheta}^s)
+		\forall j\in\mathbf{N}]{X\vert\tilde{\vtheta}^s},
+\]
+where $\tilde{\vtheta}^s$ is defined in Algorithm \ref{alg:svrpg} and $\mathbf{N} = [0,\dots,N)$.
+\end{definition}
+
+\begin{definition}
 For a random variable $X$:
 \begin{align*}
 	&\mathbb{E}_{t\vert s}\left[X\right] \coloneqq 
@@ -652,10 +664,10 @@ Intuitively, the $\Ets{\cdot}$ operator computes the expected value with respect
 \begin{definition}
 For random vectors X, Y:
 \begin{align*}
-	\Covts{X}{Y} &\coloneqq \Tr\left(\Ets{(X-\Ets{X})(Y-\Ets{Y})^T}\right), \\
-	\Varts{X} &\coloneqq \Covts{X}{Y},
+	\Covs{X}{Y} &\coloneqq \Tr\left(\Ets{(X-\Ets{X})(Y-\Ets{Y})^T}\right), \\
+	\Vars{X} &\coloneqq \Covs{X}{Y},
 \end{align*}
-where $\Tr(\cdot)$ denotes the trace of a matrix.
+where $\Tr(\cdot)$ denotes the trace of a matrix. $\Covts[t]{X}{Y}$ and $\Varts[t]{X}$ are defined in the same way from $\Ets[t]{X}$.
 \end{definition}
 
 \begin{definition}
@@ -758,7 +770,7 @@ Under Assumption \ref{ass:bounded_score}
 \Ets{\gradBlack{\vtheta_t^{s+1}}} \leq
 \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 +L^2\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
-+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
++\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 \nonumber 
 +\frac{\Gamma\VARIS}{B}
 \]
@@ -780,7 +792,7 @@ Under Assumption \ref{ass:bounded_score}
 			+\gradJ{\vtheta_t^{s+1}} - \gradJ{\tilde{\vtheta}^s}\right\|^2\right] \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
-	+\Ets[]{\norm[]{\gradApp{\tilde{\vtheta}^s}{N} - \Ets[]{\gradApp{\tilde{\vtheta}^s}{N}}}^2} \nonumber\\
+	+\Es{\norm[]{\gradApp{\tilde{\vtheta}^s}{N} - \Es{\gradApp{\tilde{\vtheta}^s}{N}}}^2} \nonumber\\
 	&\qquad+ 
 	\mathbb{E}_{t\vert s}\left[\left\|
 		\frac{1}{B}\sum_{i=0}^{B-1}\left(
@@ -794,7 +806,7 @@ Under Assumption \ref{ass:bounded_score}
 	\nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
+	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
 	&\qquad+ 
 		\mathbb{E}_{t\vert s}\left[\left\|
@@ -808,14 +820,14 @@ Under Assumption \ref{ass:bounded_score}
 			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)\right)}\right\|^2\right] 
 		\label{eq:1}\\%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
+	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
 	&\qquad+\Ets{\norm[]{
 			\frac{1}{B}\sum_{i=0}^{B-1}\left(
 			g(\tau_i\vert\vtheta_t^{s+1}) -
 			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)\right)}^2} \label{eq:2}\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
+	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
 	&\qquad+
 			\frac{1}{B^2}\sum_{i=0}^{B-1}
 			\Ets{\norm[]{
@@ -823,7 +835,7 @@ Under Assumption \ref{ass:bounded_score}
 			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
 	%
 	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
+	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
 	&\qquad+
 			\frac{1}{B^2}\sum_{i=0}^{B-1}
@@ -833,7 +845,7 @@ Under Assumption \ref{ass:bounded_score}
 			-\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
+	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
 	&\qquad+
 			\frac{1}{B^2}\sum_{i=0}^{B-1}
@@ -845,7 +857,7 @@ Under Assumption \ref{ass:bounded_score}
 			-\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
+	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}\nonumber\\
 	&\qquad+
 		\frac{1}{B^2}\sum_{i=0}^{B-1}
@@ -856,19 +868,19 @@ Under Assumption \ref{ass:bounded_score}
 \begin{align}
 % ...
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
+	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
 	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\Gamma\frac{1}{B^2}\sum_{i=0}^{B-1}\Ets{(\omega(\tau_i)-1)^2} \label{eq:4}\\
 	%
 	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
+	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
 	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\frac{\Gamma}{B^2}\sum_{i=0}^{B-1}\Varts{\omega(\tau_i)} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
+	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
 	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\frac{\Gamma\VARIS}{B}, \label{eq:5}
@@ -879,55 +891,57 @@ where (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}
 
 %Lemma 0
 \begin{restatable}[]{lemma}{auxzero}\label{lemma:aux0}
-Under Assumption \ref{ass:bounded_score}, for any function $f(\vtheta_t^{s+1})$ which is deterministic for a fixed $\vtheta_t^{s+1}$:
+Under Assumption \ref{ass:bounded_score}, for any function $\varphi(\vtheta_t^{s+1})$ which is deterministic for a fixed $\vtheta_t^{s+1}$:
 \begin{align*}
-\left|\Ets[t]{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}}
--\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}}
+\left|\Ets[t]{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}}
+-\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}}
 \right|
 \leq
-\frac{1}{2N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{f(\vtheta_t^{s+1})}^2}
+\frac{1}{2N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\varphi(\vtheta_t^{s+1})}^2}
 \end{align*}
 \end{restatable}
 \begin{proof}
 \begin{align}
-	\Ets{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}}
+	\Ets{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}}
 	&=
-	\Ets{\dotprod{\gradIdeal{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} +
-	\Ets[t-1]{\dotprod{e_s}{f(\vtheta_t^{s+1})}} \label{eq:6}\\
+	\Ets{\dotprod{\gradIdeal{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}} +
+	\Ets[t-1]{\dotprod{e_s}{\varphi(\vtheta_t^{s+1})}} \label{eq:6}\\
 	&=
-	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} +
-	\Ets[t-1]{\dotprod{e_s}{f(\vtheta_t^{s+1})}} \label{eq:7}\\
+	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}} +
+	\Ets[t-1]{\dotprod{e_s}{\varphi(\vtheta_t^{s+1})}} \label{eq:7}\\
 	&=
-	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} \nonumber\\
+	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}} \nonumber\\
 	&\qquad+
-	\dotprod{\Ets{e_s}}{\Ets{f(\vtheta_t^{s+1})}}
-	+\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{f(\vtheta_t^{s+1})}  \nonumber\\
+	\dotprod{\Ets{e_s}}{\Ets{\varphi(\vtheta_t^{s+1})}}
+	+\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{\varphi(\vtheta_t^{s+1})}  \label{eq:new1}\\
 	&= 
-	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}} \nonumber\\
+	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}} \nonumber\\
 	&\qquad+
-	\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{f(\vtheta_t^{s+1})} \label{eq:8}
+	\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{\varphi(\vtheta_t^{s+1})} \label{eq:8}
 \end{align}
 Hence:
 \begin{align}
-	\left|\Ets{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}}
-	\right.&-\left.\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{f(\vtheta_t^{s+1})}}\right| 
+	\left|\Ets{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}}
+	\right.&-\left.\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}}\right| 
 	=
-	\left|\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{f(\vtheta_t^{s+1})}\right|  
+	\left|\Covts[t-1]{\gradApp{\tilde{\vtheta}^s}{N}}{\varphi(\vtheta_t^{s+1})}\right|  
 	\nonumber\\
 	&\leq
-	\sqrt{\Varts[]{\gradApp{\tilde{\vtheta}^s}{N}}}\circ\sqrt{\Varts[t-1]{f(\vtheta_t^{s+1})}} \nonumber\\
+	\sqrt{\Vars{\gradApp{\tilde{\vtheta}^s}{N}}}\circ\sqrt{\Varts[t-1]{\varphi(\vtheta_t^{s+1})}} \nonumber\\
 	%
 	&\leq	
-	\frac{\alpha_t}{2}\Varts[]{\gradApp{\tilde{\vtheta}^s}{N}} +\frac{\alpha_t}{2}\Varts[t-1]{f(\vtheta_t^{s+1})}\label{eq:9}\\
+	\frac{1}{2}\Vars{\gradApp{\tilde{\vtheta}^s}{N}} +\frac{1}{2}\Varts[t-1]{\varphi(\vtheta_t^{s+1})}\label{eq:9}\\
 	%
 	&=
-	\frac{1}{2N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Varts[t-1]{f(\vtheta_t^{s+1})} \label{eq:10}\\
+	\frac{1}{2N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Varts[t-1]{\varphi(\vtheta_t^{s+1})} \label{eq:10}\\
 	%
 	&\leq
-	\frac{1}{2N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{f(\vtheta_t^{s+1})}^2},
+	\frac{1}{2N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\varphi(\vtheta_t^{s+1})}^2},
 	\nonumber
 \end{align}
-where (\ref{eq:6}) is from Definition \ref{def:ideal}; (\ref{eq:7}) is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $f(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$; (\ref{eq:8}) is from $\Ets{e_s}=0$; (\ref{eq:9}) is from Young's inequality; and (\ref{eq:10}) is from the definition of $\gradApp{\vtheta}{N}$.
+where (\ref{eq:6}) is from Definition \ref{def:ideal}; (\ref{eq:7}) is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $\varphi(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$; 
+(\ref{eq:new1}) is from the fact that $\gradJ{\tilde{\vtheta}^s}$ is constant \wrt $\Vars{\cdot}$;
+(\ref{eq:8}) is from $\Ets{e_s}=0$; (\ref{eq:9}) is from Young's inequality; and (\ref{eq:10}) is from the definition of $\gradApp{\vtheta}{N}$.
 \end{proof}
 
 %Lemma 1
@@ -962,8 +976,9 @@ In particular, the following constraints on $\alpha_t$ and $\beta_t$ are suffici
 	&\geq
 	\Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-
-	\frac{\alpha_t}{2N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2}, \label{eq:13}
+	\frac{\alpha_t}{2N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2}, \label{eq:13}
 \end{align}
+\todomat{check last inequality}
 where (\ref{eq:11}) is from the L-smoothness of $J(\vtheta)$, (\ref{eq:12}) is from the SVRPG update, and (\ref{eq:13}) is from Lemma \ref{lemma:aux0}.
 
 Next we have:
@@ -974,22 +989,22 @@ Next we have:
 &= \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2+2\alpha_t\dotprod{\gradBlack{\vtheta_t^{s+1}}}{\vtheta_t^{s+1}-\tilde{\vtheta}^s}} \label{eq:14}\\
 &\leq \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2+2\alpha_t\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_t^{s+1}-\tilde{\vtheta}^s}} \nonumber\\ 
 &\qquad+
-\frac{\alpha_t}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:15}\\
+\frac{\alpha_t}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:15}\\
 %
 &\leq \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 +2\alpha_t\Ets{\left|\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_t^{s+1}-\tilde{\vtheta}^s}\right|} \nonumber\\ 
 &\qquad+
-\frac{\alpha_t}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\
+\frac{\alpha_t}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\
 %
 &\leq \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 +2\alpha_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}} \nonumber\\ 
 &\qquad+
-\frac{\alpha_t}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\
+\frac{\alpha_t}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\
 %
 &\leq \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 +2\alpha_t\Ets{\frac{1}{2\beta}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2+\frac{\beta}{2}\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\ 
 &\qquad
-\frac{\alpha_t}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}, \label{eq:16}
+\frac{\alpha_t}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}, \label{eq:16}
 \end{align}
 where (\ref{eq:14}) is from the SVRPG update, (\ref{eq:15}) is from Lemma \ref{lemma:aux0}, and (\ref{eq:16}) is from Young's inequality in the 'Peter-Paul' variant.
 Finally:
@@ -998,46 +1013,46 @@ Finally:
 	%
 	&\geq	\Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-
-	\frac{\alpha_t}{2N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2}
+	\frac{\alpha_t}{2N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2}
 	-c_{t+1}\Ets{\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:17}\\
 	%
 	&\geq \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} 
-	-\frac{\alpha_t}{2N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
+	-\frac{\alpha_t}{2N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
 	&\qquad -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2}
 	-c_{t+1}\Ets{\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\
 	%
 	&\geq \Ets{J(\vtheta_t^{s+1})+\alpha_t\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} 
-	-\frac{\alpha_t}{2N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
+	-\frac{\alpha_t}{2N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
 	&\qquad -\frac{\alpha_tL^2}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1} - \tilde{\vtheta}^s}^2} -c_{t+1}\Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	\nonumber\\
 	&\qquad-2c_{t+1}\alpha_t\Ets{\frac{1}{2\beta}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2+\frac{\beta}{2}\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\ 
 	&\qquad
-	-c_{t+1}\frac{\alpha_t}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} -c_{t+1}\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:18}\\
+	-c_{t+1}\frac{\alpha_t}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} -c_{t+1}\frac{1}{2}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:18}\\
 	%
 	&= \Ets{J(\vtheta_t^{s+1})} - \left(c_{t+1}\left(\frac{3}{2}+\alpha_t\beta\right)+\alpha_tL^2\right)\Ets{\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
 	&\qquad-\alpha_t^2\left(\frac{L}{2}+c_{t+1}\right)\Ets{\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2}
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
-	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}\right)\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
+	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}\right)\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
 	%
 	&\geq  \Ets{J(\vtheta_t^{s+1})} - \left(c_{t+1}\left(\frac{3}{2}+\alpha_t\beta\right)+\alpha_tL^2\right)\Ets{\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
 	&\qquad
 	-\alpha_t^2\left(\frac{L}{2}+c_{t+1}\right)\left(\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-	+\frac{1}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
+	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\right.\nonumber\\
 	&\left.\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\frac{\Gamma W}{B}\right)
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
-	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}\right)\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} \label{eq:19}\\
+	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}\right)\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \label{eq:19}\\
 	%
 	& = \Ets{J(\vtheta_t^{s+1}) - \left(c_{t+1}\left(\frac{3}{2}+\alpha_t\beta+\frac{\alpha_t^2L^2}{B}\right)+\alpha_tL^2+\frac{\alpha_t^2L^3}{2B}\right)\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
 	&\qquad
 	+\alpha_t\left(1-\frac{c_{t+1}}{\beta}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
-	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}+\alpha_t^2L+2\alpha_t^2c_{t+1}\right)\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
+	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}+\alpha_t^2L+2\alpha_t^2c_{t+1}\right)\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
 	&\qquad-\alpha_t^2\frac{(L+2c_{t+1})\Gamma\VARIS}{2B} \nonumber\\
 	%
 	&= R_t^{s+1}
 	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
-	-\frac{d_t}{N}\Varts[]{g(\cdot\vert\tilde{\vtheta}^s)}
+	-\frac{d_t}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	-\frac{f_t}{b}\VARIS,\nonumber\\
 	&\geq R_t^{s+1}
 	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
