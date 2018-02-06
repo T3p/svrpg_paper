@@ -543,13 +543,13 @@ This weighted approach comes from the fact that, as mentioned above, there is no
 Thus, we aim to facilitate sub-iterations rather than snapshots.
 
 \subsection{Normalized Importance Sampling}\label{sec:prac}
-\todopir{TODO: This section should be generic for normalized importance sampling trying to explain when and where are the advantages of doing this. Explicit formulation can be postponed in appendix.}
-We introduce a term with importance weights to guarantee proper sampling of trajectories.
-This term's variance is subjected to the variance of importance weights. 
-There are some methods to reduce this variance.
-
-As reported in Section \ref{subsec:PolicyGradient} we use G(PO)MDP gradient estimator~\cite{baxter2001infinite}, which gives us the same guarantees we have for the Reinforce Estimator.
-One variant in off-policy G(PO)MDP is to use the weighted per-decision importance sampling estimator \cite{precup2000eligibility}, allowing a reduction of the gradient estimator variance. The off-policy gradient estimator becomes:
+As we already mentioned in section \ref{sec:stopping} importance weights means a lot of variance to deal with. Therefore, in oreder to cope with this issue the literature propose two main tecniques:
+\begin{enumerate}
+\item Self-normalization (?ciatazione bib?).
+\item Importance weights trucation (?citazione bib?).
+\end{enumerate}
+Both of them offer a variance reduction over the importance weights in exchange of a bias introduction. Hence, if the bias introduced by those techniques is smaller than the variance reduction they cause, it is convenient to use them in practice. So far, sperimentally, we have not seen any advantage in using importance weights truncation, hence we discard this technique for the previously mentioned purpose. Whereas for what concern self-normalization we expirienced some improvements using it (see section \ref{sec:exp} for the sperimental point of view).
+Self-normalization is easy to use, but depends on the chosen reinforcement learning algorithm. Therefore, here we give the definition of this technique in the context of G(PO)MDP where we have used the weighted per-decision importance sampling estimator \cite{precup2000eligibility}:
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{\Omega}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_k^n\vert s_k^n}\right)\left(\gamma^h r_h^n \omega(z_{0:h})\right).
 \end{align*} 
