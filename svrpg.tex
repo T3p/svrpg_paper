@@ -1144,7 +1144,7 @@ It is a common practice to learn also the variance of the policy in order to ada
 Setting specifications for all the used environments:
 \begin{enumerate}
 	\item \emph{Cart-Pole Balancing} : 4-dimensional state space: cart position x, pole angle $\theta$, cart velocity $\dot{x}$ and pole velocity $\dot{\theta}$; 1-dimensional action space: the horizontal force applied to the cart body. Reward function  is defined as $r(s, a) := 10 - (1 - cos(\theta)) - 10^{-5}\norm[] a^2$. The episodes terminates when $|x|>2.4$ or $|\theta|>0.2$ or the number of time steps T is greater than 100.
-	\item \emph{Mujoco Swimmer}: 12-dimensional state space: 3 links velocities ($v_x$ and $v_y$ of center of masses) and 2 actuated joints angles. 2-dimensional action space: the two momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 10^{-4}\norm[2] a^2$. The episodes terminates when the number of time steps T is greater than 500.
+	\item \emph{Mujoco Swimmer}: 13-dimensional state space: 3 links velocities ($v_x$ and $v_y$ of center of masses) and 2 actuated joints angles. 2-dimensional action space: the two momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 10^{-4}\norm[2] a^2$. The episodes terminates when the number of time steps T is greater than 500.
 	\item \emph{Mujoco Half Cheetah}: 20-dimensional state space: 9 links and 6 actuated joints angles. 6-dimensional action space: the 6 momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 0.05\norm[2] a^2$. The episodes terminates when the number of time steps T is greater than 500.
 \end{enumerate}
 
@@ -1155,7 +1155,7 @@ All the experiments' parameters are reported in the following table:
 	\hline	
 	& Cart-Pole & Swimmer & Half Cheetah \\
 	\hline
-	State space dimension  & 4 & 8 & 20 \\
+	State space dimension  & 4 & 13 & 20 \\
 	Control space dimension & 1 & 2 & 6 \\
 	NN Hidden layers & 8 & 32x32 & 32x32 \\
 	Learning rate & $10^{-2}$ & $10^{-3}$ & $10^{-3}$ \\
@@ -1164,7 +1164,7 @@ All the experiments' parameters are reported in the following table:
 	Max sub-iterations & 50 & 20 & 20 \\
 	Trajectories lengths& 500 & 500 & 500 \\
 	Discount $(\gamma)$& 0.99 & 0.995 & 0.99 \\
-	Total trajectories& 10000 & 10000 & 10000 \\
+	Total trajectories& 10000 & 20000 & 50000 \\
 	\hline  
 \end{tabular}
 
