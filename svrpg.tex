@@ -562,8 +562,20 @@ where:
 }{\pi_{\vtheta^{'}}({a_k^n\vert s_k^n})}
 \end{align*}
 \todomat{why should we use it? What advantages do we expect? At what cost? Pointer to experiments}
+
 \section{Related Work}
-\todopir{I think that this section is worth here}
+Despite the huge interest received in SL, variance-reduced gradient approaches has not attracted the RL community.
+As far as we know, there are just two applications of SVRG in RL.
+The first approach~\citep{du2017svrgpe} aims to exploit SVRG for policy evaluation.
+The policy evaluation problem is simpler than the one faced in this paper (control problem).
+In particular, since the goal is to evaluate just the performance of a predefined policy, the optimization problem is stationary.
+The setting considered in the paper is the one of policy evaluation by minimizing the empirical mean squared projected Bellman error (MSPBE) with a linear approximation of the value function. \citet{du2017svrgpe} shown that this problem can equivalently reformulated as a convex-concave saddle-point problem that is characterized by a finite-sum structure.
+This problem can be solved using a variant of SVRG~\citep{Palaniappan2016svrgsaddle} for which convergence guarantees have been provided.
+In the second approach~\citep{xu2017svrgtrpo}, SVRG is just an efficient approach to solve the optimization problem faced by Trust Region Policy Optimization (TRPO) at each iteration. We can just talk of a direct application of SVRG to a problem having finite-sum structure since no specific structure of the RL problem is exploited.
+It is worth to mention that, for practical reasons, the authors proposed to use a Newton conjugate gradient method with SVRG.
+
+Concerning importance weighting techniques, RL has made wide use of them for off-policy problems~\citep[\eg]{precup2000eligibility,thomas2015high}. However, as mentioned before, SVRPG cannot be compared to such methods since it is practically on-policy. Here, importance weighting is just a statistical tool used to preserve the unbiasedness of the corrected gradient.
+
 
 \section{Experiments}\label{sec:exp}
 We have designed our experiments to investigate whether:
@@ -587,15 +599,15 @@ The neural networks is composed of one layer with 8 neurons for Cart-Pole enviro
 
 \section{Conclusion}
 In this paper we introduce SVRPG, a variant of SVRG specifically designed for RL problems.
-RL has a series of difficulties non-common in SL.
+The control problem considered in the paper has a series of difficulties non-common in SL.
 Among them non-concavity and approximate estimate of the FG have been analysed independently in SL~\citep[\eg][]{allen2016variance,reddi2016stochastic,harikandeh2015stopwasting} but never combined.
 Nevertheless, the main issue in RL is the non-stationarity of the sampling process since the distribution underlying the objective function is policy dependent.
 We have shown that by exploiting importance weighting techniques it is possible to overcome this issue and preserve the unbiasedness of the corrected gradient.
+We have additionally shown that under mild assumptions that are often verified in RL applications, it is possible to derive convergence guarantees for SVRPG.
 SVRG has been previously used in RL for policy evaluation~\citep{du2017svrgpe} and as alternative optimization method for TRPO~\citep{xu2017svrgtrpo}.
 The first case is much more similar to the SL case since the problem is stationary and may be made concave, removing several issues we have faced here.
 In the second case it was used as a better optimization technique to solve the per-iteration problem imposed by TRPO.
-Additional, as far as we know, we are the first to report convergence guarantees for SVRG in the RL scenario.
-Empirically, we have shown that practical variants of the theoretical SVRPG are able to outperform classical actor-only approaches on several benchmarks.
+Finally, we have empirically shown that practical variants of the theoretical SVRPG are able to outperform classical actor-only approaches on several benchmarks.
 
 
 
