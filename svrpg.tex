@@ -202,13 +202,15 @@ On a very general level, machine learning addresses the problem of an agent that
 % SL needs SVRG so RL
 In a typical SL setting, a performance function $J(\vtheta)$ has to be optimized \wrt to model parameters $\vtheta$. The set of data that are available for training is often a subset of all the cases of interest, which may even be infinite, leading to optimization of finite sums to approximate expected performance over an unknown data distribution. When generalization to the complete dataset is not taken into consideration we talk about Empirical Risk Minization (ERM). Even in this case, stochastic optimization is often used for reasons of efficiency. The idea of stochastic gradient (SG) ascent \cite{nesterov2013introductory} is to iteratively focus on a random subset of the available data to obtain an approximate improvement direction. At the level of the single iteration, this can be much less expensive than taking into account all the data. However, the sub-sampling of data is a source of variance that can potentially compromise convergence, so that per-iteration efficiency and convergence rate must be traded off with proper handling of meta-parameters.
 Variance-reduced gradient algorithms such as SAG \cite{roux2012stochastic}, SVRG \cite{johnson2013accelerating} and SAGA \cite{defazio2014saga} offer better ways of addressing this trade-off, with significant results both in theory and practice. Although designed explicitly for ERM, these algorithms address a problem that affects more general machine learning problems. 
+
 In RL, stochastic optimization is rarely a matter of choice, since data must be actively sampled by interacting with an initially unknown environment. In this scenario, containing the variance of the estimates is a problem that cannot be avoided, which makes variance-reduced algorithms very interesting.
 % Potential advantages of SVRG
 Among RL approaches, policy gradient \cite{sutton2000policy} is the one that bears the closest similarity to SL solutions. The fundamental principle of this methods is to optimize a parametric policy by means of stochastic gradient ascent. Compared to other applications of SG, the cost of collecting samples can be very high since it requires to interact with the environment. This makes SVRG-like methods potentially much more efficient than, \eg batch learning.
 % Difficulties in RL \wrt SL
-Unfortunately, RL has a series of difficulties that are not present in ERM. First, in SL the objective can often be designed to be strongly concave. This is not possible in RL, so we have to deal with non-concavities. Then, as mentioned, the dataset is not initially available and may even be infinite, which  makes approximations unavoidable. This also rules out SAG and SAGA because of their storage requirements, which leaves SVRG as the most promising choice. Finally, the distribution used to sample data is not under direct control of the algorithm designer, but is a function of policy parameters that changes over time as the policy is optimized, which is a form of nonstationarity.
-
+Unfortunately, RL has a series of difficulties that are not present in ERM. First, in SL the objective can often be designed to be strongly concave (we aim to maximize). This is not possible in RL, so we have to deal with non-concavities. Then, as mentioned, the dataset is not initially available and may even be infinite, which  makes approximations unavoidable. This also rules out SAG and SAGA because of their storage requirements, which leaves SVRG as the most promising choice. Finally, the distribution used to sample data is not under direct control of the algorithm designer, but is a function of policy parameters that changes over time as the policy is optimized, which is a form of non-stationarity.
 % Related work?
+SVRG has been used in RL as a efficient technique for optimizing the per-iteration problem in Trust-Region Policy Optimization~\citep{xu2017svrgtrpo} or for policy evaluation~\citep{du2017svrgpe}.
+In both the cases, the optimization problems faced resemble the SL scenario and are not characterized by all the previously mentioned issues.
 
 %Paper structure
 After providing a background on policy gradient and SVRG in Section \ref{sec:pre}, in Section \ref{sec:alg} we address the aforementioned difficulties to design SVRPG, a variant of SVRG for the policy gradient framework. In Section \ref{sec:conv} we provide convergence guarantees for our algorithm which also offers insights on the challenges of variance reduction in RL. In Section \ref{sec:stopping} we suggests how to set the meta-parameters of SVRPG, while in Section \ref{sec:prac} we discuss some practical variants of the algorithm. Finally, in Section \ref{sec:exp} we empirically evaluate the performance of our method on popular continuous RL tasks.
@@ -356,7 +358,7 @@ Our update is still fundamentally on-policy, since the weighting concerns only t
         g(\tau_i|\vtheta_t) - \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
         \right].
 \end{align}
-We want just to underlying that $\EVV[\tau_i \sim \pi_{\vtheta_t}]{\frac{1}{B} \sum_{i=0}^{B-1} \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} = \nabla J(\wt{\vtheta})$~\citep[\eg][]{jurvcivcek2012reinforcement}.\footnote{The reader can refer to App.~\ref{} for off-policy variants of REINFORCE and G(PO)MDP.}
+We want just to stress that $\EVV[\tau_i \sim \pi_{\vtheta_t}]{\frac{1}{B} \sum_{i=0}^{B-1} \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} = \nabla J(\wt{\vtheta})$.\footnote{The reader can refer to App.~\ref{} for off-policy gradients and variants of REINFORCE and G(PO)MDP.}
 This property will be used to prove Lem.~\ref{L:svrpg.properties}.
 %\begin{align*}
 %&\blacktriangledown J(\vtheta) = \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \vert \tilde{\vtheta})\Reward(\tau_j) +\\
@@ -398,7 +400,7 @@ The resulting SVRPG policy optimization method is detailed in Alg.~\ref{alg:svrp
 
 To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$.
 Adaptive selection of these meta-parameters is also possible, and is explored in Sec.~\ref{sec:stopping}.
-However, the next section will provide general converge guarantees for SVRPG with REINFORCE estimator.
+However, the next section will provide general converge guarantees for SVRPG \textcolor{red}{with REINFORCE estimator}.
 
 \begin{algorithm}[tb]
         \caption{SVRPG}
@@ -434,7 +436,7 @@ However, the next section will provide general converge guarantees for SVRPG wit
 \end{algorithm}
 
 \section{Convergence Guarantees of SVRPG}\label{sec:conv}
-In this section, we state the convergence guarantees for SVRPG with REINFORCE estimator (refer to Alg.~\ref{alg:svrpg} with $g(\tau|\vtheta) =  \nabla \log\pi(\tau|\vtheta) \mathcal{R}(\tau)$).\footnote{Similar results can be derived for G(PO)MDP, see App.~\ref{app:}.}
+In this section, we state the convergence guarantees for SVRPG with REINFORCE estimator.\footnote{Similar results can be derived for G(PO)MDP, see App.~\ref{app:}.}
 We mainly leverage on the recent analysis of \textcolor{red}{non-concave} SVRG~\cite{reddi2016stochastic,allen2016variance}.
 Each of the three challenges presented at the beginning of Sec.~\ref{sec:alg} can potentially prevent convergence, so we need additional assumptions.
 In App.~\ref{app:gauss} we show how the widespread Gaussian policy satisfies these assumptions.
@@ -584,7 +586,20 @@ We fixed the maximum number of trajectories that both the algorithms can use as 
 
 The neural networks is composed of one layer with 8 neurons for Cart-Pole environment and by two layers with 32x32 neurons for Swimmer and for Half Cheetah environments. In each experiment, the length of episodes is 500 steps.
 
-\section{Discussion}
+\section{Conclusion}
+In this paper we introduce SVRPG, a variant of SVRG specifically designed for RL problems.
+RL has a series of difficulties non-common in SL.
+Among them non-concavity and approximate estimate of the FG have been analysed independently in SL~\citep[\eg][]{allen2016variance,reddi2016stochastic,harikandeh2015stopwasting} but never combined.
+Nevertheless, the main issue in RL is the non-stationarity of the sampling process since the distribution underlying the objective function is policy dependent.
+We have shown that by exploiting importance weighting techniques it is possible to overcome this issue and preserve the unbiasedness of the corrected gradient.
+SVRG has been previously used in RL for policy evaluation~\citep{du2017svrgpe} and as alternative optimization method for TRPO~\citep{xu2017svrgtrpo}.
+The first case is much more similar to the SL case since the problem is stationary and may be made concave, removing several issues we have faced here.
+In the second case it was used as a better optimization technique to solve the per-iteration problem imposed by TRPO.
+Additional, as far as we know, we are the first to report convergence guarantees for SVRG in the RL scenario.
+Empirically, we have shown that practical variants of the theoretical SVRPG are able to outperform classical actor-only approaches on several benchmarks.
+
+
+
 
 \bibliography{svrpg}
 \bibliographystyle{icml2018}
