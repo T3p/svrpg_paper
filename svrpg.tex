@@ -583,8 +583,9 @@ Concerning importance weighting techniques, RL has made wide use of them for off
 
 
 \section{Experiments}\label{sec:exp}
-In practical experiments we use G(PO)MDP as 
-We have designed our experiments to investigate whether:
+In this section we address the performance evaluation of our policy gradient estimator defined in equation \ref{E:svrpg.estimate.batch} against that one of equation \ref{E:policygradient.estimate}. This comparison is performed using G(PO)MDP as estimator of $\score{\vtheta}{\tau}\Reward(\tau)$.
+ 
+We want to investigate whether:
 \begin{enumerate}
 \item The algorithm reaches high value of the reward function faster than GPOMDP.
 \item Averagely SVRPG keep the reward function more stable than GPOMDP.
