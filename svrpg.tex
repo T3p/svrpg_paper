@@ -560,7 +560,7 @@ We experienced some improvements using it (see section \ref{sec:exp} for the exp
 
 \subsection{Baseline}
 As reported in Sec. \ref{subsec:PolicyGradient} a well known variance reduction tool in Reinforcement Learning is the baseline.
-This tool does not depend on SVRPO. More precicely we decided to use an Actor Critic baseline, which is a state dependent linear function with a time-varying feature vector \cite{duan2016benchmarking}. Furthermore, the baseline is unique and computed every snapshot using the N trajectories at hand.
+This tool does not depend on SVRPG. More precicely we decided to use an Actor Critic baseline, which is a state dependent linear function with a time-varying feature vector \cite{duan2016benchmarking}. Furthermore, the baseline is unique and computed every snapshot using the N trajectories at hand.
 
 \section{Related Work}
 Despite the huge interest received in SL, variance-reduced gradient approaches has not attracted the RL community.
@@ -577,6 +577,7 @@ Concerning importance weighting techniques, RL has made wide use of them for off
 
 
 \section{Experiments}\label{sec:exp}
+In practical experiments we use G(PO)MDP as 
 We have designed our experiments to investigate whether:
 \begin{enumerate}
 \item The algorithm reaches high value of the reward function faster than GPOMDP.
