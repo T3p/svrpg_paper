@@ -3,6 +3,7 @@
 % Recommended, but optional, packages for figures and better typesetting:
 \usepackage{microtype}
 \usepackage{graphicx}
+\graphicspath{ {images/} }
 \usepackage{subfigure}
 \usepackage{booktabs} % for professional tables
 
@@ -584,28 +585,38 @@ Concerning importance weighting techniques, RL has made wide use of them for off
 
 
 \section{Experiments}\label{sec:exp}
-In this section we address the performance evaluation of our policy gradient estimator defined in equation \ref{E:svrpg.estimate.batch} against that one of equation \ref{E:policygradient.estimate}. This comparison is performed using G(PO)MDP as estimator of $\score{\vtheta}{\tau}\Reward(\tau)$.
- 
-We want to investigate whether:
-\begin{enumerate}
-\item The algorithm reaches high value of the reward function faster than GPOMDP.
-\item Averagely SVRPG keep the reward function more stable than GPOMDP.
-\end{enumerate}
+In this section we address the performance evaluation of our policy gradient estimator defined in equation \ref{E:svrpg.estimate.batch} against that one of equation \ref{E:policygradient.estimate}. This comparison is performed using G(PO)MDP as estimator of $\score{\vtheta}{\tau}\Reward(\tau)$. For the sake of simplicity and with a little abuse of notation we refer to \ref{E:svrpg.estimate.batch} as SVRPG and to \ref{E:policygradient.estimate} as G(PO)MDP.
+In all the experiments we used gaussian policies and bootsrap confidence intervals $\alpha = 10\% $ over ten different runs for evaluation. Each run with a different policy initialization which is kept fixed when changing the algorithm. The maximum number of trajectories at hand is fixed for each task. 
 
 In order to pursue the above mentioned objectives, we evaluate the behavior of the reward function averaged on 10 runs for each experiment.
 
 We decide to use the following models of Rllab: \emph{Cart-Pole Balancing}, \emph{Mujoco Swimmer}, \emph{Mujoco Half Cheetah}.
 
+\begin{figure}[t]
+    \includegraphics[width=0.5\textwidth]{swimmer_self_normalized_SVRPG_vs_GPOMDP}
+    \caption{Self-Normalized SVRPG vs GPOMDP in swimmer}
+    \label{fig:swimmerone}
+\end{figure}
+\begin{figure}[t]
+    \includegraphics[width=0.5\textwidth]{swimmer_self_normalized_SVRPG_vs_SVRPG}
+    \caption{Self-Normalized SVRPG vs Non Self-Normalized SVRPG in swimmer}
+    \label{fig:swimmertwo}
+\end{figure}
+\begin{figure}[t]
+    \includegraphics[width=0.5\textwidth]{half_cheetah_self_norm_baseline_SVRPG_vs_GPOMDP100_baseline}
+    \caption{Self-Normalized SVRPG with baseline vs GPOMDP with baseline in half cheetah}
+    \label{fig:halfcheetah}
+\end{figure}
+\begin{figure}[t]
+    \includegraphics[width=0.5\textwidth]{half_cheetah_self_norm_baseline_SVRPG_vs_GPOMDP100_baseline}
+    \caption{SVRPG vs GPOMDP in cart-pole}
+    \label{fig:cartpole}
+\end{figure}
 
-In all the experiments we compete with GPOMDP standard algorithm. GPOMDP uses a number of trajectories per batch that is equal to the number of trajectories used in SVRPG mini-batch size.
-The neural network and the learning rate are the same for GPOMDP and SVRPG.
-In SVRPG we used two different Adam parameters: the first one for Snapshot and the second one for sub-iterations.
-We used the stopping condition defined in Section \ref{sec:stopping}.
-We fixed the maximum number of trajectories that both the algorithms can use as shown in appendices. 
 
-The neural networks is composed of one layer with 8 neurons for Cart-Pole environment and by two layers with 32x32 neurons for Swimmer and for Half Cheetah environments. In each experiment, the length of episodes is 500 steps.
 
-In particular in our experiments we use this technique in the context of G(PO)MDP defined as "weighted per-decision importance sampling estimator" \cite{precup2000eligibility}.  
+
+  
 
 \section{Conclusion}
 In this paper we introduce SVRPG, a variant of SVRG specifically designed for RL problems.
