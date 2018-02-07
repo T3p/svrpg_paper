@@ -251,11 +251,12 @@ In this setting, stochastic gradient ascent is typically employed.
 At each iteration $k >0$, a batch $\mathcal{D}_N^k = \{\tau_i\}_{i=0}^N$ of $N>0$ trajectories is collected using policy $\pi_{\vtheta_k}$.
 The policy is then updated as $\vtheta_{k+1}  = \vtheta_k + \alpha\gradApp{\vtheta_k}{N}$, where $\alpha$ is a step size and $\gradApp{\vtheta}{N}$ is an estimate of~\eqref{E:policygradient} using $\mathcal{D}_N^k$, \ie
 \begin{align} \label{E:policygradient.estimate}
-        \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N} g(\tau_i|\vtheta), \quad \tau_i \in \mathcal{D}_N^k.
-\end{align}~\todomarcout{chi e' g?}
+        \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N} g(\tau_i|\vtheta), \quad \tau_i \in \mathcal{D}_N^k,
+\end{align}
+where $g(\tau_i|\vtheta)$ is an estimate of $\score{\vtheta}{\tau_i}\Reward(\tau_i)$.
 The most widespread gradient estimators are REINFORCE~\citep{williams1992simple} and G(PO)MDP~\citep{baxter2001infinite}.
 Although REINFORCE definition is simpler than the G(PO)MDP one, the latter is often preferred due to its lower variance.
-We refer the reader to Appendix~\ref{A:gradient_estimators} for details.
+We refer the reader to Appendix~\ref{A:gradient_estimators} for details and a formal definition of $g$.
 
 The main limitation of plain policy gradient is the high variance of these estimators.
 The na\"ive approach of increasing the batch size is not an option in RL due to the high cost of collecting samples, \ie by interacting with the environment.
@@ -622,8 +623,7 @@ Finally, we have empirically shown that practical variants of the theoretical SV
 \appendix
 
 \section{Policy Gradient Estimators} \label{A:gradient_estimators}
-
-
+We present a brief overview of two most widespread gradient estimators (REINFORCE~\citep{williams1992simple} and G(PO)MDP~\citep{baxter2001infinite}) both in on-policy and off-policy settings.
 \subsection{On-policy}
 The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, unbiased way of estimating the gradient:
 \begin{align*}
