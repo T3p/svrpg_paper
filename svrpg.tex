@@ -286,7 +286,7 @@ The idea of SVRG is to alternate full and stochastic gradient updates.
 Each $m = \mathcal{O}(N)$ iterations, a snapshot $\widetilde{\vtheta}$ of the current parameter is saved together with its full gradient $\nabla f(\widetilde{\vtheta}) = \frac{1}{N} \sum_i \nabla z(x_i|\widetilde{\vtheta})$.
 Between snapshots, the parameter is updated with a gradient estimate corrected using stochastic gradient, for any $t \in \{0,\ldots,m-1\}$
 \begin{equation}\label{E:svrg.gradient.correction}
-        \blacktriangledown f(\vtheta_{t}) = \nabla f(\tilde{\vtheta}) + \nabla z(x_i | \vtheta_t) - \nabla z(x_i | \tilde{\vtheta}),
+        \blacktriangledown f(\vtheta_{t}) := v_t = \nabla f(\tilde{\vtheta}) + \nabla z(x_i | \vtheta_t) - \nabla z(x_i | \tilde{\vtheta}),
 \end{equation} 
 where $x_i$ is sampled uniformly at random from $\mathcal{D}_N$ (\ie $x_i \sim \mathcal{U}(\mathcal{D}_N)$).
 Note that $t=0$ corresponds to a FG step (\ie $\blacktriangledown f(\vtheta_0) = \nabla f(\wt{\vtheta})$) since $\vtheta_0 := \wt{\vtheta}$.
@@ -298,24 +298,24 @@ More recently, some extensions of variance reduction algorithms to the non-conca
 	\caption{SVRG}
 	\label{alg:svrg}
 	\begin{algorithmic}
-            \STATE {\bfseries Input:} a dataset $\mathcal{D}_N$, number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{0}^0:=\wt{\vtheta}^0$
+            \STATE {\bfseries Input:} a dataset $\mathcal{D}_N$, number of epochs $S$, epoch size $m$, step size $\alpha$, initial parameter $\vtheta_{m}^0:=\wt{\vtheta}^0$
 		\FOR{$s=0$ {\bfseries to} $S-1$}
+        \STATE $\vtheta_0^{s+1} := \wt{\vtheta}^{s} = \vtheta_{m}^s$
         \STATE $\wt{\mu} = \nabla f(\wt{\vtheta}^s)$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
 %		\STATE Pick $i$ uniformly at random from $[1,N]$
         \STATE $x_i \sim \mathcal{U}\left(\mathcal{D}_N\right)$
-		\STATE $v^{s}_t = 
+		\STATE $v^{s+1}_t = 
 %			\nabla f(\wt{\vtheta}^s) + 
 			\wt{\mu} + 
-			\nabla z(x_i|\vtheta_t^{s}) -
+			\nabla z(x_i|\vtheta_t^{s+1}) -
 			\nabla z(x_i|\wt{\vtheta}^{s})
 		$
-        \STATE $\vtheta_{t+1}^{s} = \vtheta_t^{s} + \alpha v^{s}_t$
+        \STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha v^{s+1}_t$
 		\ENDFOR
-        \STATE $\vtheta_0^{s+1} := \wt{\vtheta}^{s+1} = \vtheta_{m}^s$
 		\ENDFOR
-        \STATE \underline{Concave case:} \textbf{return} $\vtheta_{0}^S$
-        \STATE \underline{Non-Concave case:} \textbf{return} $\vtheta_t^s$ with $(s,t)$ picked uniformly at random from $\{[0,S[\times[0,m[\} \cup \{(S,0)\}$
+        \STATE \underline{Concave case:} \textbf{return} $\vtheta_{m}^S$
+        \STATE \underline{Non-Concave case:} \textbf{return} $\vtheta_t^{s+1}$ with $(s,t)$ picked uniformly at random from $\{[0,S-1]\times[0,m-1]\}$
 	\end{algorithmic}
 \end{algorithm}
 
@@ -356,9 +356,11 @@ Similarly to SVRG, we have that $\vtheta_0 := \wt{\vtheta}$ and the update is a 
 Our update is still fundamentally on-policy, since the weighting concerns only the correction term. However, this partial ``off-policyness'' is enough to introduce variance. This is a well-known issue of importance sampling~\citep[\eg][]{thomas2015high}. To mitigate it, we use mini-batches of trajectories of size $B \ll N$ to average the correction, \ie
 \begin{align}\label{E:svrpg.estimate.batch}
         \blacktriangledown J(\vtheta_{t}) &:= v_t= \wh{\nabla}_N J(\wt{\vtheta})\\ \notag
-                                            & \quad{} + \frac{1}{B} \sum_{i=0}^{B-1} \left[
+                                            & \quad{} + 
+        \underbracket{
+        \frac{1}{B} \sum_{i=0}^{B-1} \left[
         g(\tau_i|\vtheta_t) - \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
-        \right].
+\right]}_{c_t}.
 \end{align}
 We want just to stress that $\EVV[\tau_i \sim \pi_{\vtheta_t}]{\frac{1}{B} \sum_{i=0}^{B-1} \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} = \nabla J(\wt{\vtheta})$.\footnote{The reader can refer to App.~\ref{} for off-policy gradients and variants of REINFORCE and G(PO)MDP.}
 This property will be used to prove Lem.~\ref{L:svrpg.properties}.
@@ -409,20 +411,24 @@ However, the next section will provide general converge guarantees for SVRPG \te
         \caption{SVRPG}
 	\label{alg:svrpg}
 	\begin{algorithmic}
-        \STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, batch size $N$, mini-batch size $B$, gradient estimator $g$, initial parameter $\vtheta_{0}^0 := \wt{\vtheta}^0$
+        \STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, batch size $N$, mini-batch size $B$, gradient estimator $g$, initial parameter $\vtheta_{0}^m := \wt{\vtheta}^0$
 		\FOR{$s=0$ {\bfseries to} $S-1$}
+        \STATE $\vtheta_0^{s+1} := \tilde{\vtheta}^{s} = \vtheta_{m}^s$
         \STATE Sample $N$ trajectories $\{\tau_j\}$ from $\pi(\cdot\vert\tilde{\vtheta}^{s})$
         \STATE $ \wt{\mu} = \gradApp{\wt{\vtheta}^{s}}{N}$ (see Eq.~\ref{E:policygradient.estimate})% = \frac{1}{N}\sum_{j=0}^{N-1}g(\tau_j | \wt{\vtheta}^s)$
-%        \STATE $ \vtheta^s_1 = \wt{\vtheta}^s + \alpha \wt{\mu}$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
         \STATE Sample $B$ trajectories $\{\tau_i\}$ from $\pi(\cdot\vert\vtheta_t^{s+1})$
-        \STATE $c^s_t = \frac{1}{B} \sum\limits_{i=0}^{B-1} \left( g(\tau_i|\vtheta_t^s) - \omega(\tau_i|\vtheta^s_t, \wt{\vtheta}^s) g(\tau_i| \wt{\vtheta})^s\right)$
-%        \STATE $c^{s+1}_t = \frac{1}{B} \sum\limits_{i=0}^{B-1}
-%        \begin{aligned}[t]
-%                & \Reward(\tau_i) \Big[ \score{}{\tau_i|\vtheta_t^{s+1}} \\
-%                &- \omega(\tau|\vtheta^{s+1}_t, \wt{\vtheta}^s)\score{}{\tau_i|\wt{\vtheta}^{s}} \Big]
-%        \end{aligned}$
-        \STATE $v^{s}_t = \wt{\mu} + c^s_t$ % \gradApp{\wt{\vtheta}^{s}}{N} + c^{s}_t$
+%        \STATE $c^{s+1}_t = \frac{1}{B} \sum\limits_{i=0}^{B-1} \left( g(\tau_i|\vtheta_t^{s+1}) - \omega(\tau_i|\vtheta^{s+1}_t, \wt{\vtheta}^s) g(\tau_i| \wt{\vtheta}^s) \right)$
+        \STATE $c^{s+1}_t = \frac{1}{B} \sum\limits_{i=0}^{B-1}
+        \begin{aligned}[t]
+                \Big( & g(\tau_i|\vtheta_t^{s+1})\\ 
+                      & \quad{} - \omega(\tau_i|\vtheta^{s+1}_t, \wt{\vtheta}^s) g(\tau_i| \wt{\vtheta}^s) \Big)
+        \end{aligned}$
+%        \STATE $\begin{aligned}[t]
+%                &v^{s+1}_t = \wt{\mu}\\ 
+%                & +\frac{1}{B} \sum\limits_{i=0}^{B-1} \left( g(\tau_i|\vtheta_t^{s+1}) - \omega(\tau_i|\vtheta^{s+1}_t, \wt{\vtheta}^s) g(\tau_i| \wt{\vtheta}^s) \right)
+%                \end{aligned}$
+        \STATE $v^{s+1}_t = \wt{\mu} + c^{s+1}_t$ % \gradApp{\wt{\vtheta}^{s}}{N} + c^{s}_t$
 %%		\begin{align*}
 %%		\blacktriangledown J(\vtheta_t^{s+1}) = 
 %%		&\gradApp{\tilde{\vtheta}^s}{N} \\
@@ -430,11 +436,10 @@ However, the next section will provide general converge guarantees for SVRPG \te
 %%		\score{}{\tau_i\vert\vtheta_t^{s+1}}\Reward(\tau_i)\right. \\
 %%		&\left. - \omega(\tau_i)\score{}{\tau_i \vert \tilde{\vtheta}^{s}}\Reward(\tau_i)\right]
 %%		\end{align*}
-        \STATE $\vtheta_{t+1}^{s} = \vtheta_t^{s} + \alpha v^{s}_t$
+        \STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha v^{s+1}_t$
 		\ENDFOR
-        \STATE $\vtheta_0^{s+1} := \tilde{\vtheta}^{s+1} = \vtheta_{m}^s$
 		\ENDFOR
-        \STATE {\bfseries return} $\vtheta_t^s$ with $(s,t)$ picked uniformly at random from $\{[0,S[\times[0,m[\} \cup \{(S,0)\}$
+        \STATE {\bfseries return} $\vtheta_t^{s+1}$ with $(s,t)$ picked uniformly at random from $\{[0,S-1]\times[0,m-1]\}$
 	\end{algorithmic}
 \end{algorithm}
 
@@ -732,6 +737,7 @@ For a random variable $X$:
 		\vert\tilde{\vtheta}^s},
 \end{align*}
 where the sequence $\tilde{\vtheta}^s,\vtheta_0^{s+1},\dots,\vtheta_t^{s+1}$ is defined in Algorithm \ref{alg:svrpg}, ${\it {\bf N}} = [0,\dots,N)$, and ${\it {\bf B}} = [0,\dots,B)$. 
+
 \end{definition}
 Intuitively, the $\Ets{\cdot}$ operator computes the expected value with respect to the sampling of trajectories from the snapshot $\tilde{\vtheta}^s$ up to the $t$-th iteration included. Note that the order in which expected values are taken is important since each $\vtheta_{t}^{s+1}$ is function of previously sampled trajectories and is used to sample new ones.
 
