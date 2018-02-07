@@ -524,8 +524,7 @@ Given this structure, we suggest to use two ADAM estimators:
         \vtheta^{s}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\wh{\nabla}_N J(\wt{\vtheta}^s)\\
         \vtheta^{s}_{t+1} &= \vtheta^{s}_t + \alpha^{\textsc{SI}}_{s,t} v_t^{s}
 \end{align*}
-where $\alpha^{\textsc{FG}}_{s}$ is associated to the snapshot and $\alpha^{\textsc{SI}}_{s,t}$ with the sub-iterations.
-
+where $\alpha^{\textsc{FG}}_{s}$ is associated to the snapshot and $\alpha^{\textsc{SI}}_{s,t}$ with the sub-iterations (see App.~\ref{app:practicalsvrpg} for details).
 \todopir{Add ADAM definition and explain in more details}
 By doing so we decouple the contribution of the variance introduced by the approximate FG from the one introduced by the sub-iterations.
 Note that these two terms have different orders of magnitude since are estimated with a different number of trajectories ($B \ll N$) and w/o importance weights.
@@ -1223,6 +1222,22 @@ In complex continuous tasks, $\mu(s)$ often represents a deep neural network, or
 
 \paragraph{Adaptive variance}
 It is a common practice to learn also the variance of the policy in order to adapt the degree of exploration. The variance (or diagonal covariance matrix in the multi-dimensional case) can be learned as a separate parameter or be state-dependent like the mean. In any case, adaptive variance must be carefully employed since it can clearly undermine all the three assumptions of Theorem \ref{theo:convergence}.
+
+\section{Practical SVRPG versions}\label{app:practicalsvrpg}
+\begin{algorithm}[h]
+        \begin{algorithmic}
+        \STATE \textbf{Input:} A gradient estimate $g_t$ and parameters $\beta_1$, $\beta_2$, $\epsilon$ and $\alpha$.
+        \STATE $m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$
+        \STATE $v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t \circ g_t$ ($\circ$ is the Hadamard (component-wise) product)
+        \STATE $\hat{m}_t = \dfrac{m_t}{1 - \beta^t_1}$
+        \STATE $\hat{v}_t = \dfrac{v_t}{1 - \beta^t_2}$
+        \STATE $\Delta(g_t) = \dfrac{\alpha}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t$
+        \STATE \textbf{Return:} The increment $\Delta(g_t)$  of the parameters.
+\end{algorithmic}
+ \caption{
+ \label{A:adam}
+ Adam}
+\end{algorithm}
 
 \section{Experimental Details}\label{app:exp}
 Setting specifications for all the used environments:
