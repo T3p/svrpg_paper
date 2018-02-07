@@ -398,8 +398,7 @@ For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of th
 %\]
 %\end{restatable}
 In particular, the latter result suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can actually achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance (at least asymptotically).
-The resulting SVRPG policy optimization method is detailed in Alg.~\ref{alg:svrpg}.\footnote{Note that when $t=0$ we can avoid to sample trajectories and instead perform directly the policy update using the FG. For sake of clarity, we have not explicitly differentiate this step from the standard update rule in Alg.~\ref{alg:svrpg}.} Note that, in our implementation, we simply return the last value of the parameter $\tilde{\vtheta}^S$ instead of a random one, as is often done in practice.
-\todomat{add reference}
+The resulting SVRPG policy optimization method is detailed in Alg.~\ref{alg:svrpg}.\footnote{Note that when $t=0$ we can avoid to sample trajectories and instead perform directly the policy update using the FG. For sake of clarity, we have not explicitly differentiate this step from the standard update rule in Alg.~\ref{alg:svrpg}.}
 
 To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$.
 Adaptive selection of these meta-parameters is also possible, and is explored in Sec.~\ref{sec:stopping}.
@@ -491,11 +490,11 @@ where $\psi,\zeta,\xi$ depend only on $\GRADLOG,\HESSLOG,\VARRF,\VARIS,\alpha$ a
 % Specific constants and meta-parameter constraints are provided in the proof of the theorem in Appendix \ref{app:proofs}.
 Refer to App.~\ref{app:proofs} for a detailed proof involving definition of the constants and the meta-parameter constraints.
 %The theoretical settings may be too conservative.
-In Sec.~\ref{sec:stopping} we propose a joint selection of step size $\alpha$ and epoch size $m$ which is more suited for applications. 
 By analysing the upper-bound in Thm.~\ref{theo:convergence} we observe that: I) the $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on \textcolor{red}{non-concave} SVRG~\citep[\eg][]{reddi2016stochastic}; II) the $\mathcal{O}(\nicefrac{1}{N})$ term is due to the FG approximation and is analogous to the one in~\citep{harikandeh2015stopwasting}; III) the $\mathcal{O}(\nicefrac{1}{B})$ term is due to importance weighting.
 To achieve true convergence, both the batch size $N$ and the mini-batch size $B$ should increase over time. 
 In practice, it is enough to choose $N$ and $B$ large enough to make the second and the third term negligible, \ie to mitigate the variance introduced by FG approximation and importance sampling, respectively.
-Once the last two terms can be neglected, the number of trajectories needed to achieve $\norm[2]{\gradJ{\vtheta}}^2\leq\epsilon$ is $O(\frac{B+\nicefrac{N}{m}}{\epsilon})$. Advantage over batch gradient ascent can be achieved with properly selected meta-parameters. In the following we propose practical ways to do so.
+Once the last two terms can be neglected, the number of trajectories needed to achieve $\norm[2]{\gradJ{\vtheta}}^2\leq\epsilon$ is $O(\frac{B+\nicefrac{N}{m}}{\epsilon})$. In this sense, advantage over batch gradient ascent can be achieved with properly selected meta-parameters. In Sec.~\ref{sec:stopping} we propose a joint selection of step size $\alpha$ and epoch size $m$.
+Finally, note from the return statement of Algorithm \ref{alg:svrpg} that $J(\vtheta_A)$ can be seen as the average performance of all the policies tried by the algorithm. This is particularly meaningful in the context of on-line learning that we are addressing in this paper.
 
 {\color{red}
 \textbf{G(PO)MDP.} A similar result to the one stated in Thm~\ref{theo:convergence} can be derived for the G(PO)MDP estimator. A sketch of the proof is reported in~\ref{app:gpomdpproof}.
