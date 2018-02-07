@@ -307,8 +307,8 @@ More recently, some extensions of variance reduction algorithms to the non-conca
 		\STATE $v^{s}_t = 
 %			\nabla f(\wt{\vtheta}^s) + 
 			\wt{\mu} + 
-			\nabla g(x_i|\vtheta_t^{s}) -
-			\nabla g(x_i|\wt{\vtheta}^{s})
+			\nabla z(x_i|\vtheta_t^{s}) -
+			\nabla z(x_i|\wt{\vtheta}^{s})
 		$
         \STATE $\vtheta_{t+1}^{s} = \vtheta_t^{s} + \alpha v^{s}_t$
 		\ENDFOR
@@ -573,7 +573,7 @@ This problem can be solved using a variant of SVRG~\citep{Palaniappan2016svrgsad
 In the second approach~\citep{xu2017svrgtrpo}, SVRG is just an efficient approach to solve the optimization problem faced by Trust Region Policy Optimization (TRPO) at each iteration. We can just talk of a direct application of SVRG to a problem having finite-sum structure since no specific structure of the RL problem is exploited.
 It is worth to mention that, for practical reasons, the authors proposed to use a Newton conjugate gradient method with SVRG.
 
-Concerning importance weighting techniques, RL has made wide use of them for off-policy problems~\citep[\eg]{precup2000eligibility,thomas2015high}. However, as mentioned before, SVRPG cannot be compared to such methods since it is practically on-policy. Here, importance weighting is just a statistical tool used to preserve the unbiasedness of the corrected gradient.
+Concerning importance weighting techniques, RL has made wide use of them for off-policy problems~\citep[\eg][]{precup2000eligibility,thomas2015high}. However, as mentioned before, SVRPG cannot be compared to such methods since it is practically on-policy. Here, importance weighting is just a statistical tool used to preserve the unbiasedness of the corrected gradient.
 
 
 \section{Experiments}\label{sec:exp}
