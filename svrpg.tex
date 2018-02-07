@@ -3,6 +3,7 @@
 % Recommended, but optional, packages for figures and better typesetting:
 \usepackage{microtype}
 \usepackage{graphicx}
+\graphicspath{ {images/} }
 \usepackage{subfigure}
 \usepackage{booktabs} % for professional tables
 
@@ -237,7 +238,7 @@ $\Reward(\tau) = \sum_{t=0}^{H-1}\gamma^t\Reward(s_t,a_t).$
 Policies can be ranked based on their expected total reward: $J(\pi) = \EVV[\tau \sim p(\cdot|\pi)]{\Reward(\tau)|M}$.
 Solving an MDP $M$ means finding $\pi^* \in \argmax_{\pi} \{J(\pi)\}$.
 
-Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^d\}$, with the only constraint that $\pol$ is differentiable \wrt $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity, while in some occasions we replace $p_{\vtheta}(\tau)$ with $p(\tau|\vtheta)$ for the sake of readability.
+Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^d\}$, with the only constraint that $\pol$ is differentiable \wrt $\vtheta$. For sake of brevity, we will denote the performance of a parametric policy with $J(\vtheta)$ and the probability of a trajectory $\tau$ with $p(\tau|\vtheta)$ (in some occasions, $p(\tau|\vtheta)$ will be replaced by $p_{\vtheta}(\tau)$ for the sake of readability).
 The search for a locally optimal policy is performed through gradient ascent, where the policy gradient
 %of $J(\vtheta)$ \wrt the policy parameters 
 is \cite{sutton2000policy, Peters2008reinf}:
@@ -249,19 +250,19 @@ Notice that the distribution defining the gradient is induced by the current pol
 Here, we consider the \emph{online learning scenario}, where trajectories are sampled by interacting with the environment at each policy change. 
 In this setting, stochastic gradient ascent is typically employed.
 At each iteration $k >0$, a batch $\mathcal{D}_N^k = \{\tau_i\}_{i=0}^N$ of $N>0$ trajectories is collected using policy $\pi_{\vtheta_k}$.
-The policy is then updated as $\vtheta_{k+1}  = \vtheta_k + \alpha\gradApp{\vtheta_k}{N}$, where $\alpha$ is a step size and $\gradApp{\vtheta}{N}$ is an estimate of~\eqref{E:policygradient} using $\mathcal{D}_N^k$. The most common policy gradient estimators can be expressed as follows
+The policy is then updated as $\vtheta_{k+1}  = \vtheta_k + \alpha\gradApp{\vtheta_k}{N}$, where $\alpha$ is a step size and $\gradApp{\vtheta}{N}$ is an estimate of Eq.~\eqref{E:policygradient} using $\mathcal{D}_N^k$. The most common policy gradient estimators (\eg REINFORCE~\citep{williams1992simple} and G(PO)MDP~\citep{baxter2001infinite}) can be expressed as follows
 \begin{align} \label{E:policygradient.estimate}
         \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N} g(\tau_i|\vtheta), \quad \tau_i \in \mathcal{D}_N^k,
 \end{align}
-where $g(\tau_i|\vtheta)$ is an estimate of $\score{\vtheta}{\tau_i}\Reward(\tau_i)$, \eg REINFORCE~\citep{williams1992simple} and G(PO)MDP~\citep{baxter2001infinite}.
-Although REINFORCE definition is simpler than the G(PO)MDP one, the latter is often preferred due to its lower variance.
+where $g(\tau_i|\vtheta)$ is an estimate of $\score{\vtheta}{\tau_i}\Reward(\tau_i)$.
+Although the REINFORCE definition is simpler than the G(PO)MDP one, the latter is usually preferred due to its lower variance.
 We refer the reader to Appendix~\ref{A:gradient_estimators} for details and a formal definition of $g$.
 
 The main limitation of plain policy gradient is the high variance of these estimators.
 The na\"ive approach of increasing the batch size is not an option in RL due to the high cost of collecting samples, \ie by interacting with the environment.
 For this reason, literature has focused on the introduction of baselines aiming to reduce the variance~\citep[\eg][]{Peters2008reinf,Thomas2017actionbaseline,wu2018variance}.\footnote{A baseline is a function $f(s,a)$ such that $\EVV[a \sim \pol]{f(s,a)} = 0$, for any $s\in\Sspace$. \todopir{check the definition of baseline}}
 There has been a surge of recent interest in variance reduction techniques for gradient optimization in supervised learning.
-Although these techniques have been mainly derived for finite-sum problems, we will show in Sec.~\ref{sec:alg} how they can be used in RL.
+Although these techniques have been mainly derived for finite-sum problems, we will show in Section~\ref{sec:alg} how they can be used in RL.
 The next section has the aim to describe variance reduction techniques for finite-sum problems. In particular, we will present the SVRG algorithm that is at the core of this work.
 
 
@@ -320,40 +321,40 @@ More recently, some extensions of variance reduction algorithms to the non-conca
 \end{algorithm}
 
 \section{SVRG in Reinforcement Learning}\label{sec:alg}
-In online RL problems the usual approach is to tune the batch size of SG in order to find the optimal trade-off between variance and speed.
-Recall that compared to SL, the samples are not fixed in advance but need to be collected at each policy change.
+In online RL problems, the usual approach is to tune the batch size of SG to find the optimal trade-off between variance and speed.
+Recall that, compared to SL, the samples are not fixed in advance but we need to collect them at each policy change.
 Since this operation may be costly, we would like to minimize the number of interactions with the environment.
-Due to this issues, we would like to apply SVRG to RL problems in order to limit the variance introduced by sampling trajectories, which would ultimately lead to faster convergence.
-However, a direct application of SVRG to RL is not possible due to the following properties:
+For these reasons, we would like to apply SVRG to RL problems in order to limit the variance introduced by sampling trajectories, which would ultimately lead to faster convergence.
+However, a direct application of SVRG to RL is not possible due to the following issues:
 % In on-line policy gradient problems, SG is not really a choice, but is dictated by the necessity of interacting with an unknown environment.\todopir{I do not understand the meaning of this sentence. I would say that SG is not a choice by referring to papers that uses batches}
 % We would like to apply SVRG to the policy gradient framework in order to limit the variance introduced by sampling trajectories, which would ultimately lead to faster convergence. In this scenario, the function $f(\vtheta)$ to optimize is $J(\vtheta)$ and the (implicit) dataset $\mathcal{D}$ is the set of all possible trajectories $\mathcal{T}$. Compared to the typical finite sum optimization scenario, we have the following additional challenges:
 \begin{description}
         \item[Non-concavity:] the objective function $J(\vtheta)$ is typically non-concave.
-        \item[Infinite dataset:] the RL optimization cannot be expressed as a finite-sum problem. The actual dataset is infinite and coincide with $\pi_{\vtheta}(\tau)$.
+        \item[Infinite dataset:] the RL optimization cannot be expressed as a finite-sum problem. The objective function is an expected value over the trajectory density $p_{\vtheta}(\tau)$ of the total discounted reward, for which we would need an infinite dataset.
 %    \item[Approximation:] the dataset $\mathcal{T}$ can be infinite, but we can only sample a finite number of trajectories;
-        \item[Non-stationarity:] the distribution of the samples changes over time. In particular, the value of the parameter $\vtheta$ influences the sampling process.
+        \item[Non-stationarity:] the distribution of the samples changes over time. In particular, the value of the policy parameter $\vtheta$ influences the sampling process.
 \end{description}
-To deal with non-concavity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and softmax~\citep[\eg][]{Furmston2012unifying,pirotta2015lipschitz}, see App.~\ref{app:gauss} for the derivation.
+To deal with non-concavity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and softmax~\citep[\eg][]{Furmston2012unifying,pirotta2015lipschitz}, see Appendix~\ref{app:gauss} for the derivation.
 Because of the infinite dataset, we can only rely on an estimate of the full gradient.
-\citet{harikandeh2015stopwasting} analysed this scenario under the assumptions of $z$ being \textcolor{red}{concave}, showing that SVRG is robust to inexact computation of the full gradient. In particular, it is still possible to recover the original convergence rate if the error decreases at an appropriate rate. {\color{red}Later on we will show how the estimation accuracy impacts on the convergence results with non-concave objective.} 
-Finally, the unbiasedness of Eq.~\ref{E:svrg.gradient.correction} is broken by the non-stationarity of the optimization problem.
+\citet{harikandeh2015stopwasting} analysed this scenario under the assumptions of $z$ being \textcolor{red}{concave}, showing that SVRG is robust to an inexact computation of the full gradient. In particular, it is still possible to recover the original convergence rate if the error decreases at an appropriate rate. {\color{red}Later on we will show how the estimation accuracy impacts on the convergence results with non-concave objective.} 
+Finally, the non-stationarity of the optimization problem introduces a bias into the SVRG estimator in Eq.~\eqref{E:svrg.gradient.correction}.
 To overcome this limitation we employ importance weighting~\citep[\eg][]{rubinstein1981simulation,precup2000eligibility} to correct the distribution shift.
 %Finally, we employ importance weighting~\citep[\eg]{rubinstein1981simulation,precup2000eligibility} to guarantee proper sampling of trajectories. 
 
-We can now introduce Stochastic Variance-Reduced Policy Gradient (SVRPG) for a generic policy gradient estimator $g$ (see Eq.~\ref{E:policygradient.estimate}).
+We can now introduce Stochastic Variance-Reduced Policy Gradient (SVRPG) for a generic policy gradient estimator $g$ (see Eq.~\eqref{E:policygradient.estimate}).
 % For simplicity, we focus on the REINFORCE estimator but the extension to G(PO)MDP is straightforward.
 Between snapshots, the SVRPG estimate is corrected using importance weighting, for any $t \in \{0,\ldots,m-1\}$
 \begin{align*}
-        \blacktriangledown J(\vtheta_{t}) &= \wh{\nabla}_N J(\wt{\vtheta}) + g(\tau_i|\vtheta_t) - \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
+        \blacktriangledown J(\vtheta_{t}) &= \wh{\nabla}_N J(\wt{\vtheta}) + g(\tau_i|\vtheta_t) - \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta}),
 \end{align*}
 % \begin{align*}
 % 	\blacktriangledown J(\vtheta) &= \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \vert \wt{\vtheta})\Reward(\tau_j) \\
 % 		&+ \nabla\log\pi(\tau_i \vert \vtheta)\Reward(\tau_i) 
 % 		- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \wt{\vtheta})\Reward(\tau_i),
 % \end{align*}
-where $\wh{\nabla}_N J(\wt{\vtheta})$ is as in~\eqref{E:policygradient.estimate} where $\mathcal{D}_N$ is sampled using the snapshot policy $\pi_{\wt{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pi_{\vtheta_t}$, and $\omega(\tau|\vtheta_t, \wt{\vtheta}) = \frac{p(\tau|\wt{\vtheta})}{p(\tau|\vtheta_t)}$ is an importance weight from $\pi_{\vtheta_t}$ to the snapshot policy $\pi_{\wt{\vtheta}}$. 
-Similarly to SVRG, we have that $\vtheta_0 := \wt{\vtheta}$ and the update is a FG step.
-Our update is still fundamentally on-policy, since the weighting concerns only the correction term. However, this partial ``off-policyness'' is enough to introduce variance. This is a well-known issue of importance sampling~\citep[\eg][]{thomas2015high}. To mitigate it, we use mini-batches of trajectories of size $B \ll N$ to average the correction, \ie
+where $\wh{\nabla}_N J(\wt{\vtheta})$ is as in Eq.~\eqref{E:policygradient.estimate} where $\mathcal{D}_N$ is sampled using the snapshot policy $\pi_{\wt{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pi_{\vtheta_t}$, and $\omega(\tau|\vtheta_t, \wt{\vtheta}) = \frac{p(\tau|\wt{\vtheta})}{p(\tau|\vtheta_t)}$ is an importance weight from $\pi_{\vtheta_t}$ to the snapshot policy $\pi_{\wt{\vtheta}}$. 
+Similarly to SVRG, we have that $\vtheta_0 := \wt{\vtheta}$, and the update is a FG step.
+Our update is still fundamentally on-policy since the weighting concerns only the correction term. However, this partial ``off-policyness'' is enough to introduce variance. This is a well-known issue of importance sampling~\citep[\eg][]{thomas2015high}. To mitigate it, we use mini-batches of trajectories of size $B \ll N$ to average the correction, \ie
 \begin{align}\label{E:svrpg.estimate.batch}
         \blacktriangledown J(\vtheta_{t}) &:= v_t= \wh{\nabla}_N J(\wt{\vtheta})\\ \notag
                                             & \quad{} + 
@@ -362,15 +363,15 @@ Our update is still fundamentally on-policy, since the weighting concerns only t
         g(\tau_i|\vtheta_t) - \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
 \right]}_{c_t}.
 \end{align}
-We want just to stress that $\EVV[\tau_i \sim p(\cdot|\vtheta_t)]{\frac{1}{B} \sum_{i=0}^{B-1} \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} = \nabla J(\wt{\vtheta})$.\footnote{The reader can refer to App.~\ref{} for off-policy gradients and variants of REINFORCE and G(PO)MDP.}
-This property will be used to prove Lem.~\ref{L:svrpg.properties}.
+We want just to stress that $\EVV[\tau_i \sim p(\cdot|\vtheta_t)]{\frac{1}{B} \sum_{i=0}^{B-1} \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} = \nabla J(\wt{\vtheta})$.\footnote{The reader can refer to Appendix~\ref{} for off-policy gradients and variants of REINFORCE and G(PO)MDP.}
+This property will be used to prove Lemma~\ref{L:svrpg.properties}.
 %\begin{align*}
 %&\blacktriangledown J(\vtheta) = \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \vert \wt{\vtheta})\Reward(\tau_j) +\\
 %&\quad\frac{1}{B}\left[\sum_{i=0}^{B-1}
 %\nabla\log\pi(\tau_i \vert \vtheta)\Reward(\tau_i) 
 %- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \wt{\vtheta})\Reward(\tau_i)\right].
 %\end{align*}
-The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case~\citep{harikandeh2015stopwasting,konevcny2016mini}. It is easy to show that the SVRPG estimator has the following, desirable properties (see App.~\ref{app:proofs}):
+The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case~\citep{harikandeh2015stopwasting,konevcny2016mini}. It is easy to show that the SVRPG estimator has the following, desirable properties (see Appendix~\ref{app:proofs}):
 \begin{lemma}\label{L:svrpg.properties} \todopirout{extended to any unbiased estimator}
         {\color{blue} Let $\wh{\nabla}_N J(\vtheta)$ be an unbiased estimator of~\eqref{E:policygradient} }
 %Denote by $\wh{\nabla}_N^{\textsc{RF}} J(\vtheta)$ the REINFORCE estimator in~\eqref{E:policygradient.estimate} 
@@ -401,11 +402,11 @@ For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of th
 %	\mathbb{V}ar\left[\gradApp{\vtheta^*}{N}\right].
 %\]
 %\end{restatable}
-In particular, the latter result suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can actually achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance (at least asymptotically).
-The resulting SVRPG policy optimization method is detailed in Alg.~\ref{alg:svrpg}.\footnote{Note that when $t=0$ we can avoid to sample trajectories and instead perform directly the policy update using the FG. For sake of clarity, we have not explicitly differentiate this step from the standard update rule in Alg.~\ref{alg:svrpg}.}
+In particular, the latter result suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance (at least asymptotically).
+Algorithm~\ref{alg:svrpg} presents the details of the SVRPG method for policy optimization.\footnote{Note that when $t=0$ we can avoid to sample trajectories and instead directly perform the policy update using the FG. For the sake of clarity, we have not explicitly differentiated this step from the standard update rule in Algorithm~\ref{alg:svrpg}.}
 
-To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$.
-Adaptive selection of these meta-parameters is also possible, and is explored in Sec.~\ref{sec:stopping}.
+To use SVRPG in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$.
+Adaptive selection of these meta-parameters is also possible, and it is explored in Section~\ref{sec:stopping}.
 However, the next section will provide general converge guarantees for SVRPG \textcolor{red}{with REINFORCE estimator}.
 
 \begin{algorithm}[tb]
@@ -416,7 +417,7 @@ However, the next section will provide general converge guarantees for SVRPG \te
 		\FOR{$s=0$ {\bfseries to} $S-1$}
         \STATE $\vtheta_0^{s+1} := \wt{\vtheta}^{s} = \vtheta_{m}^s$
         \STATE Sample $N$ trajectories $\{\tau_j\}$ from $p(\cdot\vert\wt{\vtheta}^{s})$
-        \STATE $ \wt{\mu} = \gradApp{\wt{\vtheta}^{s}}{N}$ (see Eq.~\ref{E:policygradient.estimate})% = \frac{1}{N}\sum_{j=0}^{N-1}g(\tau_j | \wt{\vtheta}^s)$
+        \STATE $ \wt{\mu} = \gradApp{\wt{\vtheta}^{s}}{N}$ (see Eq.~\eqref{E:policygradient.estimate})% = \frac{1}{N}\sum_{j=0}^{N-1}g(\tau_j | \wt{\vtheta}^s)$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
         \STATE Sample $B$ trajectories $\{\tau_i\}$ from $p(\cdot\vert\vtheta_t^{s+1})$
 %        \STATE $c^{s+1}_t = \frac{1}{B} \sum\limits_{i=0}^{B-1} \left( g(\tau_i|\vtheta_t^{s+1}) - \omega(\tau_i|\vtheta^{s+1}_t, \wt{\vtheta}^s) g(\tau_i| \wt{\vtheta}^s) \right)$
@@ -445,13 +446,13 @@ However, the next section will provide general converge guarantees for SVRPG \te
 \end{algorithm}
 
 \section{Convergence Guarantees of SVRPG}\label{sec:conv}
-In this section, we state the convergence guarantees for SVRPG {\color{red}with REINFORCE estimator}.\footnote{\color{red}Similar results can be derived for G(PO)MDP, see App.~\ref{app:}.}
+In this section, we state the convergence guarantees for SVRPG {\color{red}with REINFORCE estimator}.\footnote{\color{red}Similar results can be derived for G(PO)MDP, see Appendix~\ref{app:}.}
 We mainly leverage on the recent analysis of \textcolor{red}{non-concave} SVRG~\cite{reddi2016stochastic,allen2016variance}.
-Each of the three challenges presented at the beginning of Sec.~\ref{sec:alg} can potentially prevent convergence, so we need additional assumptions.
-In App.~\ref{app:gauss} we show how the widespread Gaussian policy satisfies these assumptions.
+Each of the three challenges presented at the beginning of Section~\ref{sec:alg} can potentially prevent convergence, so we need additional assumptions.
+In Appendix~\ref{app:gauss} we show how the traditional Gaussian policy satisfies these assumptions.
 
-\textit{1) Non-concavity.} A common assumption in this case it to assume the objective function to be $L$-smooth.
-However, in RL we can consider the following assumption which is sufficient for the $L$-smoothness of the objective (see Lem.~\ref{lemma:lsmooth}).
+\textit{1) Non-concavity.} A common assumption, in this case, is to assume the objective function to be $L$-smooth.
+However, in RL we can consider the following assumption which is sufficient for the $L$-smoothness of the objective (see Lemma~\ref{lemma:lsmooth}).
 	\begin{restatable}[On policy derivatives]{assumption}{boundedscore}\label{ass:bounded_score}
 		For each state-action pair $(s,a)$, value of $\vtheta$ and dimensions $i,j$ there are positive constants $G,F<\infty$ such that:
 \[
@@ -462,7 +463,7 @@ However, in RL we can consider the following assumption which is sufficient for 
 
 \textit{2) FG Approximation.}
 Since we cannot compute an exact full gradient, we require the variance of the estimator to be bounded.
-This assumption is in spirit similar to the one in~\citep{harikandeh2015stopwasting}.
+This assumption is similar in spirit to the one in~\citep{harikandeh2015stopwasting}.
 	\begin{restatable}[On the variance of the gradient estimator]{assumption}{varreinforce}\label{ass:REINFORCE}
 		There is a constant $V<\infty$ such that, for any policy $\pol$:
 		\[
@@ -473,17 +474,17 @@ This assumption is in spirit similar to the one in~\citep{harikandeh2015stopwast
 \textit{3) Non-stationarity.} 
 Similarly to what done in SL~\citep{cortes2010learning}, we require the variance of the importance weight to be bounded.
 	\begin{restatable}[On the variance of importance weights]{assumption}{varweights}\label{ass:M2}
-		There is a constant $W<\infty$ such that, for each pair of policies encountered in Alg.~\ref{alg:svrpg} and for each possible trajectory,
+		There is a constant $W<\infty$ such that, for each pair of policies encountered in Algorithm~\ref{alg:svrpg} and for each possible trajectory,
 		\[
                 \mathbb{V}ar\left[\omega(\tau| \vtheta_1, \vtheta_2)\right] \leq \VARIS, \quad \forall \vtheta_1,\vtheta_2 \in \realspace^d , \tau \sim p(\cdot|\vtheta_1).
 		\]
 	\end{restatable}
-Differently from Ass.~\ref{ass:bounded_score} and ~\ref{ass:REINFORCE}, Ass.~\ref{ass:M2} can be enforced by a proper handling of the epoch size $m$.
+Differently from Assumptions~\ref{ass:bounded_score} and ~\ref{ass:REINFORCE}, Assumption~\ref{ass:M2} can be enforced by a proper handling of the epoch size $m$.
 
 We can now state the convergence guarantees for SVRPG.
 \begin{restatable}[Convergence of the {\color{red}REINFORCE-}SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
-{\color{red}Consider the REINFORCE estimator in Eq.~\ref{E:policygradient.estimate}.}
-Under Ass.~\ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Alg.~\ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size $\alpha$ and the epoch size $m$, the following property:
+{\color{red}Consider the REINFORCE estimator in Eq.~\eqref{E:policygradient.estimate}.}
+Under Assumptions~\ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Algorithm~\ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size $\alpha$ and the epoch size $m$, the following property:
 \begin{align*}
 	&\EVV[]
 	{\norm[2]{\nabla J(\vtheta_A)}^2} 
@@ -495,56 +496,56 @@ Under Ass.~\ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the pa
 where $\psi,\zeta,\xi$ depend only on $\GRADLOG,\HESSLOG,\VARRF,\VARIS,\alpha$ and $m$.
 \end{restatable}
 % Specific constants and meta-parameter constraints are provided in the proof of the theorem in Appendix \ref{app:proofs}.
-Refer to App.~\ref{app:proofs} for a detailed proof involving definition of the constants and the meta-parameter constraints.
+Refer to Appendix~\ref{app:proofs} for a detailed proof involving the definition of the constants and the meta-parameter constraints.
 %The theoretical settings may be too conservative.
-By analysing the upper-bound in Thm.~\ref{theo:convergence} we observe that: I) the $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on \textcolor{red}{non-concave} SVRG~\citep[\eg][]{reddi2016stochastic}; II) the $\mathcal{O}(\nicefrac{1}{N})$ term is due to the FG approximation and is analogous to the one in~\citep{harikandeh2015stopwasting}; III) the $\mathcal{O}(\nicefrac{1}{B})$ term is due to importance weighting.
+By analysing the upper-bound in Theorem~\ref{theo:convergence} we observe that: I) the $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on \textcolor{red}{non-concave} SVRG~\citep[\eg][]{reddi2016stochastic}; II) the $\mathcal{O}(\nicefrac{1}{N})$ term is due to the FG approximation and is analogous to the one in~\citep{harikandeh2015stopwasting}; III) the $\mathcal{O}(\nicefrac{1}{B})$ term is due to importance weighting.
 To achieve true convergence, both the batch size $N$ and the mini-batch size $B$ should increase over time. 
 In practice, it is enough to choose $N$ and $B$ large enough to make the second and the third term negligible, \ie to mitigate the variance introduced by FG approximation and importance sampling, respectively.
-Once the last two terms can be neglected, the number of trajectories needed to achieve $\norm[2]{\gradJ{\vtheta}}^2\leq\epsilon$ is $O(\frac{B+\nicefrac{N}{m}}{\epsilon})$. In this sense, advantage over batch gradient ascent can be achieved with properly selected meta-parameters. In Sec.~\ref{sec:stopping} we propose a joint selection of step size $\alpha$ and epoch size $m$.
-Finally, note from the return statement of Algorithm \ref{alg:svrpg} that $J(\vtheta_A)$ can be seen as the average performance of all the policies tried by the algorithm. This is particularly meaningful in the context of on-line learning that we are addressing in this paper.
+Once the last two terms can be neglected, the number of trajectories needed to achieve $\norm[2]{\gradJ{\vtheta}}^2\leq\epsilon$ is $O(\frac{B+\nicefrac{N}{m}}{\epsilon})$. In this sense, advantage over batch gradient ascent can be achieved with properly selected meta-parameters. In Section~\ref{sec:stopping} we propose a joint selection of step size $\alpha$ and epoch size $m$.
+Finally, from the return statement of Algorithm \ref{alg:svrpg}, it is worth noting that $J(\vtheta_A)$ can be seen as the average performance of all the policies tried by the algorithm. This is particularly meaningful in the context of online learning that we are considering in this paper.
 
 {\color{red}
 \textbf{G(PO)MDP.} A similar result to the one stated in Thm~\ref{theo:convergence} can be derived for the G(PO)MDP estimator. A sketch of the proof is reported in~\ref{app:gpomdpproof}.
 In practice, due to the lower variance G(PO)MDP is preferred to REINFORCE.
-For this reason we will use G(PO)MDP for the experiments (see Sec.~\ref{sec:exp}).
+For this reason, we will use G(PO)MDP for the experiments (see Sec.~\ref{sec:exp}).
 \todopir{sketch of proof for GPOMDP in appendix, probably can be unified with the one of REINFORCE}}
 
 \section{Remarks on SVRPG}
 The convergence guarantees presented in the previous section come with requirements on the meta-parameters (\ie $\alpha$ and $m$) that may be too conservative for practical applications.
 Here we provide a practical and automatic way to choose the step size $\alpha$ and the number of sub-iterations $m$ performed between snapshots.
-Additionally, we provide variants of SVRPG exploiting variance-reduction techniques for importance weights. Despite lacking of theoretical guarantees, we will show that these methods are able to outperform the baseline SVRPG (Alg.~\ref{alg:svrpg}).
+Additionally, we provide variants of SVRPG exploiting variance-reduction techniques for importance weights. Despite lacking theoretical guarantees, we will show that these methods can outperform the baseline SVRPG (Algorithm~\ref{alg:svrpg}).
 
-\subsection{Meta-Parameters Selection}\label{sec:stopping}
+\subsection{Meta-Parameter Selection}\label{sec:stopping}
 % In section \ref{sec:conv}, we introduced the practical need to properly choose $\alpha$ and $m$, which are, respectively, the step size and the number of sub-iterations to perform after a snapshot.
 % At this point, the open question is how to properly select the step size $\alpha$ and the sub-iteration number $m$ in practical applications.
-The step size $\alpha$ is crucial to balance the variance due to the sub-iterations and the variance associated to the estimator at the snapshot.
+The step size $\alpha$ is crucial to balance the variance due to the sub-iterations and the variance associated with the estimator at the snapshot.
 % The first parameter is crucial to balance the variance introduced by estimations within sub-iterations with respect to the variance introduced by estimations associated to the snapshots.
-The number $m$ of sub-iterations controls the variance introduced by the importance weights. Low $m$ values are associated to low variance but induce lots of snapshot points (\ie lots of FG computations). High $m$ values allow to move policy $\pi_{\vtheta_t}$ away from the snapshot policy $\pi_{\wt{\vtheta}}$, causing high variance of the importance weights.
+The number $m$ of sub-iterations influences the variance introduced by the importance weights. Low $m$ values are associated with low variance but induce lots of snapshot points (\ie lots of FG computations). High $m$ values may move policy $\pi_{\vtheta_t}$ far away from the snapshot policy $\pi_{\wt{\vtheta}}$, causing high variance of the importance weights.
 % the farther the distance between the snapshot policy and the current one, the higher the variance of the importance weights.
 
 \textbf{Adaptive step size.}
-A common way to deal with noisy gradients is to use adaptive strategies to compute the step size.
+A standard way to deal with noisy gradients is to use adaptive strategies to compute the step size.
 ADAptive Moment estimation (ADAM)~\citep{kingma2014adam} stabilizes the parameter update by computing learning rates for each parameter based on an incremental estimate of the gradient variance.
-Due to this feature we would like to incorporate ADAM in the structure of the SVRPG update.
-Recall that SVRPG is characterized by two updates: I) FG update in the snapshot; II) corrected gradient update in the sub-iterations.
+Due to this feature, we would like to incorporate ADAM in the structure of the SVRPG update.
+Recall that SVRPG performs two different updates of the parameters $\vtheta$: I) FG update in the snapshot; II) corrected gradient update in the sub-iterations.
 Given this structure, we suggest to use two ADAM estimators:
 \begin{align*}
         \vtheta^{s}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\wh{\nabla}_N J(\wt{\vtheta}^s)\\
-        \vtheta^{s}_{t+1} &= \vtheta^{s}_t + \alpha^{\textsc{SI}}_{s,t} v_t^{s}
+        \vtheta^{s}_{t+1} &= \vtheta^{s}_t + \alpha^{\textsc{SI}}_{s,t} v_t^{s},
 \end{align*}
-where $\alpha^{\textsc{FG}}_{s}$ is associated to the snapshot and $\alpha^{\textsc{SI}}_{s,t}$ with the sub-iterations (see App.~\ref{app:practicalsvrpg} for details).
-By doing so we decouple the contribution of the variance introduced by the approximate FG from the one introduced by the sub-iterations.
+where $\alpha^{\textsc{FG}}_{s}$ is associated to the snapshot and $\alpha^{\textsc{SI}}_{s,t}$ with the sub-iterations (see Appendix~\ref{app:practicalsvrpg} for details).
+By doing so, we decouple the contribution of the variance due to the approximate FG from the one introduced by the sub-iterations.
 Note that these two terms have different orders of magnitude since are estimated with a different number of trajectories ($B \ll N$) and w/o importance weights.
 The use of two ADAM estimators allows to capture and exploit this property.
 
 \textbf{Adaptive Sub-Iterations.}
-It is easy to imagine that a predefined schedule (\eg $m$ fixed in advance or changed with a policy independent process) may poorly perform due to the high variability of the updates.
-In particular, fixed a value $m$ the variance of the updates in the sub-iterations depends on the snapshot policy and sampled trajectories.
-This variability is in part captured by the ADAM estimate. Hence, we propose to take a snapshot (\ie interrupt the sub-iterations) when the step size $\alpha^{\textsc{SI}}$ proposed by ADAM for the sub-iterations is smaller than the one for the FG (\ie $\alpha^{\textsc{FG}}$).
+It is easy to imagine that a predefined schedule (\eg $m$ fixed in advance or changed with a policy-independent process) may poorly perform due to the high variability of the updates.
+In particular, given a fixed number of sub-iterations $m$, the variance of the updates in the sub-iterations depends on the snapshot policy and the sampled trajectories.
+Since the ADAM estimate partly captures such variability,  we propose to take a new snapshot (\ie interrupt the sub-iterations) whenever the step size $\alpha^{\textsc{SI}}$ proposed by ADAM for the sub-iterations is smaller than the one for the FG (\ie $\alpha^{\textsc{FG}}$).
 If the latter condition is verified, it amounts to say that the noise in the corrected gradient has overcome the information of the FG.
 Formally, the stopping condition is as follow
 \[
-        \text{If }        \frac{\alpha^{\textsc{FG}}}{N} > \frac{\alpha^{\textsc{SI}}}{B} \textbf{ then } \text{take snapshot}
+        \text{If }        \frac{\alpha^{\textsc{FG}}}{N} > \frac{\alpha^{\textsc{SI}}}{B} \textbf{ then } \text{take snapshot,}
 \]
 where we have introduced $N$ and $B$ to take into account the trajectory efficiency (\ie weighted advantage).
 The less the number of trajectories used to update the policy, the better.
@@ -552,9 +553,9 @@ This weighted approach comes from the fact that, as mentioned above, there is no
 Thus, we aim to facilitate sub-iterations rather than snapshots.
 
 \subsection{Normalized Importance Sampling}\label{sec:prac}
-As mentioned in section \ref{sec:stopping}, importance weights are an additional source of variance. A common way to cope with this issue is self-normalization.
+As mentioned in Section~\ref{sec:stopping}, importance weights are an additional source of variance. A standard way to cope with this issue is self-normalization.
 This technique can reduce the variance of the importance weights at the cost of introducing some bias. Whether the trade-off is advantageous depends on the specific task.  
-Introducing self-normalization in the context of our algorithm, we switch from equation \ref{E:svrpg.estimate.batch} to:
+Introducing self-normalization in the context of our algorithm, we switch from Eq.~\eqref{E:svrpg.estimate.batch} to:
 \begin{align*}
 \blacktriangledown J(\vtheta_{t}) = \wh{\nabla}_N J(\wt{\vtheta})
  + \frac{1}{B} \sum_{i=0}^{B-1} \left[
@@ -566,58 +567,68 @@ In Section \ref{sec:exp} we show some cases in which self-normalization provides
 \todomat{add reference, maybe just Precup}
 
 \subsection{Baseline}
-As reported in Sec. \ref{subsec:PolicyGradient}, a well known variance reduction tool in Reinforcement Learning is the employment of baselines in policy gradient estimation.
-This tool is orthogonal to the variance reduction technique proposed in this paper. In Section \ref{sec:exp} we try to combine SVRPG with a non-stationary, state-dependent, learned linear baseline like the one used in \cite{duan2016benchmarking}, with the variant that baseline parameters are updated only at the snapshot, with trajectories sampled from $\pi_{\wt{\vtheta}^s}$.
+As reported in Section~\ref{subsec:PolicyGradient}, a popular variance reduction tool in Reinforcement Learning is the employment of baselines in policy gradient estimation.
+This tool is orthogonal to the variance reduction technique proposed in this paper. In Section~\ref{sec:exp} we try to combine SVRPG with a non-stationary, state-dependent, learned linear baseline like the one used in~\cite{duan2016benchmarking}, with the variant that baseline parameters are updated only at the snapshot, with trajectories sampled from $\pi_{\wt{\vtheta}^s}$.
 
 \section{Related Work}
-Despite the huge interest received in SL, variance-reduced gradient approaches has not attracted the RL community.
+Despite the considerable interest received in SL, variance-reduced gradient approaches have not attracted the RL community.
 As far as we know, there are just two applications of SVRG in RL.
 The first approach~\citep{du2017svrgpe} aims to exploit SVRG for policy evaluation.
-The policy evaluation problem is simpler than the one faced in this paper (control problem).
+The policy evaluation problem is more straightforward than the one faced in this paper (control problem).
 In particular, since the goal is to evaluate just the performance of a predefined policy, the optimization problem is stationary.
-The setting considered in the paper is the one of policy evaluation by minimizing the empirical mean squared projected Bellman error (MSPBE) with a linear approximation of the value function. \citet{du2017svrgpe} shown that this problem can equivalently reformulated as a convex-concave saddle-point problem that is characterized by a finite-sum structure.
+The setting considered in the paper is the one of policy evaluation by minimizing the empirical mean squared projected Bellman error (MSPBE) with a linear approximation of the value function. \citet{du2017svrgpe} shown that this problem can be equivalently reformulated as a convex-concave saddle-point problem that is characterized by a finite-sum structure.
 This problem can be solved using a variant of SVRG~\citep{Palaniappan2016svrgsaddle} for which convergence guarantees have been provided.
-In the second approach~\citep{xu2017svrgtrpo}, SVRG is just an efficient approach to solve the optimization problem faced by Trust Region Policy Optimization (TRPO) at each iteration. We can just talk of a direct application of SVRG to a problem having finite-sum structure since no specific structure of the RL problem is exploited.
+The second approach~\citep{xu2017svrgtrpo} uses SVRG as a practical method to solve the optimization problem faced by Trust Region Policy Optimization (TRPO) at each iteration. We can just talk of a direct application of SVRG to a problem having finite-sum structure since no specific structure of the RL problem is exploited.
 It is worth to mention that, for practical reasons, the authors proposed to use a Newton conjugate gradient method with SVRG.
 
-Concerning importance weighting techniques, RL has made wide use of them for off-policy problems~\citep[\eg][]{precup2000eligibility,thomas2015high}. However, as mentioned before, SVRPG cannot be compared to such methods since it is practically on-policy. Here, importance weighting is just a statistical tool used to preserve the unbiasedness of the corrected gradient.
+Concerning importance weighting techniques, RL has made wide use of them for off-policy problems~\citep[\eg][]{precup2000eligibility,thomas2015high}. However, as mentioned before, SVRPG cannot be compared to such methods since it is in all respects an on-policy algorithm. Here, importance weighting is just a statistical tool used to preserve the unbiasedness of the corrected gradient.
 
 
 \section{Experiments}\label{sec:exp}
-In this section we address the performance evaluation of our policy gradient estimator defined in equation \ref{E:svrpg.estimate.batch} against that one of equation \ref{E:policygradient.estimate}. This comparison is performed using G(PO)MDP as estimator of $\score{\vtheta}{\tau}\Reward(\tau)$.
- 
-We want to investigate whether:
-\begin{enumerate}
-\item The algorithm reaches high value of the reward function faster than GPOMDP.
-\item Averagely SVRPG keep the reward function more stable than GPOMDP.
-\end{enumerate}
+In this section we address the performance evaluation of our policy gradient estimator defined in equation \ref{E:svrpg.estimate.batch} against that one of equation \ref{E:policygradient.estimate}. This comparison is performed using G(PO)MDP as estimator of $\score{\vtheta}{\tau}\Reward(\tau)$. For the sake of simplicity and with a little abuse of notation we refer to \ref{E:svrpg.estimate.batch} as SVRPG and to \ref{E:policygradient.estimate} as G(PO)MDP.
+In all the experiments we used gaussian policies and bootsrap confidence intervals $\alpha = 10\% $ over ten different runs for evaluation. Each run with a different policy initialization which is kept fixed when changing the algorithm. The maximum number of trajectories at hand is fixed for each task. 
 
 In order to pursue the above mentioned objectives, we evaluate the behavior of the reward function averaged on 10 runs for each experiment.
 
 We decide to use the following models of Rllab: \emph{Cart-Pole Balancing}, \emph{Mujoco Swimmer}, \emph{Mujoco Half Cheetah}.
 
+\begin{figure}[t]
+    \includegraphics[width=0.5\textwidth]{swimmer_self_normalized_SVRPG_vs_GPOMDP}
+    \caption{Self-Normalized SVRPG vs GPOMDP in swimmer}
+    \label{fig:swimmerone}
+\end{figure}
+\begin{figure}[t]
+    \includegraphics[width=0.5\textwidth]{swimmer_self_normalized_SVRPG_vs_SVRPG}
+    \caption{Self-Normalized SVRPG vs Non Self-Normalized SVRPG in swimmer}
+    \label{fig:swimmertwo}
+\end{figure}
+\begin{figure}[t]
+    \includegraphics[width=0.5\textwidth]{half_cheetah_self_norm_baseline_SVRPG_vs_GPOMDP100_baseline}
+    \caption{Self-Normalized SVRPG with baseline vs GPOMDP with baseline in half cheetah}
+    \label{fig:halfcheetah}
+\end{figure}
+\begin{figure}[t]
+    \includegraphics[width=0.5\textwidth]{cart_pole_SVRPG_vs_GPOMDP}
+    \caption{SVRPG vs GPOMDP in cart-pole}
+    \label{fig:cartpole}
+\end{figure}
 
-In all the experiments we compete with GPOMDP standard algorithm. GPOMDP uses a number of trajectories per batch that is equal to the number of trajectories used in SVRPG mini-batch size.
-The neural network and the learning rate are the same for GPOMDP and SVRPG.
-In SVRPG we used two different Adam parameters: the first one for Snapshot and the second one for sub-iterations.
-We used the stopping condition defined in Section \ref{sec:stopping}.
-We fixed the maximum number of trajectories that both the algorithms can use as shown in appendices. 
 
-The neural networks is composed of one layer with 8 neurons for Cart-Pole environment and by two layers with 32x32 neurons for Swimmer and for Half Cheetah environments. In each experiment, the length of episodes is 500 steps.
 
-In particular in our experiments we use this technique in the context of G(PO)MDP defined as "weighted per-decision importance sampling estimator" \cite{precup2000eligibility}.  
+
+  
 
 \section{Conclusion}
-In this paper we introduce SVRPG, a variant of SVRG specifically designed for RL problems.
+In this paper, we introduced SVRPG, a variant of SVRG designed explicitly for RL problems.
 The control problem considered in the paper has a series of difficulties non-common in SL.
-Among them non-concavity and approximate estimate of the FG have been analysed independently in SL~\citep[\eg][]{allen2016variance,reddi2016stochastic,harikandeh2015stopwasting} but never combined.
+Among them, non-concavity and approximate estimates of the FG have been analysed independently in SL~\citep[\eg][]{allen2016variance,reddi2016stochastic,harikandeh2015stopwasting} but never combined.
 Nevertheless, the main issue in RL is the non-stationarity of the sampling process since the distribution underlying the objective function is policy dependent.
-We have shown that by exploiting importance weighting techniques it is possible to overcome this issue and preserve the unbiasedness of the corrected gradient.
-We have additionally shown that under mild assumptions that are often verified in RL applications, it is possible to derive convergence guarantees for SVRPG.
+We have shown that by exploiting importance weighting techniques, it is possible to overcome this issue and preserve the unbiasedness of the corrected gradient.
+We have additionally shown that, under mild assumptions that are often verified in RL applications, it is possible to derive convergence guarantees for SVRPG.
 SVRG has been previously used in RL for policy evaluation~\citep{du2017svrgpe} and as alternative optimization method for TRPO~\citep{xu2017svrgtrpo}.
 The first case is much more similar to the SL case since the problem is stationary and may be made concave, removing several issues we have faced here.
-In the second case it was used as a better optimization technique to solve the per-iteration problem imposed by TRPO.
-Finally, we have empirically shown that practical variants of the theoretical SVRPG are able to outperform classical actor-only approaches on several benchmarks.
+In the second case, it was used as a better optimization technique to solve the per-iteration problem imposed by TRPO.
+Finally, we have empirically shown that practical variants of the theoretical SVRPG version can outperform classical actor-only approaches on several benchmarks.
 
 
 
