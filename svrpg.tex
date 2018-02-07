@@ -230,19 +230,19 @@ The agent's behaviour is modelled as a policy $\pi$, where $\pi(\cdot|s)$ is the
 % We consider episodic tasks, \ie tasks composed of episodes of length $H$, also called time horizon.
 % In this setting, a trajectory $\tau$ is the sequence of states and actions $(s_0,a_0,s_1,a_1,\dots,s_{H-1},a_{H-1})$ observed by following some stationary policy in a given episode, where $s_0$ is always sampled from the initial state distribution $\rho$.
 We consider episodic MDPs with effective horizon $H$.\footnote{The episode duration is a random variable, but the optimal policy can reach the target state (\ie absorbing state) in at most $H$ steps. This has not to be confused with a finite horizon problem where the optimal policy is non-stationary.} In this setting, we can limit our attention to trajectories of length $H$. A trajectory $\tau$ is a sequence of states and actions $(s_0,a_0,s_1,a_1,\dots,s_{H-1},a_{H-1})$ observed by following a stationary policy, where $s_0 \sim \rho$.
-With abuse of notation, we denote with $\pi(\tau)$ the density distribution induced by policy $\pi$ on the set $\Tspace$ of all possible trajectories, and with $\Reward(\tau)$ the total discounted reward provided by trajectory $\tau$:
+We denote with $p(\tau|\pi)$ the density distribution induced by policy $\pi$ on the set $\Tspace$ of all possible trajectories (see Appendix~\ref{A:gradient_estimators} for the definition), and with $\Reward(\tau)$ the total discounted reward provided by trajectory $\tau$:
 %
 $\Reward(\tau) = \sum_{t=0}^{H-1}\gamma^t\Reward(s_t,a_t).$
 %
-Policies can be ranked based on their expected total reward: $J(\pi) = \EVV[\tau \sim \pi]{\Reward(\tau)|M}$.
+Policies can be ranked based on their expected total reward: $J(\pi) = \EVV[\tau \sim p(\cdot|\pi)]{\Reward(\tau)|M}$.
 Solving an MDP $M$ means finding $\pi^* \in \argmax_{\pi} \{J(\pi)\}$.
 
-Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^d\}$, with the only constraint that $\pol$ is differentiable \wrt $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity, while in some occasions we replace $\pol(\tau)$ with $\pi(\tau|\vtheta)$ for the sake of readability.
+Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^d\}$, with the only constraint that $\pol$ is differentiable \wrt $\vtheta$. We denote the performance of a parametric policy with $J(\vtheta)$ for brevity, while in some occasions we replace $p_{\vtheta}(\tau)$ with $p(\tau|\vtheta)$ for the sake of readability.
 The search for a locally optimal policy is performed through gradient ascent, where the policy gradient
 %of $J(\vtheta)$ \wrt the policy parameters 
 is \cite{sutton2000policy, Peters2008reinf}:
 \begin{align} \label{E:policygradient}
-        \gradJ{\vtheta} = \EVV[\tau \sim \pol]{\score{\vtheta}{\tau}\Reward(\tau)}.
+        \gradJ{\vtheta} = \EVV[\tau \sim p(\cdot|\vtheta)]{\score{\vtheta}{\tau}\Reward(\tau)}.
         %\int_{\Tspace}\pol(\tau)\score{\vtheta}{\tau}\Reward(\tau)\de \tau.
 \end{align}
 Notice that the distribution defining the gradient is induced by the current policy. This aspect introduces a nonstationarity in the sampling process. Since the underlying distribution changes over time, it is necessary to resample at each update or use weighting techniques such as importance sampling.
@@ -253,7 +253,7 @@ The policy is then updated as $\vtheta_{k+1}  = \vtheta_k + \alpha\gradApp{\vthe
 \begin{align} \label{E:policygradient.estimate}
         \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N} g(\tau_i|\vtheta), \quad \tau_i \in \mathcal{D}_N^k,
 \end{align}
-where $g(\tau_i|\vtheta)$ is an estimate of $\score{\vtheta}{\tau}\Reward(\tau)$, \eg REINFORCE~\citep{williams1992simple} and G(PO)MDP~\citep{baxter2001infinite}.
+where $g(\tau_i|\vtheta)$ is an estimate of $\score{\vtheta}{\tau_i}\Reward(\tau_i)$, \eg REINFORCE~\citep{williams1992simple} and G(PO)MDP~\citep{baxter2001infinite}.
 Although REINFORCE definition is simpler than the G(PO)MDP one, the latter is often preferred due to its lower variance.
 We refer the reader to Appendix~\ref{A:gradient_estimators} for details and a formal definition of $g$.
 
@@ -351,7 +351,7 @@ Between snapshots, the SVRPG estimate is corrected using importance weighting, f
 % 		&+ \nabla\log\pi(\tau_i \vert \vtheta)\Reward(\tau_i) 
 % 		- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \tilde{\vtheta})\Reward(\tau_i),
 % \end{align*}
-where $\wh{\nabla}_N J(\wt{\vtheta})$ is as in~\eqref{E:policygradient.estimate} where $\mathcal{D}_N$ is sampled using the snapshot policy $\pi_{\wt{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pi_{\vtheta_t}$, and $\omega(\tau|\vtheta_t, \wt{\vtheta}) = \frac{\pi(\tau|\wt{\vtheta})}{\pi(\tau|\vtheta_t)}$ is an importance weight from $\pi_{\vtheta_t}$ to the snapshot policy $\pi_{\wt{\vtheta}}$. 
+where $\wh{\nabla}_N J(\wt{\vtheta})$ is as in~\eqref{E:policygradient.estimate} where $\mathcal{D}_N$ is sampled using the snapshot policy $\pi_{\wt{\vtheta}}$, $\tau_i$ is sampled from the current policy $\pi_{\vtheta_t}$, and $\omega(\tau|\vtheta_t, \wt{\vtheta}) = \frac{p(\tau|\wt{\vtheta})}{p(\tau|\vtheta_t)}$ is an importance weight from $\pi_{\vtheta_t}$ to the snapshot policy $\pi_{\wt{\vtheta}}$. 
 Similarly to SVRG, we have that $\vtheta_0 := \wt{\vtheta}$ and the update is a FG step.
 Our update is still fundamentally on-policy, since the weighting concerns only the correction term. However, this partial ``off-policyness'' is enough to introduce variance. This is a well-known issue of importance sampling~\citep[\eg][]{thomas2015high}. To mitigate it, we use mini-batches of trajectories of size $B \ll N$ to average the correction, \ie
 \begin{align}\label{E:svrpg.estimate.batch}
@@ -362,7 +362,7 @@ Our update is still fundamentally on-policy, since the weighting concerns only t
         g(\tau_i|\vtheta_t) - \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
 \right]}_{c_t}.
 \end{align}
-We want just to stress that $\EVV[\tau_i \sim \pi_{\vtheta_t}]{\frac{1}{B} \sum_{i=0}^{B-1} \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} = \nabla J(\wt{\vtheta})$.\footnote{The reader can refer to App.~\ref{} for off-policy gradients and variants of REINFORCE and G(PO)MDP.}
+We want just to stress that $\EVV[\tau_i \sim p(\cdot|\vtheta_t)]{\frac{1}{B} \sum_{i=0}^{B-1} \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} = \nabla J(\wt{\vtheta})$.\footnote{The reader can refer to App.~\ref{} for off-policy gradients and variants of REINFORCE and G(PO)MDP.}
 This property will be used to prove Lem.~\ref{L:svrpg.properties}.
 %\begin{align*}
 %&\blacktriangledown J(\vtheta) = \frac{1}{N}\sum_{j=0}^{N-1}\nabla\log\pi(\tau_j \vert \tilde{\vtheta})\Reward(\tau_j) +\\
@@ -415,10 +415,10 @@ However, the next section will provide general converge guarantees for SVRPG \te
         \STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, batch size $N$, mini-batch size $B$, gradient estimator $g$, initial parameter $\vtheta_{0}^m := \wt{\vtheta}^0$
 		\FOR{$s=0$ {\bfseries to} $S-1$}
         \STATE $\vtheta_0^{s+1} := \tilde{\vtheta}^{s} = \vtheta_{m}^s$
-        \STATE Sample $N$ trajectories $\{\tau_j\}$ from $\pi(\cdot\vert\tilde{\vtheta}^{s})$
+        \STATE Sample $N$ trajectories $\{\tau_j\}$ from $p(\cdot\vert\tilde{\vtheta}^{s})$
         \STATE $ \wt{\mu} = \gradApp{\wt{\vtheta}^{s}}{N}$ (see Eq.~\ref{E:policygradient.estimate})% = \frac{1}{N}\sum_{j=0}^{N-1}g(\tau_j | \wt{\vtheta}^s)$
 		\FOR{$t=0$ {\bfseries to} $m-1$}
-        \STATE Sample $B$ trajectories $\{\tau_i\}$ from $\pi(\cdot\vert\vtheta_t^{s+1})$
+        \STATE Sample $B$ trajectories $\{\tau_i\}$ from $p(\cdot\vert\vtheta_t^{s+1})$
 %        \STATE $c^{s+1}_t = \frac{1}{B} \sum\limits_{i=0}^{B-1} \left( g(\tau_i|\vtheta_t^{s+1}) - \omega(\tau_i|\vtheta^{s+1}_t, \wt{\vtheta}^s) g(\tau_i| \wt{\vtheta}^s) \right)$
         \STATE $c^{s+1}_t = \frac{1}{B} \sum\limits_{i=0}^{B-1}
         \begin{aligned}[t]
@@ -475,7 +475,7 @@ Similarly to what done in SL~\citep{cortes2010learning}, we require the variance
 	\begin{restatable}[On the variance of importance weights]{assumption}{varweights}\label{ass:M2}
 		There is a constant $W<\infty$ such that, for each pair of policies encountered in Alg.~\ref{alg:svrpg} and for each possible trajectory,
 		\[
-                \mathbb{V}ar\left[\omega(\tau| \vtheta_1, \vtheta_2)\right] \leq \VARIS, \quad \forall \vtheta_1,\vtheta_2 \in \realspace^d , \tau \sim \pi_{\vtheta_1}.
+                \mathbb{V}ar\left[\omega(\tau| \vtheta_1, \vtheta_2)\right] \leq \VARIS, \quad \forall \vtheta_1,\vtheta_2 \in \realspace^d , \tau \sim p(\cdot|\vtheta_1).
 		\]
 	\end{restatable}
 Differently from Ass.~\ref{ass:bounded_score} and ~\ref{ass:REINFORCE}, Ass.~\ref{ass:M2} can be enforced by a proper handling of the epoch size $m$.
