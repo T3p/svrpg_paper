@@ -259,7 +259,7 @@ We refer the reader to Appendix~\ref{A:gradient_estimators} for details and a fo
 
 The main limitation of plain policy gradient is the high variance of these estimators.
 The na\"ive approach of increasing the batch size is not an option in RL due to the high cost of collecting samples, \ie by interacting with the environment.
-For this reason, literature has focused on the introduction of baselines aiming to reduce the variance~\citep[\eg][]{Peters2008reinf,Thomas2017actionbaseline,wu2018variance}.\footnote{A baseline is a function $f(s,a)$ such that $\EVV[a \sim \pol]{f(s,a)} = 0$, for any $s\in\Sspace$.}
+For this reason, literature has focused on the introduction of baselines aiming to reduce the variance~\citep[\eg][]{Peters2008reinf,Thomas2017actionbaseline,wu2018variance}.\footnote{A baseline is a function $f(s,a)$ such that $\EVV[a \sim \pol]{f(s,a)} = 0$, for any $s\in\Sspace$. \todopir{check the definition of baseline}}
 There has been a surge of recent interest in variance reduction techniques for gradient optimization in supervised learning.
 Although these techniques have been mainly derived for finite-sum problems, we will show in Sec.~\ref{sec:alg} how they can be used in RL.
 The next section has the aim to describe variance reduction techniques for finite-sum problems. In particular, we will present the SVRG algorithm that is at the core of this work.
@@ -308,8 +308,8 @@ More recently, some extensions of variance reduction algorithms to the non-conca
 		\STATE $v^{s}_t = 
 %			\nabla f(\wt{\vtheta}^s) + 
 			\wt{\mu} + 
-			\nabla g(x_i|\vtheta_t^{s}) -
-			\nabla g(x_i|\wt{\vtheta}^{s})
+			\nabla z(x_i|\vtheta_t^{s}) -
+			\nabla z(x_i|\wt{\vtheta}^{s})
 		$
         \STATE $\vtheta_{t+1}^{s} = \vtheta_t^{s} + \alpha v^{s}_t$
 		\ENDFOR
@@ -527,8 +527,7 @@ Given this structure, we suggest to use two ADAM estimators:
         \vtheta^{s}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\wh{\nabla}_N J(\wt{\vtheta}^s)\\
         \vtheta^{s}_{t+1} &= \vtheta^{s}_t + \alpha^{\textsc{SI}}_{s,t} v_t^{s}
 \end{align*}
-where $\alpha^{\textsc{FG}}_{s}$ is associated to the snapshot and $\alpha^{\textsc{SI}}_{s,t}$ with the sub-iterations.
-
+where $\alpha^{\textsc{FG}}_{s}$ is associated to the snapshot and $\alpha^{\textsc{SI}}_{s,t}$ with the sub-iterations (see App.~\ref{app:practicalsvrpg} for details).
 \todopir{Add ADAM definition and explain in more details}
 By doing so we decouple the contribution of the variance introduced by the approximate FG from the one introduced by the sub-iterations.
 Note that these two terms have different orders of magnitude since are estimated with a different number of trajectories ($B \ll N$) and w/o importance weights.
@@ -577,7 +576,7 @@ This problem can be solved using a variant of SVRG~\citep{Palaniappan2016svrgsad
 In the second approach~\citep{xu2017svrgtrpo}, SVRG is just an efficient approach to solve the optimization problem faced by Trust Region Policy Optimization (TRPO) at each iteration. We can just talk of a direct application of SVRG to a problem having finite-sum structure since no specific structure of the RL problem is exploited.
 It is worth to mention that, for practical reasons, the authors proposed to use a Newton conjugate gradient method with SVRG.
 
-Concerning importance weighting techniques, RL has made wide use of them for off-policy problems~\citep[\eg]{precup2000eligibility,thomas2015high}. However, as mentioned before, SVRPG cannot be compared to such methods since it is practically on-policy. Here, importance weighting is just a statistical tool used to preserve the unbiasedness of the corrected gradient.
+Concerning importance weighting techniques, RL has made wide use of them for off-policy problems~\citep[\eg][]{precup2000eligibility,thomas2015high}. However, as mentioned before, SVRPG cannot be compared to such methods since it is practically on-policy. Here, importance weighting is just a statistical tool used to preserve the unbiasedness of the corrected gradient.
 
 
 \section{Experiments}\label{sec:exp}
@@ -626,18 +625,76 @@ Finally, we have empirically shown that practical variants of the theoretical SV
 
 \section{Policy Gradient Estimators} \label{A:gradient_estimators}
 We present a brief overview of two most widespread gradient estimators (REINFORCE~\citep{williams1992simple} and G(PO)MDP~\citep{baxter2001infinite}) both in on-policy and off-policy settings.
-\subsection{On-policy}
+Let $\tau = \{\langle s_t,a_t \rangle\}_{t=0}^{H}= \{z_t\}_{t=0}^{H} = z_{0:H}$ is a $(H+1)$-steps trajectory.
+Given that $\tau$ depends on the MDP $M=\{\mathcal{S},\mathcal{A}, p, r, \gamma, \rho\}$ and the actual policy $\pi$, the trajectory is
+said drawn from density distribution $\Delta(\tau|\pi,M)$ defined as:
+\[
+        \Delta(\tau|\pi,M) = \rho(s_0) \pi(z_0) \prod_{k=1}^{H} p(s_k|z_{k-1})\pi(z_k).
+\]
+We can now recall the definition of policy performance 
+\[
+        J(\pol) = \EVV[\tau \sim \Delta(\cdot|\pol)]{\Reward(\tau)|M},
+\]
+where $\Reward(\tau) = \sum_{t=0}^{H}\gamma^t r(z_t)$.
+The policy gradient $\nabla J(\vtheta)$ is
+\begin{equation}\label{E:onpolicygradient}
+        \gradJ{\vtheta} = \EVV[\tau \sim \Delta(\cdot|\pol)]{\nabla \log\Delta(\tau|\vtheta)\Reward(\tau)} = \EVV[\tau \sim \Delta(\cdot|\pol)]{\sum_{j=0}^{H} \gamma^j \mathcal{R}(z_j) \sum_{i=0}^{H} \nabla \log\pi(z_i)}.
+\end{equation}
+
+\textbf{On-policy setting.}
+Consider a policy $\pol$ and let $\mathcal{D}_N = \{\tau_i\}_{i=1}^N$ be a dataset collected using policy $\pol$.
 The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, unbiased way of estimating the gradient:
 \begin{align*}
-\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\left(\sum_{h=0}^{H-1}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\sum_{h=0}^{H-1}\gamma^h r_h^n - b\right),
+\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}
+\underbracket{
+\left(\sum_{h=0}^{H}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\sum_{h=0}^{H}\gamma^h r(s_h^n,a_h^n) - b\right)
+}_{g(\tau_n|\vtheta)}
+,
 \end{align*}
-where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline provided $\EVV[a \sim \pol]{b(s,a)} = 0$, for any $s\in\Sspace$.
+where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline provided $\EVV[a \sim \pol]{b(s,a)} = 0$, for any $s\in\Sspace$.\todopir{check definition of baseline}
 The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance \cite{zhao2011analysis} while preserving the unbiasedness:
 \begin{align*}
-\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\gamma^h r_h^n - b\right).
+\gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}
+\underbracket{
+\sum_{h=0}^{H}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\gamma^h r(s_h^n,a_h^n) - b\right)
+}_{g(\tau_n|\vtheta)}.
 \end{align*}
+G(PO)MDP can be seen as a more efficient implementation
+of the REINFORCE algorithm. In fact the latter does not perform
+an optimal credit assignment, since it ignores that the reward at time $t$ does
+not depend on the action performed after time $t$. G(PO)MDP overcomes this
+issue taking into account the causality of rewards in the REINFORCE definition
+of policy gradient.
 
-\subsection{Off-Policy}
+\textbf{Off-Policy setting.}
+In off-policy setting two policies, called behavioural $\pi^B$ and target $\pi^T$, are involved.
+The first is used to select actions for the interaction with the system, while the second is used to evaluate the agent performance and it is improved in each update.
+Suppose now that we aim to estimate the performance of the target policy $\pi^T$ but we have samples collected using policy $\pi^B$.
+We can use importance weight correction to correct the shift in the distribution and obtain an unbiased estimate of $J(\pi^T)$:
+\[
+        J(\pi^T) = \EVV[\tau \sim \Delta(\cdot|\pi^T)]{\mathcal{R}(\tau)} = \EVV[\tau \sim \Delta(\cdot|\pi^B)]{\omega(\tau) \mathcal{R}(\tau)}
+\]
+where $\omega(\tau) = \frac{\Delta(\tau,\pi^T)}{\Delta(\tau|\pi^B)} = \omega(z_{0:H}) = \prod_{w=0}^{H} \omega(z_w)$ and $\omega(z_w) = \frac{\pi^T(a_w|s_w)}{\pi^B(a_w|s_w)}$
+
+The definition of the off-policy version of~\eqref{E:onpolicygradient} is~\citep[\eg][]{jurvcivcek2012reinforcement}
+\begin{equation}\label{E:offpolicygradient}
+        \nabla J(\pi^T) = \EVV[\tau \sim \Delta(\cdot|\pi^B)]{\omega(\tau) \nabla \log \Delta(\tau|\pi^T) \mathcal{R}(\tau)}
+\end{equation}
+For $\omega(\tau)$ being well defined the behavioural policy should have non-zero probability of selecting any action in every state \ie $\pi^B(a|s) > 0$ for any $(s,a)\in \mathcal{S} \times \mathcal{A}$.
+
+The off-policy version of REINFORCE is easily obtained by taking the empirical average of~\eqref{E:offpolicygradient}:
+\[
+        \nabla J(\pi^T) = \frac{1}{N} \sum_{n=1}^{N} \omega(\tau^n)
+        \left(\sum_{h=0}^{H}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\sum_{h=0}^{H}\gamma^h r(s_h^n,a_h^n)\right).
+\]
+
+The G(PO)MDP off-policy estimator is defined as follows
+\[
+        \nabla J(\pi^T) = \frac{1}{N} \sum_{n=1}^{N}
+        \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(z_k)\right) \gamma^h r(z_h^n) \omega(z_{0:h})
+\]
+\todopir{Add proof of Def 2 from Luca's thesis}
+
 \todopir{Make ref to Luca's thesis and describe in brief the derivations}
 
 
@@ -1163,6 +1220,22 @@ In complex continuous tasks, $\mu(s)$ often represents a deep neural network, or
 
 \paragraph{Adaptive variance}
 It is a common practice to learn also the variance of the policy in order to adapt the degree of exploration. The variance (or diagonal covariance matrix in the multi-dimensional case) can be learned as a separate parameter or be state-dependent like the mean. In any case, adaptive variance must be carefully employed since it can clearly undermine all the three assumptions of Theorem \ref{theo:convergence}.
+
+\section{Practical SVRPG versions}\label{app:practicalsvrpg}
+\begin{algorithm}[h]
+        \begin{algorithmic}
+        \STATE \textbf{Input:} A gradient estimate $g_t$ and parameters $\beta_1$, $\beta_2$, $\epsilon$ and $\alpha$.
+        \STATE $m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$
+        \STATE $v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t \circ g_t$ ($\circ$ is the Hadamard (component-wise) product)
+        \STATE $\hat{m}_t = \dfrac{m_t}{1 - \beta^t_1}$
+        \STATE $\hat{v}_t = \dfrac{v_t}{1 - \beta^t_2}$
+        \STATE $\Delta(g_t) = \dfrac{\alpha}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t$
+        \STATE \textbf{Return:} The increment $\Delta(g_t)$  of the parameters.
+\end{algorithmic}
+ \caption{
+ \label{A:adam}
+ Adam}
+\end{algorithm}
 
 \section{Experimental Details}\label{app:exp}
 Setting specifications for all the used environments:
