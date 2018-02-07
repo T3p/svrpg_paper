@@ -103,7 +103,7 @@
 \newcommand{\policy}{\pi_{\vtheta}(a \vert s)}
 \newcommand{\pol}{\pi_{\vtheta}}
 \newcommand{\trajdistr}{\pi_{\vtheta}(\tau)}
-\newcommand{\score}[2]{\nabla\log\pi_{#1}(#2)}
+\newcommand{\score}[2]{\nabla\log p_{#1}(#2)}
 \newcommand{\Qfun}{Q^{\pi_{\vtheta}}(s,a)}
 \newcommand{\Vfun}{V^{\pi_{\vtheta}}(s)}
 \newcommand{\vTheta}{\boldsymbol{\Theta}}
@@ -371,8 +371,10 @@ This property will be used to prove Lem.~\ref{L:svrpg.properties}.
 %- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \tilde{\vtheta})\Reward(\tau_i)\right].
 %\end{align*}
 The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case~\citep{harikandeh2015stopwasting,konevcny2016mini}. It is easy to show that the SVRPG estimator has the following, desirable properties (see App.~\ref{app:proofs}):
-\begin{lemma}\label{L:svrpg.properties}
-Denote by $\wh{\nabla}_N^{\textsc{RF}} J(\vtheta)$ the REINFORCE estimator in~\eqref{E:policygradient.estimate} and let $\vtheta^* \in \argmin_{\vtheta} \{J(\vtheta)\}$. Then, the SVRG estimate in~\eqref{E:svrpg.estimate.batch} is \emph{unbiased}
+\begin{lemma}\label{L:svrpg.properties} \todopirout{extended to any unbiased estimator}
+        {\color{blue} Let $\wh{\nabla}_N J(\vtheta)$ be an unbiased estimator of~\eqref{E:policygradient} }
+%Denote by $\wh{\nabla}_N^{\textsc{RF}} J(\vtheta)$ the REINFORCE estimator in~\eqref{E:policygradient.estimate} 
+and let $\vtheta^* \in \argmin_{\vtheta} \{J(\vtheta)\}$. Then, the SVRG estimate in~\eqref{E:svrpg.estimate.batch} is \emph{unbiased}
 \[
 \mathop{\mathbb{E}}
 \left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
@@ -381,7 +383,7 @@ and regardless of the mini-batch size $B$:\footnote{
 For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of the covariance matrix, \ie $\Tr\EVV[]{(\mathbf{x}-\EVV[]{\mathbf{x}})(\mathbf{x}-\EVV[]{\mathbf{x}})^T}$.}
 \[
 	\Var\left[\gradBlack{\vtheta^*}\right] = 
-    \Var\left[\wh{\nabla}_N^{\textsc{RF}}J(\vtheta^*)\right].
+    \Var\left[\wh{\nabla}_N J(\vtheta^*)\right].
 \]
 \end{lemma}
 
@@ -678,11 +680,11 @@ We can use importance weight correction to correct the shift in the distribution
 \[
         J(\pi^T) = \EVV[\tau \sim \Delta(\cdot|\pi^T)]{\mathcal{R}(\tau)} = \EVV[\tau \sim \Delta(\cdot|\pi^B)]{\omega(\tau) \mathcal{R}(\tau)}
 \]
-where $\omega(\tau) = \frac{\Delta(\tau,\pi^T)}{\Delta(\tau|\pi^B)} = \omega(z_{0:H}) = \prod_{w=0}^{H} \omega(z_w)$ and $\omega(z_w) = \frac{\pi^T(a_w|s_w)}{\pi^B(a_w|s_w)}$
+where $\omega(\tau|\pi^B,\pi^T) = \frac{\Delta(\tau,\pi^T)}{\Delta(\tau|\pi^B)} = \omega(z_{0:H}|\pi^B,\pi^T) = \prod_{w=0}^{H} \omega(z_w|\pi^B,\pi^T)$ and $\omega(z_w|\pi^B,\pi^T) = \frac{\pi^T(a_w|s_w)}{\pi^B(a_w|s_w)}$
 
 The definition of the off-policy version of~\eqref{E:onpolicygradient} is~\citep[\eg][]{jurvcivcek2012reinforcement}
 \begin{equation}\label{E:offpolicygradient}
-        \nabla J(\pi^T) = \EVV[\tau \sim \Delta(\cdot|\pi^B)]{\omega(\tau) \nabla \log \Delta(\tau|\pi^T) \mathcal{R}(\tau)} = \EVV[\tau \sim \Delta(\cdot|\pi^B)]{\omega(\tau) g(\tau|\vtheta)}. 
+        \nabla J(\pi^T) = \EVV[\tau \sim \Delta(\cdot|\pi^B)]{\omega(\tau|\pi^B,\pi^T) \nabla \log \Delta(\tau|\pi^T) \mathcal{R}(\tau)} = \EVV[\tau \sim \Delta(\cdot|\pi^B)]{\omega(\tau|\pi^B,\pi^T) g(\tau|\pi^T)}. 
 \end{equation}
 For $\omega(\tau)$ being well defined the behavioural policy should have non-zero probability of selecting any action in every state \ie $\pi^B(a|s) > 0$ for any $(s,a)\in \mathcal{S} \times \mathcal{A}$.
 Equation~\ref{E:offpolicygradient} is important for proving Theorem~\ref{theo:convergence} since it provides a common representation of REINFORCE and G(PO)MDP.
@@ -708,6 +710,23 @@ The G(PO)MDP off-policy estimator is defined as follows
 In this section, we prove all the claims made in the paper, with the primary objective of proving Theorem \ref{theo:convergence}.
 Our proof is adapted from the one of Theorem 2 from \cite{reddi2016stochastic} and has a very similar structure, but with all the additional challenges and assumptions described in Section \ref{sec:conv}.
 
+Note that in the following we will make wide use of the following properties.
+\begin{assumption}\label{asm:unbiasedness}
+        We consider an estimate $\wh{\nabla}_N J(\vtheta)$ as in Eq.~\ref{E:policygradient.estimate} such that
+\begin{enumerate}
+        \item \textit{On-policy Unbiased Estimator.} 
+                \[
+                        \EVV[\tau_i \sim \pi(\cdot|\vtheta)]{\wh{\nabla}_N J(\vtheta)} = \EVV[\tau_i \sim \pi(\cdot|\vtheta)]{\frac{1}{N} \sum_{i=0}^N g(\tau_i|\vtheta)} = \nabla J(\vtheta)
+                \]
+        \item \textit{Off-policy Unbiased Estimator.}
+                \[
+        \EVV[\tau_i \sim \Delta(\cdot|\pi^B)]{\frac{1}{N} \sum_{i=0}^N \omega(\tau_i|\pi^B,\vtheta) g(\tau_i|\vtheta) } 
+        = \nabla J(\vtheta) 
+                \]
+\end{enumerate}
+\end{assumption}
+Note that these assumptions are verified by REINFORCE and G(PO)MDP.
+
 \subsection*{Definitions}
 We give some additional definitions which will be useful in the proofs.
 
@@ -719,6 +738,8 @@ For a random variable X:
 \]
 where $\tilde{\vtheta}^s$ is defined in Algorithm \ref{alg:svrpg} and $\mathbf{N} = [0,\dots,N)$.
 \end{definition}
+
+We introduce the notation $\tau_{i,h}$ to denote the $h$-th trajectory collected using policy $\vtheta^{s+1}_i$ where $s$ will be clear from the context.
 
 \begin{definition}
 For a random variable $X$:
@@ -732,9 +753,11 @@ For a random variable $X$:
 						{X\vert\vtheta_t^{s+1}}
 				 \dots
 			\vert\vtheta_0^{s+1}}
-		\vert\tilde{\vtheta}^s},
+		\vert\tilde{\vtheta}^s}\\
+        &= \EVV[t-1|s]{\EVV[\tau_{t,h}\sim \pi(\cdot|\vtheta^{s+1}_t)]{X|\vtheta^{s+1}_t}}
 \end{align*}
 where the sequence $\tilde{\vtheta}^s,\vtheta_0^{s+1},\dots,\vtheta_t^{s+1}$ is defined in Algorithm \ref{alg:svrpg}, ${\it {\bf N}} = [0,\dots,N)$, and ${\it {\bf B}} = [0,\dots,B)$. 
+\todopir{what about $\vtheta^{s+1}_0$ and $\wt{\vtheta}^s$? They are equal. How this affect previous definition?}
 
 \end{definition}
 Intuitively, the $\Ets{\cdot}$ operator computes the expected value with respect to the sampling of trajectories from the snapshot $\tilde{\vtheta}^s$ up to the $t$-th iteration included. Note that the order in which expected values are taken is important since each $\vtheta_{t}^{s+1}$ is function of previously sampled trajectories and is used to sample new ones.
@@ -760,8 +783,11 @@ The ideal SVRPG gradient estimate is:
 \begin{align*}
 	\gradIdeal{\vtheta_t^{s+1}} &\coloneqq 
 	\gradJ{\tilde{\vtheta}^s}
-	+ \nabla\log\pi(\tau_i \vert \vtheta_t^{s+1})\Reward(\tau_i) 
-	- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \tilde{\vtheta}^s)\Reward(\tau_i) \\
+%	+ \nabla\log\pi(\tau_i \vert \vtheta_t^{s+1})\Reward(\tau_i) 
+    + g(\tau_i|\vtheta^{s+1}_t)
+%	- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \tilde{\vtheta}^s)\Reward(\tau_i) 
+    - \omega(\tau_i|\vtheta^{s+1}_t, \wt{\vtheta}^s) g(\tau_i|\wt{\vtheta}^s)
+    \\
 	&= \gradBlack{\vtheta_t^{s+1}} - \gradApp{\tilde{\vtheta}^s}{N} + \gradJ{\tilde{\vtheta}^s} \\
 	&= \gradBlack{\vtheta_t^{s+1}} - e_s
 \end{align*}
@@ -773,7 +799,7 @@ We prove two basic properties of the SVRPG update.
 
 %\unbias*
 \begin{restatable}{lemma}{unbias}\label{lemma:unbias}
-The SVRPG estimator is unbiased:
+Consider Assumption~\ref{asm:unbiasedness}. Then, the SVRPG estimator is unbiased:
 \[
 \mathop{\mathbb{E}}
 \left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
@@ -781,8 +807,8 @@ The SVRPG estimator is unbiased:
 \end{restatable}
 \begin{proof}
 \begin{align*}
-\EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\tilde{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} - \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i)\score{\tilde{\vtheta}}{\tau_i}R(\tau_i)} \\
-&= \gradJ{\tilde{\vtheta}} + \gradJ{\vtheta} - \gradJ{\tilde{\vtheta}} = \gradJ{\vtheta}.
+        \EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\tilde{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} - \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i|\vtheta, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} \\
+&= \gradJ{\wt{\vtheta}} + \gradJ{\vtheta} - \gradJ{\wt{\vtheta}} = \gradJ{\vtheta}.
 \end{align*}
 Note that the importance weight is necessary to guarantee unbiasedness, since the $\tau_i$ are sampled from $\pi_{\vtheta}$.
 \end{proof}
@@ -798,7 +824,7 @@ At convergence, the variance of the SVRPG estimator is equal to the variance of 
 \begin{proof}
 As $\vtheta\to\vtheta^*$, also $\tilde{\vtheta}\to\vtheta^*$. Hence, by continuity of $J(\vtheta)$:
 \begin{align*}
-\Var\left[\gradBlack{\vtheta}\right] &\to \Var\left[\gradApp{\vtheta^*}{N}\right] + \frac{1}{B}\Var\left[\score{\vtheta^*}{\tau}R(\tau) - \cancel{\omega(\tau)}\score{\vtheta^*}{\tau}R(\tau)\right] \\
+\Var\left[\gradBlack{\vtheta}\right] &\to \Var\left[\gradApp{\vtheta^*}{N}\right] + \frac{1}{B}\Var\left[g(\tau|\vtheta^*) - \cancel{\omega(\tau|\vtheta^*,\vtheta^*)}g(\tau|\vtheta^*)\right] \\
 &= \Var\left[\gradApp{\vtheta^*}{N}\right].
 \end{align*}
 Note that it is important that the trajectories used in the second and the third term are the same for the variance to vanish.
@@ -815,10 +841,10 @@ Before addressing the main convergence theorem, we prove some useful lemmas.
 By definition of $J(\vtheta)$:
 \begin{align}
 \Dij{J(\vtheta)}{\theta} 
-&= \int_{\Tspace}\Dij{}{\theta}\pol(\tau)\Reward(\tau)\de \tau
+&= \int_{\Tspace}\Dij{}{\theta}p(\tau|\vtheta)\Reward(\tau)\de \tau
 \nonumber\\ 
-&= \int_{\Tspace}\pol(\tau)\score{\theta}{\tau}\score{\theta}{\tau}^T\Reward(\tau)\de \tau + \int_{\Tspace}\pol(\tau)\Dij{}{\theta}\log\pol(\tau)\Reward(\tau)\de \tau \nonumber\\
-&\leq \sup_{\tau} \left\{\left|\Reward(\tau)\right|\right\} \left(H^2\GRADLOG^2+H\HESSLOG\right) \label{eq:0}\\
+&= \int_{\Tspace}p(\tau|\vtheta)\score{\vtheta}{\tau}\score{\vtheta}{\tau}^T\Reward(\tau)\de \tau + \int_{\Tspace}\pol(\tau)\Dij{}{\theta}\log p(\tau|\vtheta)\Reward(\tau)\de \tau \nonumber\\
+&\leq \sup_{\tau \in \mathcal{T}} \left\{\left|\Reward(\tau)\right|\right\} \left(H^2\GRADLOG^2+H\HESSLOG\right) \label{eq:0}\\
 &= \frac{1-\gamma^H}{1-\gamma}RH\left(H\GRADLOG^2+\HESSLOG\right),\nonumber
 \end{align}
 where \ref{eq:0} is from Assumption \ref{ass:bounded_score}.
@@ -828,56 +854,64 @@ Since the Hessian is bounded, $J(\vtheta)$ is Lipschitz-smooth.
 \begin{restatable}[]{lemma}{l-smooth-g}\label{lemma:gsmooth}
 Under Assumption \ref{ass:bounded_score}, whether we use the REINFORCE or the G(PO)MDP gradient estimator, $g(\tau\vert\vtheta)$ is Lipschitz continuous with Lipschitz constant $L_2$, \ie for any trajectory $\tau\in\Tspace$:
 \[
-	\norm[]{g(\tau\vert\vtheta)-g(\tau\vert\vtheta')}^2 \leq L_2\norm[]{\vtheta-\vtheta'}^2.
+	\norm[2]{g(\tau\vert\vtheta)-g(\tau\vert\vtheta')}^2 \leq L_2\norm[2]{\vtheta-\vtheta'}^2.
 \]
+\todopir{I would denote $L_J$ and $L_g$ rather than 1 and 2}
 \end{restatable}
 \begin{proof}
-For both REINFORCE and G(PO)MDP, $g(\tau\vert\vtheta)$ is a linear combination of terms of the kind $\score{\vtheta}{a_t\vert s_t}\gamma^t r_t$ \cite{peters2008reinforcement}. These terms have bounded gradient from the second inequality of Assumption \ref{ass:bounded_score} and the fact that $|r_t|\leq R$. Bounded gradient implies Lipschitz continuity. Finally, the linear combination of Lipschitz continuous functions is Lipschitz continuous.
+        For both REINFORCE and G(PO)MDP, $g(\tau\vert\vtheta)$ is a linear combination of terms of the kind $\nabla \log \pi_{\vtheta}(a_t\vert s_t)\gamma^t r_t$ \cite{peters2008reinforcement}. These terms have bounded gradient from the second inequality of Assumption \ref{ass:bounded_score} and the fact that $|r_t|\leq R$. Bounded gradient implies Lipschitz continuity. Finally, the linear combination of Lipschitz continuous functions is Lipschitz continuous.
 \end{proof}
 
 \begin{restatable}[]{lemma}{bounded-g}\label{lemma:gbound}
 Under Assumption \ref{ass:bounded_score}, whether we use the REINFORCE or the G(PO)MDP gradient estimator, for every $\tau\in\Tspace$ and $\vtheta\in\Theta$, there is a positive constant $\Gamma<\infty$ such that:
 \[
-	\norm[]{g(\tau\vert\vtheta)}^2 \leq \Gamma.
+	\norm[2]{g(\tau\vert\vtheta)}^2 \leq \Gamma.
 \]
 \end{restatable}
 \begin{proof}
 For REINFORCE we have, from Assumption \ref{ass:bounded_score}:
 \begin{align*}
-	\norm[]{g(\tau\vert\vtheta)}^2 &=
-	\norm[]{\score{\vtheta}{\tau}R(\tau)}^2 \\
-	&=\norm[]{\left(\sum_{t=0}^{H-1}\score{\vtheta}{a_t\vert s_t}\right)\left(\sum_{t=0}^{H-1}\gamma^t r_t\right)}^2\leq H^2G^2\frac{(1-\gamma^H)^2}{(1-\gamma)^2}R^2\dim(\vTheta) \coloneqq \Gamma
+	\norm[2]{g(\tau\vert\vtheta)}^2 &=
+	\norm[2]{\score{\vtheta}{\tau}R(\tau)}^2 \\
+	&=\norm[2]{\left(\sum_{t=0}^{H-1}\score{\vtheta}{a_t\vert s_t}\right)\left(\sum_{t=0}^{H-1}\gamma^t r_t\right)}^2\leq H^2G^2\frac{(1-\gamma^H)^2}{(1-\gamma)^2}R^2\dim(\vTheta) \coloneqq \Gamma
 \end{align*}
-For G(PO)MDP, we do not have a compact expression for $g$, but since it is derived from REINFORCE by neglecting some terms of the kind $\score{\vtheta}{a_t\vert s_t}\gamma^t r_t$ \cite{baxter2001infinite}\cite{peters2008reinforcement}, the above bound still holds.
+For G(PO)MDP, we do not have a compact expression for $g$, but since it is derived from REINFORCE by neglecting some terms of the kind $\nabla \log \pi_{\vtheta}{a_t | s_t}\gamma^t r_t$ \cite{baxter2001infinite,peters2008reinforcement}, the above bound still holds. \todopir{we need to prove it formally if we have time}
 \end{proof}
 %Lemma 2
 \begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
 Under Assumption \ref{ass:bounded_score}
 , the expected squared norm of the SVRPG gradient can be bounded as follows:
 \[
-\Ets{\gradBlack{\vtheta_t^{s+1}}} \leq
-\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-+\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+        \Ets{\norm[2]{\gradBlack{\vtheta_t^{s+1}}}^2} \leq
+\Ets[t-1]{\norm[2]{\gradJ{\vtheta_t^{s+1}}}^2} 
++\frac{L_2^2}{B}\Ets[t-1]{\norm[2]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 +\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 \nonumber 
 +\frac{\Gamma\VARIS}{B}
 \]
 \end{restatable}
 \begin{proof}
+For ease of notation denote $\omega(\tau_i) := \omega(\tau_i|\vtheta^{s+1}_t, \wt{\vtheta}^{s})$. Then,
+\begingroup
+\allowdisplaybreaks
 	\begin{align}
-	\Ets{\gradBlack{\vtheta_t^{s+1}}} 
-	&= \Ets{\norm[]{\gradApp{\tilde{\vtheta}^s}{N}
+%            \Ets{\norm[2]{\gradBlack{\vtheta_t^{s+1}}}^2}
+            \mathbb{E}_{t|s}\big[&\norm[2]{\gradBlack{\vtheta_t^{s+1}}}^2\big]
+	= \Ets{\norm[]{\gradApp{\tilde{\vtheta}^s}{N}
 			+\frac{1}{B}\sum_{i=0}^{B-1} g(\tau_i\vert\vtheta_t^{s+1}) 
 			-\frac{1}{B}\sum_{i=0}^{B-1}
-			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
+    \omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
 	%
 	&= \mathbb{E}_{t\vert s}\left[\left\|\gradApp{\tilde{\vtheta}^s}{N}
 			+\frac{1}{B}\sum_{i=0}^{B-1}\left( 
 			g(\tau_i\vert\vtheta_t^{s+1}) -
 			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)\right)
-			\right.\right.\nonumber\\&\qquad\left.\left.
-			-\gradJ{\vtheta_t^{s+1}} + \gradJ{\tilde{\vtheta}^s}
-			+\gradJ{\vtheta_t^{s+1}} - \gradJ{\tilde{\vtheta}^s}\right\|^2\right] \nonumber\\
+			% \right.\right.\nonumber
+            % \\&\qquad\left.\left.
+            \pm \gradJ{\vtheta_t^{s+1}} \pm \gradJ{\tilde{\vtheta}^s} 
+			% -\gradJ{\vtheta_t^{s+1}} + \gradJ{\tilde{\vtheta}^s}
+			% +\gradJ{\vtheta_t^{s+1}} - \gradJ{\tilde{\vtheta}^s}
+    \right\|^2\right] \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
 	+\Es{\norm[]{\gradApp{\tilde{\vtheta}^s}{N} - \Es{\gradApp{\tilde{\vtheta}^s}{N}}}^2} \nonumber\\
@@ -886,7 +920,7 @@ Under Assumption \ref{ass:bounded_score}
 		\frac{1}{B}\sum_{i=0}^{B-1}\left(
 		g(\tau_i\vert\vtheta_t^{s+1}) -
 			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)\right)
-		\right.\right.\nonumber\\&\qquad\left.\left.
+	%	\right.\right.\nonumber\\&\qquad\left.\left.
 		- \Ets{
 			\frac{1}{B}\sum_{i=0}^{B-1}\left(
 			g(\tau_i\vert\vtheta_t^{s+1}) -
@@ -901,36 +935,37 @@ Under Assumption \ref{ass:bounded_score}
 		\frac{1}{B}\sum_{i=0}^{B-1}\left(
 		g(\tau_i\vert\vtheta_t^{s+1}) -
 		\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)\right)
-		\right.\right.\nonumber\\&\qquad\left.\left.
+		% \right.\right.\nonumber\\&\qquad\left.\left.
 		- \Ets{
 			\frac{1}{B}\sum_{i=0}^{B-1}\left(
 			g(\tau_i\vert\vtheta_t^{s+1}) -
 			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)\right)}\right\|^2\right] 
 		\label{eq:1}\\%
-	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
-	&\qquad+\Ets{\norm[]{
+	&\leq \Ets[t-1]{\norm[2]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} 
+%    \nonumber\\ &\qquad
+    +\Ets{\norm[2]{
 			\frac{1}{B}\sum_{i=0}^{B-1}\left(
 			g(\tau_i\vert\vtheta_t^{s+1}) -
 			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)\right)}^2} \label{eq:2}\\
 	%
-	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
-	&\qquad+
-			\frac{1}{B^2}\sum_{i=0}^{B-1}
-			\Ets{\norm[]{
+	&\leq \Ets[t-1]{\norm[2]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
+%     \nonumber\\ 	&\qquad
+			+ \frac{1}{B^2}\sum_{i=0}^{B-1}
+			\Ets{\norm[2]{
 			g(\tau_i\vert\vtheta_t^{s+1}) -
-			\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
+    \omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s) \pm g(\tau_i|\wt{\vtheta}^s) }^2} \nonumber\\
 	%
-	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
-	\nonumber\\
-	&\qquad+
-			\frac{1}{B^2}\sum_{i=0}^{B-1}
-			\Ets{\norm[]{g(\tau_i\vert\vtheta_t^{s+1})
-			-g(\tau_i\vert\tilde{\vtheta}^s)
-			+g(\tau_i\vert\tilde{\vtheta}^s) 
-			-\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
+%%	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+%%	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
+%%	\nonumber\\
+%%	&\qquad+
+%%			\frac{1}{B^2}\sum_{i=0}^{B-1}
+%%			\Ets{\norm[]{g(\tau_i\vert\vtheta_t^{s+1})
+%%			-g(\tau_i\vert\tilde{\vtheta}^s)
+%%			+g(\tau_i\vert\tilde{\vtheta}^s) 
+%%			-\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
@@ -938,22 +973,24 @@ Under Assumption \ref{ass:bounded_score}
 	&\qquad+
 			\frac{1}{B^2}\sum_{i=0}^{B-1}
 			\Ets{\norm[]{g(\tau_i\vert\vtheta_t^{s+1})
-			-g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
-	&\qquad
+			-g(\tau_i\vert\tilde{\vtheta}^s)}^2} 
+%        \nonumber\\ 	&\qquad
 			+\frac{1}{B^2}\sum_{i=0}^{B-1}
 			\Ets{\norm[]{g(\tau_i\vert\tilde{\vtheta}^s) 
 			-\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
-	+\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}\nonumber\\
-	&\qquad+
+	\nonumber\\
+	&\qquad
+    +\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+    +
 		\frac{1}{B^2}\sum_{i=0}^{B-1}
 		\Ets{\norm[]{(1 
-			-\omega(\tau_i))g(\tau_i\vert\tilde{\vtheta}^s)}^2} \label{eq:3}
+			-\omega(\tau_i))g(\tau_i\vert\tilde{\vtheta}^s)}^2} \label{eq:3}\\
 % ...
-\end{align}
-\begin{align}
+%\end{align}
+%\begin{align}
 % ...
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
@@ -963,18 +1000,20 @@ Under Assumption \ref{ass:bounded_score}
 	%
 	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
-	\nonumber\\
-	&\qquad+\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+%	\nonumber\\&\qquad
+    +\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\frac{\Gamma}{B^2}\sum_{i=0}^{B-1}\Varts{\omega(\tau_i)} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
-	\nonumber\\
-	&\qquad+\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+% 	\nonumber\\ &\qquad
+    +\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\frac{\Gamma\VARIS}{B}, \label{eq:5}
 \end{align}
-where (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (\ref{eq:3}) is from Lemma \ref{lemma:gsmooth}, 
+\endgroup
+where (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$\todopirout{ref}, (\ref{eq:3}) is from Lemma \ref{lemma:gsmooth}, 
 (\ref{eq:4}) is from Lemma \ref{lemma:gbound}, and (\ref{eq:5}) is from Assumption \ref{ass:M2}.
+\todopir{Explain step $E[\|\|^2] \leq Var$}
 \end{proof}
 
 %Lemma 0
