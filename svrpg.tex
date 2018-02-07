@@ -559,10 +559,8 @@ g(\tau_i|\vtheta_t)\right]\\
 We experienced some improvements using it (see section \ref{sec:exp} for the experimental point of view).
 
 \subsection{Baseline}
-As reported in Sec. \ref{subsec:PolicyGradient} a known method for variance reduction in Reinforcement Learning is the use of baseline.
-This method is independent to SVRPO.
-We decide to test SVRPO with an Actor Critic baseline: the baseline is a states dependent linear function with a time-varying feature vector \cite{duan2016benchmarking}.
-Our choice is to use a single baseline for each term of expression \ref{E:svrpg.estimate.batch}. This is update only in the snapshot: the baseline is estimated using the N trajectories.
+As reported in Sec. \ref{subsec:PolicyGradient} a well known variance reduction tool in Reinforcement Learning is the baseline.
+This tool does not depend on SVRPO. More precicely we decided to use an Actor Critic baseline, which is a state dependent linear function with a time-varying feature vector \cite{duan2016benchmarking}. Furthermore, the baseline is unique and computed every snapshot using the N trajectories at hand.
 
 \section{Related Work}
 Despite the huge interest received in SL, variance-reduced gradient approaches has not attracted the RL community.
