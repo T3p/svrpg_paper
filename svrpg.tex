@@ -645,7 +645,7 @@ The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, u
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}
 \underbracket{
 \left(\sum_{h=0}^{H}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\sum_{h=0}^{H}\gamma^h r(s_h^n,a_h^n) - b\right)
-}_{g(\tau_n|\vtheta)}
+}_{g(\tau_n|\vtheta):=\nabla \log\Delta(\tau_n|\vtheta)\Reward(\tau_n)}
 ,
 \end{align*}
 where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline provided $\EVV[a \sim \pol]{b(s,a)} = 0$, for any $s\in\Sspace$.\todopir{check definition of baseline}
@@ -663,7 +663,7 @@ not depend on the action performed after time $t$. G(PO)MDP overcomes this
 issue taking into account the causality of rewards in the REINFORCE definition
 of policy gradient.
 
-\textbf{Off-Policy setting.}
+\textbf{Off-policy setting.}
 In off-policy setting two policies, called behavioural $\pi^B$ and target $\pi^T$, are involved.
 The first is used to select actions for the interaction with the system, while the second is used to evaluate the agent performance and it is improved in each update.
 Suppose now that we aim to estimate the performance of the target policy $\pi^T$ but we have samples collected using policy $\pi^B$.
@@ -675,9 +675,10 @@ where $\omega(\tau) = \frac{\Delta(\tau,\pi^T)}{\Delta(\tau|\pi^B)} = \omega(z_{
 
 The definition of the off-policy version of~\eqref{E:onpolicygradient} is~\citep[\eg][]{jurvcivcek2012reinforcement}
 \begin{equation}\label{E:offpolicygradient}
-        \nabla J(\pi^T) = \EVV[\tau \sim \Delta(\cdot|\pi^B)]{\omega(\tau) \nabla \log \Delta(\tau|\pi^T) \mathcal{R}(\tau)}
+        \nabla J(\pi^T) = \EVV[\tau \sim \Delta(\cdot|\pi^B)]{\omega(\tau) \nabla \log \Delta(\tau|\pi^T) \mathcal{R}(\tau)} = \EVV[\tau \sim \Delta(\cdot|\pi^B)]{\omega(\tau) g(\tau|\vtheta)}. 
 \end{equation}
 For $\omega(\tau)$ being well defined the behavioural policy should have non-zero probability of selecting any action in every state \ie $\pi^B(a|s) > 0$ for any $(s,a)\in \mathcal{S} \times \mathcal{A}$.
+Equation~\ref{E:offpolicygradient} is important for proving Theorem~\ref{theo:convergence} since it provides a common representation of REINFORCE and G(PO)MDP.
 
 The off-policy version of REINFORCE is easily obtained by taking the empirical average of~\eqref{E:offpolicygradient}:
 \[
@@ -697,7 +698,8 @@ The G(PO)MDP off-policy estimator is defined as follows
 
 
 \section{Proofs}\label{app:proofs}
-In this Appendix we prove all the claims made in the paper, with the primary objective of proving Theorem \ref{theo:convergence}. Our proof is adapted from the one of Theorem 2 from \cite{reddi2016stochastic} and has a very similar structure, but with all the additional challenges and assumptions described in Section \ref{sec:conv}.
+In this section, we prove all the claims made in the paper, with the primary objective of proving Theorem \ref{theo:convergence}.
+Our proof is adapted from the one of Theorem 2 from \cite{reddi2016stochastic} and has a very similar structure, but with all the additional challenges and assumptions described in Section \ref{sec:conv}.
 
 \subsection*{Definitions}
 We give some additional definitions which will be useful in the proofs.
@@ -714,7 +716,7 @@ where $\tilde{\vtheta}^s$ is defined in Algorithm \ref{alg:svrpg} and $\mathbf{N
 \begin{definition}
 For a random variable $X$:
 \begin{align*}
-	&\mathbb{E}_{t\vert s}\left[X\right] \coloneqq 
+        \mathbb{E}_{t\vert s}\left[X\right] &\coloneqq 
 		\mathop{\mathbb{E}}_{\substack{\tau_j\sim\pi(\cdot\vert\tilde{\vtheta}^s)\forall j \in {\it {\bf N}} \\ \tau_{i,h}\sim\pi(\cdot\vert\vtheta^{s+1}_i) \forall h \in {\it {\bf B}}, \text{ for $i=0,\dots,t-1$}}}{\left[X \vert \tilde{\vtheta^s}\right]} \\
 	&\coloneqq \EVV[\tau_j\sim\pi(\cdot\vert\tilde{\vtheta}^s)\forall j \in {\it {\bf N}}]{
 			\EVV[\tau_{0,h}\sim\pi(\cdot\vert\vtheta_0^{s+1}) \forall h \in {\it {\bf B}}]
