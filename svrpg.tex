@@ -801,7 +801,7 @@ Before addressing the main convergence theorem, we prove some useful lemmas.
 
  
 \begin{restatable}[]{lemma}{L-smoothness}\label{lemma:lsmooth}
-	Under Assumption \ref{ass:bounded_score}, $J(\vtheta)$ is L-smooth for some positive Lipschitz constant $L$.
+	Under Assumption \ref{ass:bounded_score}, $J(\vtheta)$ is L-smooth for some positive Lipschitz constant $L_1$.
 \end{restatable}
 \begin{proof}
 By definition of $J(\vtheta)$:
@@ -815,6 +815,16 @@ By definition of $J(\vtheta)$:
 \end{align}
 where \ref{eq:0} is from Assumption \ref{ass:bounded_score}.
 Since the Hessian is bounded, $J(\vtheta)$ is Lipschitz-smooth.
+\end{proof}
+
+\begin{restatable}[]{lemma}{l-smooth-g}\label{lemma:gsmooth}
+Under Assumption \ref{ass:bounded_score}, whether we use the REINFORCE or the G(PO)MDP gradient estimator, $g(\tau\vert\vtheta)$ is Lipschitz continuous with Lipschitz constant $L_2$, \ie for any trajectory $\tau\in\Tspace$:
+\[
+	\norm[]{g(\tau\vert\vtheta)-g(\tau\vert\vtheta')}^2 \leq L_2\norm[]{\vtheta-\vtheta'}^2.
+\]
+\end{restatable}
+\begin{proof}
+For both REINFORCE and G(PO)MDP, $g(\tau\vert\vtheta)$ is a linear combination of terms of the kind $\score{\vtheta}{a_t\vert s_t}\gamma^t r_t$ \cite{peters2008reinforcement}. These terms have bounded gradient from the second inequality of Assumption \ref{ass:bounded_score} and the fact that $|r_t|\leq R$. Bounded gradient implies Lipschitz continuity. Finally, the linear combination of Lipschitz continuous functions is Lipschitz continuous.
 \end{proof}
 
 \begin{restatable}[]{lemma}{bounded-g}\label{lemma:gbound}
@@ -839,7 +849,7 @@ Under Assumption \ref{ass:bounded_score}
 \[
 \Ets{\gradBlack{\vtheta_t^{s+1}}} \leq
 \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
++\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 +\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 \nonumber 
 +\frac{\Gamma\VARIS}{B}
@@ -928,11 +938,11 @@ Under Assumption \ref{ass:bounded_score}
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
-	+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}\nonumber\\
+	+\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}\nonumber\\
 	&\qquad+
 		\frac{1}{B^2}\sum_{i=0}^{B-1}
-		\Ets{\norm[]{g(\tau_i\vert\tilde{\vtheta}^s) 
-			-\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \label{eq:3}
+		\Ets{\norm[]{(1 
+			-\omega(\tau_i))g(\tau_i\vert\tilde{\vtheta}^s)}^2} \label{eq:3}
 % ...
 \end{align}
 \begin{align}
@@ -940,22 +950,22 @@ Under Assumption \ref{ass:bounded_score}
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
-	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	&\qquad+\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\Gamma\frac{1}{B^2}\sum_{i=0}^{B-1}\Ets{(\omega(\tau_i)-1)^2} \label{eq:4}\\
 	%
 	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
-	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	&\qquad+\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\frac{\Gamma}{B^2}\sum_{i=0}^{B-1}\Varts{\omega(\tau_i)} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
-	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	&\qquad+\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\frac{\Gamma\VARIS}{B}, \label{eq:5}
 \end{align}
-where (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (\ref{eq:3}) is from L-smoothness, 
+where (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (\ref{eq:3}) is from Lemma \ref{lemma:gsmooth}, 
 (\ref{eq:4}) is from Lemma \ref{lemma:gbound}, and (\ref{eq:5}) is from Assumption \ref{ass:M2}.
 \end{proof}
 
@@ -1029,8 +1039,10 @@ Under Assumptions \ref{ass:bounded_score} ans \ref{ass:M2}, the expected squared
 	&c_t = c_{t+1}\left(1+\alpha_t\beta_t+\alpha_t+\frac{\alpha_t^2L^2}{B}\right)+\frac{\alpha_t^2L^3}{2B}, \\
 	&\Psi_t = \alpha_t\left(\frac{1}{2}-\frac{c_{t+1}}{\beta_t}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right), \\
 	&d_t = \frac{\alpha_t}{2}\left(1+2c_{t+1}+\alpha_tL+2\alpha_tc_{t+1}\right), \\
-	&f_t = \alpha_t^2\frac{\Gamma(L+2c_{t+1})}{2}.
+	&f_t = \alpha_t^2\frac{\Gamma(L+2c_{t+1})}{2},
 \end{align*}
+where $L=\max\left\{L1,L2\right\}$, \ie the greater of the Lipschitz constants from Lemmas \ref{lemma:lsmooth} and \ref{lemma:gsmooth}.
+
 In particular, the following constraints on $\alpha_t$ and $\beta_t$ are sufficient:
 \begin{align*}
 &0\leq\alpha_t < \frac{2(1-\nicefrac{2c_{t+1}}{\beta_t})}{L+2c_{t+1}} \\
@@ -1048,7 +1060,6 @@ In particular, the following constraints on $\alpha_t$ and $\beta_t$ are suffici
 	&\qquad-
 	\frac{\alpha_t}{2N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} -\frac{\alpha_t}{2}\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}, \label{eq:13}
 \end{align}
-\todomat{check last inequality}
 where (\ref{eq:11}) is from the L-smoothness of $J(\vtheta)$, (\ref{eq:12}) is from the SVRPG update, and (\ref{eq:13}) is from Lemma \ref{lemma:aux0}.
 
 Next we have:
