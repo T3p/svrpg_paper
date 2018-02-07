@@ -546,19 +546,17 @@ This weighted approach comes from the fact that, as mentioned above, there is no
 Thus, we aim to facilitate sub-iterations rather than snapshots.
 
 \subsection{Normalized Importance Sampling}\label{sec:prac}
-As we already mentioned in section \ref{sec:stopping} importance weights means a lot of variance to deal with. Therefore, in order to cope with this issue the literature propose the Self-normalization techniques.
+As we already mentioned in section \ref{sec:stopping} importance weights means a lot of variance to deal with. Therefore, in order to cope with this issue the literature propose the Self-normalization technique.
 This technique offers a variance reduction over the importance weights in exchange of a bias introduction. Hence, if the bias introduced by this is smaller than the variance reduction it causes, it is convenient to use it in practice.  
-As regards our algorithm, the term
-$
- \frac{1}{B} \sum_{i=0}^{B-1} \left[ \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
-\right]
-$  \eqref{E:svrpg.estimate.batch} become:
+Introducing self-normalization in the context of our algorithm, we switch from equation \ref{E:svrpg.estimate.batch} to:
 \begin{align*}
-\frac{1}{ \sum_{i=0}^{B-1}\omega(\tau_i|\vtheta_t, \wt{\vtheta})} \sum_{i=0}^{B-1} \left[ \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
+\blacktriangledown J(\vtheta_{t}) := v_t= \wh{\nabla}_N J(\wt{\vtheta})
+ + \frac{1}{B} \sum_{i=0}^{B-1} \left[
+g(\tau_i|\vtheta_t)\right]\\ 
+- \frac{1}{ \sum_{i=0}^{B-1}\omega(\tau_i|\vtheta_t, \wt{\vtheta})} \sum_{i=0}^{B-1} \left[ \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
 \right].
 \end{align*}
-The rest of terms remain unchanged.
-We experienced some improvements using it (see section \ref{sec:exp} for the experimental point of view), in particular in our experiments we use this technique in the context of G(PO)MDP defined as "weighted per-decision importance sampling estimator" \cite{precup2000eligibility}.  
+We experienced some improvements using it (see section \ref{sec:exp} for the experimental point of view).
 
 \subsection{Baseline}
 As reported in Sec. \ref{subsec:PolicyGradient} a known method for variance reduction in Reinforcement Learning is the use of baseline.
@@ -599,6 +597,8 @@ We used the stopping condition defined in Section \ref{sec:stopping}.
 We fixed the maximum number of trajectories that both the algorithms can use as shown in appendices. 
 
 The neural networks is composed of one layer with 8 neurons for Cart-Pole environment and by two layers with 32x32 neurons for Swimmer and for Half Cheetah environments. In each experiment, the length of episodes is 500 steps.
+
+In particular in our experiments we use this technique in the context of G(PO)MDP defined as "weighted per-decision importance sampling estimator" \cite{precup2000eligibility}.  
 
 \section{Conclusion}
 In this paper we introduce SVRPG, a variant of SVRG specifically designed for RL problems.
