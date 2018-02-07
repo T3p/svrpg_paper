@@ -525,7 +525,6 @@ Given this structure, we suggest to use two ADAM estimators:
         \vtheta^{s}_{t+1} &= \vtheta^{s}_t + \alpha^{\textsc{SI}}_{s,t} v_t^{s}
 \end{align*}
 where $\alpha^{\textsc{FG}}_{s}$ is associated to the snapshot and $\alpha^{\textsc{SI}}_{s,t}$ with the sub-iterations (see App.~\ref{app:practicalsvrpg} for details).
-\todopir{Add ADAM definition and explain in more details}
 By doing so we decouple the contribution of the variance introduced by the approximate FG from the one introduced by the sub-iterations.
 Note that these two terms have different orders of magnitude since are estimated with a different number of trajectories ($B \ll N$) and w/o importance weights.
 The use of two ADAM estimators allows to capture and exploit this property.
@@ -545,22 +544,25 @@ This weighted approach comes from the fact that, as mentioned above, there is no
 Thus, we aim to facilitate sub-iterations rather than snapshots.
 
 \subsection{Normalized Importance Sampling}\label{sec:prac}
-As we already mentioned in section \ref{sec:stopping} importance weights means a lot of variance to deal with. Therefore, in oreder to cope with this issue the literature propose the Self-normalization techniques \cite{precup2000eligibility}.
-This technique offers a variance reduction over the importance weights in exchange of a bias introduction. Hence, if the bias introduced by this is smaller than the variance reduction it causes, it is convenient to use it in practice.  We expirienced some improvements using it (see section \ref{sec:exp} for the sperimental point of view).
-Self-normalization is easy to use, but depends on the chosen reinforcement learning algorithm. Therefore, here we give the definition of this technique in the context of G(PO)MDP where we have used the weighted per-decision importance sampling estimator \cite{precup2000eligibility}:
+As we already mentioned in section \ref{sec:stopping} importance weights means a lot of variance to deal with. Therefore, in order to cope with this issue the literature propose the Self-normalization techniques.
+This technique offers a variance reduction over the importance weights in exchange of a bias introduction. Hence, if the bias introduced by this is smaller than the variance reduction it causes, it is convenient to use it in practice.  
+As regards our algorithm, the term
+$
+ \frac{1}{B} \sum_{i=0}^{B-1} \left[ \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
+\right]
+$  \eqref{E:svrpg.estimate.batch} become:
 \begin{align*}
-\gradApp{\vtheta}{N} = \frac{1}{\Omega}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_k^n\vert s_k^n}\right)\left(\gamma^h r_h^n \omega(z_{0:h})\right).
-\end{align*} 
-where:
-\begin{align*}
-\omega(z_{0:h}) = \prod_{k=0}^{h} \frac{\pi_{\vtheta}({a_k^n\vert s_k^n})
- }{\pi_{\vtheta^{'}}({a_k^n\vert s_k^n})}
+\frac{1}{ \sum_{i=0}^{B-1}\omega(\tau_i|\vtheta_t, \wt{\vtheta})} \sum_{i=0}^{B-1} \left[ \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
+\right].
 \end{align*}
-\begin{align*}
-\Omega = \sum_{n=1}^{N}\sum_{h=0}^{H-1}\gamma^h\prod_{k=0}^{h} \frac{\pi_{\vtheta}({a_k^n\vert s_k^n})
-}{\pi_{\vtheta^{'}}({a_k^n\vert s_k^n})}
-\end{align*}
-\todomat{why should we use it? What advantages do we expect? At what cost? Pointer to experiments}
+The rest of terms remain unchanged.
+We experienced some improvements using it (see section \ref{sec:exp} for the experimental point of view), in particular in our experiments we use this technique in the context of G(PO)MDP defined as "weighted per-decision importance sampling estimator" \cite{precup2000eligibility}.  
+
+\subsection{Baseline}
+As reported in Sec. \ref{subsec:PolicyGradient} a known method for variance reduction in Reinforcement Learning is the use of baseline.
+This method is independent to SVRPO.
+We decide to test SVRPO with an Actor Critic baseline: the baseline is a states dependent linear function with a time-varying feature vector \cite{duan2016benchmarking}.
+Our choice is to use a single baseline for each term of expression \ref{E:svrpg.estimate.batch}. This is update only in the snapshot: the baseline is estimated using the N trajectories.
 
 \section{Related Work}
 Despite the huge interest received in SL, variance-reduced gradient approaches has not attracted the RL community.
