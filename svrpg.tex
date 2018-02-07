@@ -527,7 +527,6 @@ Given this structure, we suggest to use two ADAM estimators:
         \vtheta^{s}_{t+1} &= \vtheta^{s}_t + \alpha^{\textsc{SI}}_{s,t} v_t^{s}
 \end{align*}
 where $\alpha^{\textsc{FG}}_{s}$ is associated to the snapshot and $\alpha^{\textsc{SI}}_{s,t}$ with the sub-iterations (see App.~\ref{app:practicalsvrpg} for details).
-\todopir{Add ADAM definition and explain in more details}
 By doing so we decouple the contribution of the variance introduced by the approximate FG from the one introduced by the sub-iterations.
 Note that these two terms have different orders of magnitude since are estimated with a different number of trajectories ($B \ll N$) and w/o importance weights.
 The use of two ADAM estimators allows to capture and exploit this property.
@@ -547,22 +546,21 @@ This weighted approach comes from the fact that, as mentioned above, there is no
 Thus, we aim to facilitate sub-iterations rather than snapshots.
 
 \subsection{Normalized Importance Sampling}\label{sec:prac}
-As we already mentioned in section \ref{sec:stopping} importance weights means a lot of variance to deal with. Therefore, in oreder to cope with this issue the literature propose the Self-normalization techniques \cite{precup2000eligibility}.
-This technique offers a variance reduction over the importance weights in exchange of a bias introduction. Hence, if the bias introduced by this is smaller than the variance reduction it causes, it is convenient to use it in practice.  We expirienced some improvements using it (see section \ref{sec:exp} for the sperimental point of view).
-Self-normalization is easy to use, but depends on the chosen reinforcement learning algorithm. Therefore, here we give the definition of this technique in the context of G(PO)MDP where we have used the weighted per-decision importance sampling estimator \cite{precup2000eligibility}:
+As we already mentioned in section \ref{sec:stopping} importance weights means a lot of variance to deal with. Therefore, in order to cope with this issue the literature propose the Self-normalization technique.
+This technique offers a variance reduction over the importance weights in exchange of a bias introduction. Hence, if the bias introduced by this is smaller than the variance reduction it causes, it is convenient to use it in practice.  
+Introducing self-normalization in the context of our algorithm, we switch from equation \ref{E:svrpg.estimate.batch} to:
 \begin{align*}
-\gradApp{\vtheta}{N} = \frac{1}{\Omega}\sum_{n=1}^{N}\sum_{h=0}^{H-1}\left(\sum_{k=0}^{h}\score{\vtheta}{a_k^n\vert s_k^n}\right)\left(\gamma^h r_h^n \omega(z_{0:h})\right).
-\end{align*} 
-where:
-\begin{align*}
-\omega(z_{0:h}) = \prod_{k=0}^{h} \frac{\pi_{\vtheta}({a_k^n\vert s_k^n})
- }{\pi_{\vtheta^{'}}({a_k^n\vert s_k^n})}
+\blacktriangledown J(\vtheta_{t}) := v_t= \wh{\nabla}_N J(\wt{\vtheta})
+ + \frac{1}{B} \sum_{i=0}^{B-1} \left[
+g(\tau_i|\vtheta_t)\right]\\ 
+- \frac{1}{ \sum_{i=0}^{B-1}\omega(\tau_i|\vtheta_t, \wt{\vtheta})} \sum_{i=0}^{B-1} \left[ \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
+\right].
 \end{align*}
-\begin{align*}
-\Omega = \sum_{n=1}^{N}\sum_{h=0}^{H-1}\gamma^h\prod_{k=0}^{h} \frac{\pi_{\vtheta}({a_k^n\vert s_k^n})
-}{\pi_{\vtheta^{'}}({a_k^n\vert s_k^n})}
-\end{align*}
-\todomat{why should we use it? What advantages do we expect? At what cost? Pointer to experiments}
+We experienced some improvements using it (see section \ref{sec:exp} for the experimental point of view).
+
+\subsection{Baseline}
+As reported in Sec. \ref{subsec:PolicyGradient} a well known variance reduction tool in Reinforcement Learning is the baseline.
+This tool does not depend on SVRPG. More precicely we decided to use an Actor Critic baseline, which is a state dependent linear function with a time-varying feature vector \cite{duan2016benchmarking}. Furthermore, the baseline is unique and computed every snapshot using the N trajectories at hand.
 
 \section{Related Work}
 Despite the huge interest received in SL, variance-reduced gradient approaches has not attracted the RL community.
@@ -579,6 +577,7 @@ Concerning importance weighting techniques, RL has made wide use of them for off
 
 
 \section{Experiments}\label{sec:exp}
+In practical experiments we use G(PO)MDP as 
 We have designed our experiments to investigate whether:
 \begin{enumerate}
 \item The algorithm reaches high value of the reward function faster than GPOMDP.
@@ -597,6 +596,8 @@ We used the stopping condition defined in Section \ref{sec:stopping}.
 We fixed the maximum number of trajectories that both the algorithms can use as shown in appendices. 
 
 The neural networks is composed of one layer with 8 neurons for Cart-Pole environment and by two layers with 32x32 neurons for Swimmer and for Half Cheetah environments. In each experiment, the length of episodes is 500 steps.
+
+In particular in our experiments we use this technique in the context of G(PO)MDP defined as "weighted per-decision importance sampling estimator" \cite{precup2000eligibility}.  
 
 \section{Conclusion}
 In this paper we introduce SVRPG, a variant of SVRG specifically designed for RL problems.
