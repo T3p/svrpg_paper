@@ -400,8 +400,7 @@ For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of th
 %\]
 %\end{restatable}
 In particular, the latter result suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can actually achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance (at least asymptotically).
-The resulting SVRPG policy optimization method is detailed in Alg.~\ref{alg:svrpg}.\footnote{Note that when $t=0$ we can avoid to sample trajectories and instead perform directly the policy update using the FG. For sake of clarity, we have not explicitly differentiate this step from the standard update rule in Alg.~\ref{alg:svrpg}.} Note that, in our implementation, we simply return the last value of the parameter $\tilde{\vtheta}^S$ instead of a random one, as is often done in practice.
-\todomat{add reference}
+The resulting SVRPG policy optimization method is detailed in Alg.~\ref{alg:svrpg}.\footnote{Note that when $t=0$ we can avoid to sample trajectories and instead perform directly the policy update using the FG. For sake of clarity, we have not explicitly differentiate this step from the standard update rule in Alg.~\ref{alg:svrpg}.}
 
 To obtain a method that can be used in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$.
 Adaptive selection of these meta-parameters is also possible, and is explored in Sec.~\ref{sec:stopping}.
@@ -496,11 +495,11 @@ where $\psi,\zeta,\xi$ depend only on $\GRADLOG,\HESSLOG,\VARRF,\VARIS,\alpha$ a
 % Specific constants and meta-parameter constraints are provided in the proof of the theorem in Appendix \ref{app:proofs}.
 Refer to App.~\ref{app:proofs} for a detailed proof involving definition of the constants and the meta-parameter constraints.
 %The theoretical settings may be too conservative.
-In Sec.~\ref{sec:stopping} we propose a joint selection of step size $\alpha$ and epoch size $m$ which is more suited for applications. 
 By analysing the upper-bound in Thm.~\ref{theo:convergence} we observe that: I) the $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on \textcolor{red}{non-concave} SVRG~\citep[\eg][]{reddi2016stochastic}; II) the $\mathcal{O}(\nicefrac{1}{N})$ term is due to the FG approximation and is analogous to the one in~\citep{harikandeh2015stopwasting}; III) the $\mathcal{O}(\nicefrac{1}{B})$ term is due to importance weighting.
 To achieve true convergence, both the batch size $N$ and the mini-batch size $B$ should increase over time. 
 In practice, it is enough to choose $N$ and $B$ large enough to make the second and the third term negligible, \ie to mitigate the variance introduced by FG approximation and importance sampling, respectively.
-Once the last two terms can be neglected, the number of trajectories needed to achieve $\norm[2]{\gradJ{\vtheta}}^2\leq\epsilon$ is $O(\frac{B+\nicefrac{N}{m}}{\epsilon})$. Advantage over batch gradient ascent can be achieved with properly selected meta-parameters. In the following we propose practical ways to do so.
+Once the last two terms can be neglected, the number of trajectories needed to achieve $\norm[2]{\gradJ{\vtheta}}^2\leq\epsilon$ is $O(\frac{B+\nicefrac{N}{m}}{\epsilon})$. In this sense, advantage over batch gradient ascent can be achieved with properly selected meta-parameters. In Sec.~\ref{sec:stopping} we propose a joint selection of step size $\alpha$ and epoch size $m$.
+Finally, note from the return statement of Algorithm \ref{alg:svrpg} that $J(\vtheta_A)$ can be seen as the average performance of all the policies tried by the algorithm. This is particularly meaningful in the context of on-line learning that we are addressing in this paper.
 
 {\color{red}
 \textbf{G(PO)MDP.} A similar result to the one stated in Thm~\ref{theo:convergence} can be derived for the G(PO)MDP estimator. A sketch of the proof is reported in~\ref{app:gpomdpproof}.
@@ -564,10 +563,8 @@ g(\tau_i|\vtheta_t)\right]\\
 We experienced some improvements using it (see section \ref{sec:exp} for the experimental point of view).
 
 \subsection{Baseline}
-As reported in Sec. \ref{subsec:PolicyGradient} a known method for variance reduction in Reinforcement Learning is the use of baseline.
-This method is independent to SVRPO.
-We decide to test SVRPO with an Actor Critic baseline: the baseline is a states dependent linear function with a time-varying feature vector \cite{duan2016benchmarking}.
-Our choice is to use a single baseline for each term of expression \ref{E:svrpg.estimate.batch}. This is update only in the snapshot: the baseline is estimated using the N trajectories.
+As reported in Sec. \ref{subsec:PolicyGradient} a well known variance reduction tool in Reinforcement Learning is the baseline.
+This tool does not depend on SVRPG. More precicely we decided to use an Actor Critic baseline, which is a state dependent linear function with a time-varying feature vector \cite{duan2016benchmarking}. Furthermore, the baseline is unique and computed every snapshot using the N trajectories at hand.
 
 \section{Related Work}
 Despite the huge interest received in SL, variance-reduced gradient approaches has not attracted the RL community.
@@ -584,6 +581,7 @@ Concerning importance weighting techniques, RL has made wide use of them for off
 
 
 \section{Experiments}\label{sec:exp}
+In practical experiments we use G(PO)MDP as 
 We have designed our experiments to investigate whether:
 \begin{enumerate}
 \item The algorithm reaches high value of the reward function faster than GPOMDP.
@@ -811,7 +809,7 @@ Before addressing the main convergence theorem, we prove some useful lemmas.
 
  
 \begin{restatable}[]{lemma}{L-smoothness}\label{lemma:lsmooth}
-	Under Assumption \ref{ass:bounded_score}, $J(\vtheta)$ is L-smooth for some positive Lipschitz constant $L$.
+	Under Assumption \ref{ass:bounded_score}, $J(\vtheta)$ is L-smooth for some positive Lipschitz constant $L_1$.
 \end{restatable}
 \begin{proof}
 By definition of $J(\vtheta)$:
@@ -825,6 +823,16 @@ By definition of $J(\vtheta)$:
 \end{align}
 where \ref{eq:0} is from Assumption \ref{ass:bounded_score}.
 Since the Hessian is bounded, $J(\vtheta)$ is Lipschitz-smooth.
+\end{proof}
+
+\begin{restatable}[]{lemma}{l-smooth-g}\label{lemma:gsmooth}
+Under Assumption \ref{ass:bounded_score}, whether we use the REINFORCE or the G(PO)MDP gradient estimator, $g(\tau\vert\vtheta)$ is Lipschitz continuous with Lipschitz constant $L_2$, \ie for any trajectory $\tau\in\Tspace$:
+\[
+	\norm[]{g(\tau\vert\vtheta)-g(\tau\vert\vtheta')}^2 \leq L_2\norm[]{\vtheta-\vtheta'}^2.
+\]
+\end{restatable}
+\begin{proof}
+For both REINFORCE and G(PO)MDP, $g(\tau\vert\vtheta)$ is a linear combination of terms of the kind $\score{\vtheta}{a_t\vert s_t}\gamma^t r_t$ \cite{peters2008reinforcement}. These terms have bounded gradient from the second inequality of Assumption \ref{ass:bounded_score} and the fact that $|r_t|\leq R$. Bounded gradient implies Lipschitz continuity. Finally, the linear combination of Lipschitz continuous functions is Lipschitz continuous.
 \end{proof}
 
 \begin{restatable}[]{lemma}{bounded-g}\label{lemma:gbound}
@@ -849,7 +857,7 @@ Under Assumption \ref{ass:bounded_score}
 \[
 \Ets{\gradBlack{\vtheta_t^{s+1}}} \leq
 \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
-+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
++\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 +\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 \nonumber 
 +\frac{\Gamma\VARIS}{B}
@@ -938,11 +946,11 @@ Under Assumption \ref{ass:bounded_score}
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
-	+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}\nonumber\\
+	+\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}\nonumber\\
 	&\qquad+
 		\frac{1}{B^2}\sum_{i=0}^{B-1}
-		\Ets{\norm[]{g(\tau_i\vert\tilde{\vtheta}^s) 
-			-\omega(\tau_i)g(\tau_i\vert\tilde{\vtheta}^s)}^2} \label{eq:3}
+		\Ets{\norm[]{(1 
+			-\omega(\tau_i))g(\tau_i\vert\tilde{\vtheta}^s)}^2} \label{eq:3}
 % ...
 \end{align}
 \begin{align}
@@ -950,22 +958,22 @@ Under Assumption \ref{ass:bounded_score}
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
-	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	&\qquad+\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\Gamma\frac{1}{B^2}\sum_{i=0}^{B-1}\Ets{(\omega(\tau_i)-1)^2} \label{eq:4}\\
 	%
 	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
-	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	&\qquad+\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\frac{\Gamma}{B^2}\sum_{i=0}^{B-1}\Varts{\omega(\tau_i)} \nonumber\\
 	%
 	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\nonumber\\
-	&\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
+	&\qquad+\frac{L_2^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\frac{\Gamma\VARIS}{B}, \label{eq:5}
 \end{align}
-where (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (\ref{eq:3}) is from L-smoothness, 
+where (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$, (\ref{eq:3}) is from Lemma \ref{lemma:gsmooth}, 
 (\ref{eq:4}) is from Lemma \ref{lemma:gbound}, and (\ref{eq:5}) is from Assumption \ref{ass:M2}.
 \end{proof}
 
@@ -1039,8 +1047,10 @@ Under Assumptions \ref{ass:bounded_score} ans \ref{ass:M2}, the expected squared
 	&c_t = c_{t+1}\left(1+\alpha_t\beta_t+\alpha_t+\frac{\alpha_t^2L^2}{B}\right)+\frac{\alpha_t^2L^3}{2B}, \\
 	&\Psi_t = \alpha_t\left(\frac{1}{2}-\frac{c_{t+1}}{\beta_t}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right), \\
 	&d_t = \frac{\alpha_t}{2}\left(1+2c_{t+1}+\alpha_tL+2\alpha_tc_{t+1}\right), \\
-	&f_t = \alpha_t^2\frac{\Gamma(L+2c_{t+1})}{2}.
+	&f_t = \alpha_t^2\frac{\Gamma(L+2c_{t+1})}{2},
 \end{align*}
+where $L=\max\left\{L1,L2\right\}$, \ie the greater of the Lipschitz constants from Lemmas \ref{lemma:lsmooth} and \ref{lemma:gsmooth}.
+
 In particular, the following constraints on $\alpha_t$ and $\beta_t$ are sufficient:
 \begin{align*}
 &0\leq\alpha_t < \frac{2(1-\nicefrac{2c_{t+1}}{\beta_t})}{L+2c_{t+1}} \\
@@ -1058,7 +1068,6 @@ In particular, the following constraints on $\alpha_t$ and $\beta_t$ are suffici
 	&\qquad-
 	\frac{\alpha_t}{2N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} -\frac{\alpha_t}{2}\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}, \label{eq:13}
 \end{align}
-\todomat{check last inequality}
 where (\ref{eq:11}) is from the L-smoothness of $J(\vtheta)$, (\ref{eq:12}) is from the SVRPG update, and (\ref{eq:13}) is from Lemma \ref{lemma:aux0}.
 
 Next we have:
