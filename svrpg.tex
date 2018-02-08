@@ -371,37 +371,37 @@ This property will be used to prove Lemma~\ref{L:svrpg.properties}.
 %\nabla\log\pi(\tau_i \vert \vtheta)\Reward(\tau_i) 
 %- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \wt{\vtheta})\Reward(\tau_i)\right].
 %\end{align*}
-The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case~\citep{harikandeh2015stopwasting,konevcny2016mini}. It is easy to show that the SVRPG estimator has the following, desirable properties (see Appendix~\ref{app:proofs}):
+The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case~\citep{harikandeh2015stopwasting,konevcny2016mini}. It is easy to show that the SVRPG estimator has the following, desirable properties:
 \begin{lemma}\label{L:svrpg.properties}
         Let $\wh{\nabla}_N J(\vtheta)$ be an unbiased estimator of~\eqref{E:policygradient}
 %Denote by $\wh{\nabla}_N^{\textsc{RF}} J(\vtheta)$ the REINFORCE estimator in~\eqref{E:policygradient.estimate} 
 and let $\vtheta^* \in \argmin_{\vtheta} \{J(\vtheta)\}$. Then, the SVRG estimate in~\eqref{E:svrpg.estimate.batch} is \emph{unbiased}
-\[
+\begin{equation}\label{eq:unbiased}
 \mathop{\mathbb{E}}
 \left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
-\]
+\end{equation}
 and regardless of the mini-batch size $B$:\footnote{
 For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of the covariance matrix, \ie $\Tr\EVV[]{(\mathbf{x}-\EVV[]{\mathbf{x}})(\mathbf{x}-\EVV[]{\mathbf{x}})^T}$.}
-\[
+\begin{equation}\label{eq:zerovar}
 	\Var\left[\gradBlack{\vtheta^*}\right] = 
     \Var\left[\wh{\nabla}_N J(\vtheta^*)\right].
-\]
+\end{equation}
 \end{lemma}
-
-%\begin{restatable}{lemma}{unbias}\label{lemma:unbias}
-%The SVRPG estimator is unbiased:
-%\[
-%\mathop{\mathbb{E}}
-%\left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
-%\]
-%\end{restatable}
-%\begin{restatable}{lemma}{zerovar}\label{lemma:zerovar}
-%At convergence, the variance of the SVRPG estimator is equal to the variance of the REINFORCE estimator, regardless of the mini-batch size $B$:
-%\[
-%	\mathbb{V}ar\left[\gradBlack{\vtheta^*}\right] = 
-%	\mathbb{V}ar\left[\gradApp{\vtheta^*}{N}\right].
-%\]
-%\end{restatable}
+\begin{proof}
+Claim (\ref{eq:unbiased}) is from the unbiasedness of the estimators:
+\begin{align*}
+\EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\wt{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} \\
+&\qquad- \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i|\vtheta, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} \\
+&= \gradJ{\wt{\vtheta}} + \gradJ{\vtheta} - \gradJ{\wt{\vtheta}} = \gradJ{\vtheta}.
+\end{align*}
+As for claim (\ref{eq:zerovar}), note that as $\vtheta\to\vtheta^*$, also $\wt{\vtheta}\to\vtheta^*$. Hence, by continuity of $J(\vtheta)$:
+\begin{align*}
+\Var\left[\gradBlack{\vtheta}\right] &\to \Var\left[\gradApp{\vtheta^*}{N}\right] + \frac{1}{B}\Var\left[g(\tau|\vtheta^*)\right. \\
+&\left.- \cancel{\omega(\tau|\vtheta^*,\vtheta^*)}g(\tau|\vtheta^*)\right]
+= \Var\left[\gradApp{\vtheta^*}{N}\right].
+\end{align*}
+Note that it is important that the trajectories used in the second and the third term are the same for the variance to vanish.
+\end{proof}
 In particular, the latter result suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance (at least asymptotically).
 Algorithm~\ref{alg:svrpg} presents the details of the SVRPG method for policy optimization.\footnote{Note that when $t=0$ we can avoid to sample trajectories and instead directly perform the policy update using the FG. For the sake of clarity, we have not explicitly differentiated this step from the standard update rule in Algorithm~\ref{alg:svrpg}.}
 
@@ -795,41 +795,41 @@ The ideal SVRPG gradient estimate is:
 \end{definition}
 
 
-\subsection*{Basic Lemmas}
-We prove two basic properties of the SVRPG update.
-
-%\unbias*
-\begin{restatable}{lemma}{unbias}\label{lemma:unbias}
-Consider Assumption~\ref{asm:unbiasedness}. Then, the SVRPG estimator is unbiased:
-\[
-\mathop{\mathbb{E}}
-\left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
-\]
-\end{restatable}
-\begin{proof}
-\begin{align*}
-        \EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\wt{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} - \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i|\vtheta, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} \\
-&= \gradJ{\wt{\vtheta}} + \gradJ{\vtheta} - \gradJ{\wt{\vtheta}} = \gradJ{\vtheta}.
-\end{align*}
-Note that the importance weight is necessary to guarantee unbiasedness, since the $\tau_i$ are sampled from $\pi_{\vtheta}$.
-\end{proof}
-
-% \zerovar*
-\begin{restatable}{lemma}{zerovar}\label{lemma:zerovar}
-At convergence, the variance of the SVRPG estimator is equal to the variance of the gradient estimator, regardless of the mini-batch size $B$:
-\[
-	\Var\left[\gradBlack{\vtheta^*}\right] = 
-	\Var\left[\gradApp{\vtheta^*}{N}\right].
-\]
-\end{restatable}
-\begin{proof}
-As $\vtheta\to\vtheta^*$, also $\wt{\vtheta}\to\vtheta^*$. Hence, by continuity of $J(\vtheta)$:
-\begin{align*}
-\Var\left[\gradBlack{\vtheta}\right] &\to \Var\left[\gradApp{\vtheta^*}{N}\right] + \frac{1}{B}\Var\left[g(\tau|\vtheta^*) - \cancel{\omega(\tau|\vtheta^*,\vtheta^*)}g(\tau|\vtheta^*)\right] \\
-&= \Var\left[\gradApp{\vtheta^*}{N}\right].
-\end{align*}
-Note that it is important that the trajectories used in the second and the third term are the same for the variance to vanish.
-\end{proof}
+%\subsection*{Basic Lemmas}
+%We prove two basic properties of the SVRPG update.
+%
+%%\unbias*
+%\begin{restatable}{lemma}{unbias}\label{lemma:unbias}
+%Consider Assumption~\ref{asm:unbiasedness}. Then, the SVRPG estimator is unbiased:
+%\[
+%\mathop{\mathbb{E}}
+%\left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
+%\]
+%\end{restatable}
+%\begin{proof}
+%\begin{align*}
+%        \EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\wt{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} - \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i|\vtheta, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} \\
+%&= \gradJ{\wt{\vtheta}} + \gradJ{\vtheta} - \gradJ{\wt{\vtheta}} = \gradJ{\vtheta}.
+%\end{align*}
+%Note that the importance weight is necessary to guarantee unbiasedness, since the $\tau_i$ are sampled from $\pi_{\vtheta}$.
+%\end{proof}
+%
+%% \zerovar*
+%\begin{restatable}{lemma}{zerovar}\label{lemma:zerovar}
+%At convergence, the variance of the SVRPG estimator is equal to the variance of the gradient estimator, regardless of the mini-batch size $B$:
+%\[
+%	\Var\left[\gradBlack{\vtheta^*}\right] = 
+%	\Var\left[\gradApp{\vtheta^*}{N}\right].
+%\]
+%\end{restatable}
+%\begin{proof}
+%As $\vtheta\to\vtheta^*$, also $\wt{\vtheta}\to\vtheta^*$. Hence, by continuity of $J(\vtheta)$:
+%\begin{align*}
+%\Var\left[\gradBlack{\vtheta}\right] &\to \Var\left[\gradApp{\vtheta^*}{N}\right] + \frac{1}{B}\Var\left[g(\tau|\vtheta^*) - \cancel{\omega(\tau|\vtheta^*,\vtheta^*)}g(\tau|\vtheta^*)\right] \\
+%&= \Var\left[\gradApp{\vtheta^*}{N}\right].
+%\end{align*}
+%Note that it is important that the trajectories used in the second and the third term are the same for the variance to vanish.
+%\end{proof}
 
 \subsection*{Ancillary Lemmas}
 Before addressing the main convergence theorem, we prove some useful lemmas.
