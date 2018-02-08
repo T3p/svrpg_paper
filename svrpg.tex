@@ -1148,9 +1148,9 @@ Next we have:
 \endgroup
 where~\eqref{eq:14a} is obtained using the triangular inequality,~\eqref{eq:14} is from the SVRPG update,~\eqref{eq:15} is from Lemma~\ref{lemma:aux0} with $\vphi(\vtheta_t^{s+1})\coloneqq\vtheta_t^{s+1}-\tilde{\vtheta}^s$,~\eqref{eq:16a} is from Cauchy-Schwarz inequality, and~\eqref{eq:16} is from Young's inequality in the `Peter-Paul' variant.
 Let us consider the following function:
-\[
+\begin{equation}\label{E:lyapunov.function}
 	R_{t+1}^{s+1} \coloneqq \Ets{J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2}. 
-\]
+\end{equation}
 The objective is now to provide a lower bound to it.
 \begingroup
 \allowdisplaybreaks
@@ -1216,29 +1216,26 @@ We finally provide the proof of the convergence theorem:
 \begin{proof}
 We prove the theorem for the following values of the constants:
 \begin{align*}
-& \psi \coloneqq \min_t\{\Psi_t\}, \\
-& \zeta \coloneqq \frac{\max_t\{d_t\}V}{\psi} \\
-& \xi \coloneqq \frac{\max_t\{f_t\}W}{\psi}.
+& \psi \coloneqq \min_t\{\Psi_t\}, 
+& \zeta \coloneqq \frac{\max_t\{d_t\}V}{\psi}, 
+&& \xi \coloneqq \frac{\max_t\{f_t\}W}{\psi},
 \end{align*}
-The values of all other constants and the constraints on the step size are provided in Lemma \ref{lemma:aux1}.
-
-Starting from Lemma \ref{lemma:aux1}, summing over iterations of an epoch $s$ we get:
-\begin{align}
+where $\Psi$, $d_t$ and $f_t$ are defined in Lemma~\ref{lemma:aux1}.
+% The values of all other constants and the constraints on the step size are provided in Lemma \ref{lemma:aux1}.
+Starting from Lemma \ref{lemma:aux1}, summing over iterations of an epoch $s$ and using telescopic sum we obtain
+\begin{align*}
 \sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}^2}}&\leq
  \frac{\sum_{t=0}^{m-1}\left(R_{t+1}^{s+1} - R_t^{s+1}\right)}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B} \nonumber\\
- %
- &= \frac{\sum_{t=0}^{m-1}\left(\Ets[t+1]{J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} - \Ets[t]{J(\vtheta_{t}^{s+1}) - c_{t}\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}^s}^2}\right)}{\psi} \nonumber\\
- &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \nonumber\\
- %
- &= \frac{\Ets[m]{\sum_{t=0}^{m-1}\left(J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2 - J(\vtheta_{t}^{s+1}) - c_{t}\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}^s}^2\right)}}{\psi} \nonumber\\
- &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \nonumber\\
- %
- &= \frac{\Ets[m]{J(\vtheta_{m}^{s+1}) - c_{m}\norm[]{\vtheta_{m}^{s+1}-\tilde{\vtheta}^s}^2 - J(\vtheta_{0}^{s+1}) - c_{0}\norm[]{\vtheta_{0}^{s+1}-\tilde{\vtheta}^s}^2}}{\psi} \nonumber\\
- &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \label{eq:21}\\
- %
- &= \frac{\Ets[m]{J(\tilde{\vtheta}^{s+1}) - J(\tilde{\vtheta}^{s})}}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B}, \label{eq:22}
- \end{align}
-where (\ref{eq:21}) is obtained by telescoping the sum and (\ref{eq:22}) from the fact that $c_m=0$ and $\vtheta_0^{s+1}=\tilde{\vtheta}^s$.
+ & = \frac{R^{s+1}_m - R^{s+1}_0}{\psi}  + \frac{m\zeta}{N} + \frac{m\xi}{B}
+\end{align*}
+By using the definition of $R^s_t$ in~\eqref{E:lyapunov.function}, the fact that $c_m = 0$ and $\vtheta^{s+1}_0 = \wt{\vtheta}^s = \vtheta^s_m$, we can state that
+\todopir{Why $c_m =0$? In the previous theorem  was $c_{m-1} = 0$}
+\begin{align*}
+        R^{s+1}_m - R^{s+1}_0 
+        &= \EVV[m|s]{J(\vtheta^{s+1}_{m})- c_m \norm[]{\vtheta^{s+1}_{m} - \wt{\vtheta}^s}^2 } - \EVV[0|s]{J(\vtheta^{s+1}_{0}) - c_0 \norm[]{\vtheta^{s+1}_0 - \wt{\vtheta}^s}^2}\\
+        &= \EVV[m|s]{J(\vtheta^{s+1}_{m})} - \EVV[0|s]{J(\wt{\vtheta}^s)}
+        = \EVV[m|s]{J(\wt{\vtheta}^{s+1}) - J(\wt{\vtheta}^s)}
+\end{align*}
 Next, summing over epochs:
 \begin{align}
 \sum_{s=0}^{S-1}\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}^2}}&\leq
@@ -1251,15 +1248,52 @@ Next, summing over epochs:
 &\leq
 \frac{J(\vtheta^*) - J(\vtheta^0)}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B}, \label{eq:24}
 \end{align}
-where the expectation in (\ref{eq:23}) is \wrt all the trajectories sampled in a run of Algorithm \ref{alg:svrpg} and (\ref{eq:24}) is from the definition of $\vtheta^*$.
- 
+where the expectation in~\eqref{eq:23} is \wrt all the trajectories sampled in a run of Algorithm~\ref{alg:svrpg} and~\eqref{eq:24} is from the definition of $\vtheta^*$ (\ie the policy performance maximizer).
 Finally, we consider the expectation \wrt all sources of randomness, including the uniform sampling of the output parameter:
-\begin{align}
+\begin{align*}
 \EVV[]{\norm[]{\gradJ{(\vtheta_t^{s+1})}}^2} 
-&=\frac{1}{T}\sum_{s=0}^{S-1}\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}}^2} \nonumber\\
-&\leq
-\frac{J(\vtheta^*) - J(\vtheta^0)}{\psi T} + \frac{\zeta}{N} + \frac{\xi}{B} \nonumber.
-\end{align}
+&=\frac{1}{T}\sum_{s=0}^{S-1}\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}}^2} 
+\leq
+\frac{J(\vtheta^*) - J(\vtheta^0)}{\psi T} + \frac{\zeta}{N} + \frac{\xi}{B}.
+\end{align*}
+
+%% \begin{align}
+%% \sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}^2}}&\leq
+%%  \frac{\sum_{t=0}^{m-1}\left(R_{t+1}^{s+1} - R_t^{s+1}\right)}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B} \nonumber\\
+%%  %
+%%  &= \frac{\sum_{t=0}^{m-1}\left(\Ets[t+1]{J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} - \Ets[t]{J(\vtheta_{t}^{s+1}) - c_{t}\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}^s}^2}\right)}{\psi} \nonumber\\
+%%  &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \nonumber\\
+%%  %
+%%  &= \frac{\Ets[m]{\sum_{t=0}^{m-1}\left(J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2 - J(\vtheta_{t}^{s+1}) - c_{t}\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}^s}^2\right)}}{\psi} \nonumber\\
+%%  &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \nonumber\\
+%%  %
+%%  &= \frac{\Ets[m]{J(\vtheta_{m}^{s+1}) - c_{m}\norm[]{\vtheta_{m}^{s+1}-\tilde{\vtheta}^s}^2 - J(\vtheta_{0}^{s+1}) - c_{0}\norm[]{\vtheta_{0}^{s+1}-\tilde{\vtheta}^s}^2}}{\psi} \nonumber\\
+%%  &\qquad+ \frac{m\zeta}{N} + \frac{m\xi}{B} \label{eq:21}\\
+%%  %
+%%  &= \frac{\Ets[m]{J(\tilde{\vtheta}^{s+1}) - J(\tilde{\vtheta}^{s})}}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B}, \label{eq:22}
+%%  \end{align}
+%% where (\ref{eq:21}) is obtained by telescoping the sum and (\ref{eq:22}) from the fact that $c_m=0$ and $\vtheta_0^{s+1}=\tilde{\vtheta}^s$.
+%% Next, summing over epochs:
+%% \begin{align}
+%% \sum_{s=0}^{S-1}\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}^2}}&\leq
+%% \frac{\sum_{s=0}^{S-1}\Ets[m]{J(\tilde{\vtheta}^{s+1}) - J(\tilde{\vtheta}^{s})}}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B} \nonumber\\
+%% %
+%% &\leq
+%% \frac{\EVV[]{J(\tilde{\vtheta}^{S}) - J(\tilde{\vtheta}^{0})}}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B}
+%%  \label{eq:23}\\
+%% %
+%% &\leq
+%% \frac{J(\vtheta^*) - J(\vtheta^0)}{\psi} + \frac{T\zeta}{N} + \frac{T\xi}{B}, \label{eq:24}
+%% \end{align}
+%% where the expectation in (\ref{eq:23}) is \wrt all the trajectories sampled in a run of Algorithm \ref{alg:svrpg} and (\ref{eq:24}) is from the definition of $\vtheta^*$.
+%%  
+%% Finally, we consider the expectation \wrt all sources of randomness, including the uniform sampling of the output parameter:
+%% \begin{align}
+%% \EVV[]{\norm[]{\gradJ{(\vtheta_t^{s+1})}}^2} 
+%% &=\frac{1}{T}\sum_{s=0}^{S-1}\sum_{t=0}^{m-1}\Ets{\norm[]{\gradJ{(\vtheta_t^{s+1})}}^2} \nonumber\\
+%% &\leq
+%% \frac{J(\vtheta^*) - J(\vtheta^0)}{\psi T} + \frac{\zeta}{N} + \frac{\xi}{B} \nonumber.
+%% \end{align}
 \end{proof}
 
 
