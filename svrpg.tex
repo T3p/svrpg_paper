@@ -636,9 +636,7 @@ Finally, we have empirically shown that practical variants of the theoretical SV
 \bibliography{svrpg}
 \bibliographystyle{icml2018}
 
-\newpage
-\mbox{}
-\newpage
+\clearpage
 \onecolumn
 \appendix
 
@@ -1123,6 +1121,7 @@ In particular, the following constraints on $\alpha_t$ and $\beta_t$ are suffici
 \end{align}
 where~\eqref{eq:11} is from the L-smoothness of $J(\vtheta)$ and \eqref{eq:12} is from the SVRPG update.
 {\color{blue} Inequality~\ref{eq:13} follows from Lemma~\ref{lemma:aux0} by noticing that $\nabla J(\vtheta^{s+1}_t)$ is a deterministic function given $\vtheta^{s+1}_t$. As a consequence we can directly apply Lemma~\ref{lemma:aux0} to lower-bound $\EVV[t|s]{\langle \nabla J(\vtheta^{s+1}_t, \blacktriangledown J(\vtheta^{s+1}_t \rangle}$ by $\norm[2]{\nabla J(\vtheta^{s+1}_t}^2 - f(\vtheta^{s+1}_t, \wt{\vtheta}^s)$.}
+\todopir{is \eqref{eq:11} true just for smooth functions? Does it require convexity/concavity? Ref?}
 
 
 Next we have:
