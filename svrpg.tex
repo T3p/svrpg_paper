@@ -405,6 +405,8 @@ For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of th
 In particular, the latter result suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance (at least asymptotically).
 Algorithm~\ref{alg:svrpg} presents the details of the SVRPG method for policy optimization.\footnote{Note that when $t=0$ we can avoid to sample trajectories and instead directly perform the policy update using the FG. For the sake of clarity, we have not explicitly differentiated this step from the standard update rule in Algorithm~\ref{alg:svrpg}.}
 
+\todopir{mention that even if for theoretical guarantees we should return a random solution, this is not a problem for us because we are evaluating the performance on-line. And is always improving}
+
 To use SVRPG in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$.
 Adaptive selection of these meta-parameters is also possible, and it is explored in Section~\ref{sec:stopping}.
 However, the next section will provide general converge guarantees for SVRPG.
