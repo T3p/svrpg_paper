@@ -575,6 +575,8 @@ It is worth to mention that, for practical reasons, the authors proposed to use 
 
 Concerning importance weighting techniques, RL has made wide use of them for off-policy problems~\citep[\eg][]{precup2000eligibility,thomas2015high}. However, as mentioned before, SVRPG cannot be compared to such methods since it is in all respects an on-policy algorithm. Here, importance weighting is just a statistical tool used to preserve the unbiasedness of the corrected gradient.
 
+\todopir{Maybe we can talk about variance reduction baselines}
+
 
 \section{Experiments}\label{sec:exp}
 In this section we address the performance evaluation of our policy gradient estimator defined in equation \ref{E:svrpg.estimate.batch} against that one of equation \ref{E:policygradient.estimate}. This comparison is performed using G(PO)MDP as estimator of $\score{\vtheta}{\tau}\Reward(\tau)$. For the sake of simplicity and with a little abuse of notation we refer to \ref{E:svrpg.estimate.batch} as SVRPG and to \ref{E:policygradient.estimate} as G(PO)MDP.
@@ -701,9 +703,9 @@ The G(PO)MDP off-policy estimator is defined as follows
         \nabla J(\pi^T) = \frac{1}{N} \sum_{n=1}^{N}
         \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(z_k^n)\right) \gamma^h \Reward(z_h^n) \omega(z_{0:h}|\pi^B,\pi^T)
 \]
-\todopir{Add proof of Def 2 from Luca's thesis}
+% \todopir{Add proof of Def 2 from Luca's thesis}
 
-\todopir{Make ref to Luca's thesis and describe in brief the derivations}
+% \todopir{Make ref to Luca's thesis and describe in brief the derivations}
 
 
 
@@ -1025,7 +1027,6 @@ Under Assumption \ref{ass:bounded_score}, for any function $\varphi(\vtheta_t^{s
 \leq
 \frac{1}{2N}\Vars{g(\cdot\vert\wt{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\varphi(\vtheta_t^{s+1})}^2}
 \end{align*}
-\todopir{I have to check this one!!!}
 \end{restatable}
 \begin{proof}
 \begin{align}
@@ -1046,6 +1047,8 @@ Under Assumption \ref{ass:bounded_score}, for any function $\varphi(\vtheta_t^{s
 	&\qquad+
 	\Covts[t-1]{\gradApp{\wt{\vtheta}^s}{N}}{\varphi(\vtheta_t^{s+1})} \label{eq:8}
 \end{align}
+where~\eqref{eq:6} is from Definition~\ref{def:ideal};~\eqref{eq:7} is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $\varphi(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$;~\eqref{eq:new1} is from the fact that $\gradJ{\wt{\vtheta}^s}$ is constant \wrt $\Vars{\cdot}$;~\eqref{eq:8} is from $\Ets{e_s}=0$.
+\todopir{In Eq~\ref{eq:7} the first expected value is on $t-1$? In any case even $t$ is fine.}
 Hence:
 \begin{align}
 	\left|\Ets{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}}
@@ -1054,7 +1057,7 @@ Hence:
 	\left|\Covts[t-1]{\gradApp{\wt{\vtheta}^s}{N}}{\varphi(\vtheta_t^{s+1})}\right|  
 	\nonumber\\
 	&\leq
-	\sqrt{\Vars{\gradApp{\wt{\vtheta}^s}{N}}}\circ\sqrt{\Varts[t-1]{\varphi(\vtheta_t^{s+1})}} \nonumber\\
+    \sqrt{\Vars{\gradApp{\wt{\vtheta}^s}{N}}} \cdot \sqrt{\Varts[t-1]{\varphi(\vtheta_t^{s+1})}} \label{eq:9a}\\
 	%
 	&\leq	
 	\frac{1}{2}\Vars{\gradApp{\wt{\vtheta}^s}{N}} +\frac{1}{2}\Varts[t-1]{\varphi(\vtheta_t^{s+1})}\label{eq:9}\\
@@ -1066,9 +1069,12 @@ Hence:
 	\frac{1}{2N}\Vars{g(\cdot\vert\wt{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\varphi(\vtheta_t^{s+1})}^2},
 	\nonumber
 \end{align}
-where (\ref{eq:6}) is from Definition \ref{def:ideal}; (\ref{eq:7}) is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $\varphi(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$; 
-(\ref{eq:new1}) is from the fact that $\gradJ{\wt{\vtheta}^s}$ is constant \wrt $\Vars{\cdot}$;
-(\ref{eq:8}) is from $\Ets{e_s}=0$; (\ref{eq:9}) is from Young's inequality; and (\ref{eq:10}) is from the definition of $\gradApp{\vtheta}{N}$.
+where~\eqref{eq:9a} comes from Cauchy-Schwarz inequality
+\[
+        |\Cov(X,Y)| = |\EVV[]{(X-\mu_X)\transpose{(Y-\mu_Y)}}| \leq \EVV[]{(X-\mu_X)^2}^{1/2}\EVV[]{(Y-\mu_Y)^2}^{1/2} = \sqrt{\Var(X) \Var(Y)},
+\]
+\eqref{eq:9} is from Young's inequality, and~\eqref{eq:10} is from the definition of $\gradApp{\vtheta}{N}$.
+\todopir{comment the last step.}
 \end{proof}
 
 %Lemma 1
@@ -1316,13 +1322,13 @@ It is noted in \cite{cortes2010learning} that, for any two Gaussian distribution
 
 We now briefly examine some generalizations of the simple Gaussian policy defined above that can be found in applications:
 
-\paragraph{Multi-dimensional actions}
-When actions are multi-dimensional, factored Gaussian policies are typically employed, so the results extends trivially from the one-dimensional case. Actual multi-variate Gaussian distributions would require more calculations, but we do not expect substantially different results.
+\paragraph{Multi-dimensional actions.}
+When actions are multi-dimensional, factored Gaussian policies are typically employed, so the results extend trivially from the one-dimensional case. Actual multi-variate Gaussian distributions would require more calculations, but we do not expect substantially different results.
 
-\paragraph{Non-linear mean}
+\paragraph{Non-linear mean.}
 In complex continuous tasks, $\mu(s)$ often represents a deep neural network, or multi-layer perceptron, where $\vtheta$ are the weights of the network. The analysis of first and second order log-derivatives in such a scenario is beyond the scope of this paper.
 
-\paragraph{Adaptive variance}
+\paragraph{Adaptive variance.}
 It is a common practice to learn also the variance of the policy in order to adapt the degree of exploration. The variance (or diagonal covariance matrix in the multi-dimensional case) can be learned as a separate parameter or be state-dependent like the mean. In any case, adaptive variance must be carefully employed since it can clearly undermine all the three assumptions of Theorem \ref{theo:convergence}.
 
 \section{Practical SVRPG versions}\label{app:practicalsvrpg}
