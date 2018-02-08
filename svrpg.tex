@@ -586,11 +586,7 @@ Concerning importance weighting techniques, RL has made wide use of them for off
 
 \section{Experiments}\label{sec:exp}
 In this section we address the performance evaluation of our policy gradient estimator defined in equation \ref{E:svrpg.estimate.batch} against that one of equation \ref{E:policygradient.estimate}. This comparison is performed using G(PO)MDP as estimator of $\score{\vtheta}{\tau}\Reward(\tau)$. For the sake of simplicity and with a little abuse of notation we refer to \ref{E:svrpg.estimate.batch} as SVRPG and to \ref{E:policygradient.estimate} as G(PO)MDP.
-In all the experiments we used gaussian policies and bootsrap confidence intervals $\alpha = 10\% $ over ten different runs for evaluation. Each run with a different policy initialization which is kept fixed when changing the algorithm. The maximum number of trajectories at hand is fixed for each task. 
-
-In order to pursue the above mentioned objectives, we evaluate the behavior of the reward function averaged on 10 runs for each experiment.
-
-We decide to use the following models of Rllab: \emph{Cart-Pole Balancing}, \emph{Mujoco Swimmer}, \emph{Mujoco Half Cheetah}.
+In all the experiments we used gaussian policies and bootsrap confidence intervals $\alpha = 10\% $ over ten different runs for evaluation. Each run with a different policy initialization which is kept fixed when changing the algorithm. The maximum number of trajectories at hand is fixed for each task. In \emph{figure} \ref{fig:swimmerone} we can see how SVRPG outperforms G(PO)MDP over the swimmer task. Clearly the mean is nearly always higher for our algorithm, moreover near the end we see that te confidence intervals are also disjoint. In \emph{figure} \ref{fig:swimmertwo} we addressed the comparison between SVRPG and its self-normalized version still for the swimmer task. We can see an inprovement on the average return, but the confidence intervals are never disjoint. In \emph{figure} \ref{fig:halfcheetah} the difference between our algorithm and G(PO)MDP over the half-cheetah task is not statistically significant (both of them use the same baseline even though is not optimal for SVRPG see \ref{} for further hints over this topic), however we can see a certain improvement on the mean of the objective function. Eventually in \emph{figure} \ref{fig:cartpole} we can clearly see that SVRPG outperforms GPOMDP in the cart-pole task.
 
 \begin{figure}[t]
     \includegraphics[width=0.5\textwidth]{swimmer_self_normalized_SVRPG_vs_GPOMDP}
