@@ -266,7 +266,7 @@ Although these techniques have been mainly derived for finite-sum problems, we w
 The next section has the aim to describe variance reduction techniques for finite-sum problems. In particular, we will present the SVRG algorithm that is at the core of this work.
 
 
-\subsection{Stochastic Variance-Reduced Gradient}
+\subsection{Stochastic Variance-Reduced Gradient}\label{sec:svrg}
 Finite-sum optimization is the problem of maximizing an objective function $f(\vtheta)$ which can be decomposed into the sum or average of a finite number of functions $z_i(\cdot|\vtheta)$:
 \begin{align*}
         \max_{\vtheta} \left\{ f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}z_i(\vtheta)\right\}.
@@ -504,6 +504,14 @@ The convergence guarantees presented in the previous section come with requireme
 Here we provide a practical and automatic way to choose the step size $\alpha$ and the number of sub-iterations $m$ performed between snapshots.
 Additionally, we provide variants of SVRPG exploiting variance-reduction techniques for importance weights. Despite lacking theoretical guarantees, we will show that these methods can outperform the baseline SVRPG (Algorithm~\ref{alg:svrpg}).
 
+\subsection{Zeroth update}
+As noted in Section \ref{sec:alg}, the update performed at the beginning of each epoch is equivalent to a full-gradient update. In our setting, where collecting samples is particularly expensive, the $B$ trajectories collected using the snapshot trajectory $\pi_{\tilde{\vtheta}^s}$ feel like a waste of data. In practice, we just perform an approximate full gradient update using the $N$ trajectories sampled to compute $\gradApp{\tilde{\vtheta}^s}{N}$, \ie
+\begin{align*}
+	&\vtheta_{1}^{s+1} = \tilde{\vtheta}^s + \alpha\gradApp{\tilde{\vtheta}^s}{N} \\
+	&\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha v_t^{s+1} \text{ for $t=1,\dots,m-1$}.
+\end{align*}
+In the rest of this section we assume this practical variant.
+
 \subsection{Meta-Parameter Selection}\label{sec:stopping}
 % In section \ref{sec:conv}, we introduced the practical need to properly choose $\alpha$ and $m$, which are, respectively, the step size and the number of sub-iterations to perform after a snapshot.
 % At this point, the open question is how to properly select the step size $\alpha$ and the sub-iteration number $m$ in practical applications.
@@ -519,10 +527,10 @@ Due to this feature, we would like to incorporate ADAM in the structure of the S
 Recall that SVRPG performs two different updates of the parameters $\vtheta$: I) FG update in the snapshot; II) corrected gradient update in the sub-iterations.
 Given this structure, we suggest to use two separate ADAM estimators:
 \begin{align*}
-        \vtheta^{s+1}_0 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\wh{\nabla}_N J(\wt{\vtheta}^s)\\
-        \vtheta^{s+1}_{t+1} &= \vtheta^{s+1}_t + \alpha^{\textsc{SI}}_{s,t} v_t^{s},
+        \vtheta^{s+1}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\wh{\nabla}_N J(\wt{\vtheta}^s)\\
+        \vtheta^{s+1}_{t+1} &= \vtheta^{s+1}_t + \alpha^{\textsc{SI}}_{s+1,t} v_t^{s+1} \text{ for $t=1,\dots,m-1$},
 \end{align*}
-where $\alpha^{\textsc{FG}}_{s}$ is associated to the snapshot and $\alpha^{\textsc{SI}}_{s,t}$ with the sub-iterations (see Appendix~\ref{app:practicalsvrpg} for details).
+where $\alpha^{\textsc{FG}}_{s}$ is associated to the snapshot and $\alpha^{\textsc{SI}}_{s+1,t}$ with the sub-iterations (see Appendix~\ref{app:practicalsvrpg} for details).
 By doing so, we decouple the contribution of the variance due to the approximate FG from the one introduced by the sub-iterations.
 Note that these two terms have different orders of magnitude since are estimated with a different number of trajectories ($B \ll N$) and w/o importance weights.
 The use of two ADAM estimators allows to capture and exploit this property.
