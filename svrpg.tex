@@ -336,7 +336,7 @@ However, a direct application of SVRG to RL is not possible due to the following
 \end{description}
 To deal with non-concavity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as truncated Gaussian and softmax~\citep[\eg][]{Furmston2012unifying,pirotta2015lipschitz}, see Appendix~\ref{app:gauss} for the derivation.
 Because of the infinite dataset, we can only rely on an estimate of the full gradient.
-\citet{harikandeh2015stopwasting} analysed this scenario under the assumptions of $z$ being \textcolor{red}{concave}, showing that SVRG is robust to an inexact computation of the full gradient. In particular, it is still possible to recover the original convergence rate if the error decreases at an appropriate rate. {\color{red}Later on we will show how the estimation accuracy impacts on the convergence results with non-concave objective.} 
+\citet{harikandeh2015stopwasting} analysed this scenario under the assumptions of $z$ being concave, showing that SVRG is robust to an inexact computation of the full gradient. In particular, it is still possible to recover the original convergence rate if the error decreases at an appropriate rate. {\color{red}Later on we will show how the estimation accuracy impacts on the convergence results with non-concave objective.} 
 Finally, the non-stationarity of the optimization problem introduces a bias into the SVRG estimator in Eq.~\eqref{E:svrg.gradient.correction}.
 To overcome this limitation we employ importance weighting~\citep[\eg][]{rubinstein1981simulation,precup2000eligibility} to correct the distribution shift.
 %Finally, we employ importance weighting~\citep[\eg]{rubinstein1981simulation,precup2000eligibility} to guarantee proper sampling of trajectories. 
@@ -372,8 +372,8 @@ This property will be used to prove Lemma~\ref{L:svrpg.properties}.
 %- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \wt{\vtheta})\Reward(\tau_i)\right].
 %\end{align*}
 The use of mini-batches is a common practice in SVRG since it can yield a performance improvement even in the supervised case~\citep{harikandeh2015stopwasting,konevcny2016mini}. It is easy to show that the SVRPG estimator has the following, desirable properties (see Appendix~\ref{app:proofs}):
-\begin{lemma}\label{L:svrpg.properties} \todopirout{extended to any unbiased estimator}
-        {\color{blue} Let $\wh{\nabla}_N J(\vtheta)$ be an unbiased estimator of~\eqref{E:policygradient} }
+\begin{lemma}\label{L:svrpg.properties}
+        Let $\wh{\nabla}_N J(\vtheta)$ be an unbiased estimator of~\eqref{E:policygradient}
 %Denote by $\wh{\nabla}_N^{\textsc{RF}} J(\vtheta)$ the REINFORCE estimator in~\eqref{E:policygradient.estimate} 
 and let $\vtheta^* \in \argmin_{\vtheta} \{J(\vtheta)\}$. Then, the SVRG estimate in~\eqref{E:svrpg.estimate.batch} is \emph{unbiased}
 \[
@@ -407,7 +407,7 @@ Algorithm~\ref{alg:svrpg} presents the details of the SVRPG method for policy op
 
 To use SVRPG in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$.
 Adaptive selection of these meta-parameters is also possible, and it is explored in Section~\ref{sec:stopping}.
-However, the next section will provide general converge guarantees for SVRPG \textcolor{red}{with REINFORCE estimator}.
+However, the next section will provide general converge guarantees for SVRPG.
 
 \begin{algorithm}[tb]
         \caption{SVRPG}
@@ -441,13 +441,13 @@ However, the next section will provide general converge guarantees for SVRPG \te
         \STATE $\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha v^{s+1}_t$
 		\ENDFOR
 		\ENDFOR
-        \STATE {\bfseries return} $\vtheta_t^{s+1}$ with $(s,t)$ picked uniformly at random from $\{[0,S-1]\times[0,m-1]\}$
+        \STATE {\bfseries return} $\vtheta_A\coloneqq\vtheta_t^{s+1}$ with $(s,t)$ picked uniformly at random from $\{[0,S-1]\times[0,m-1]\}$
 	\end{algorithmic}
 \end{algorithm}
 
 \section{Convergence Guarantees of SVRPG}\label{sec:conv}
-In this section, we state the convergence guarantees for SVRPG {\color{red}with REINFORCE estimator}.\footnote{\color{red}Similar results can be derived for G(PO)MDP, see Appendix~\ref{app:}.}
-We mainly leverage on the recent analysis of \textcolor{red}{non-concave} SVRG~\cite{reddi2016stochastic,allen2016variance}.
+In this section, we state the convergence guarantees for SVRPG with REINFORCE or G(PO)MDP gradient estimator.
+We mainly leverage on the recent analysis of non-concave SVRG~\cite{reddi2016stochastic,allen2016variance}.
 Each of the three challenges presented at the beginning of Section~\ref{sec:alg} can potentially prevent convergence, so we need additional assumptions.
 In Appendix~\ref{app:gauss} we show how the traditional Gaussian policy satisfies these assumptions.
 
@@ -482,8 +482,8 @@ Similarly to what done in SL~\citep{cortes2010learning}, we require the variance
 Differently from Assumptions~\ref{ass:bounded_score} and ~\ref{ass:REINFORCE}, Assumption~\ref{ass:M2} can be enforced by a proper handling of the epoch size $m$.
 
 We can now state the convergence guarantees for SVRPG.
-\begin{restatable}[Convergence of the {\color{red}REINFORCE-}SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
-{\color{red}Consider the REINFORCE estimator in Eq.~\eqref{E:policygradient.estimate}.}
+\begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
+Assume the REINFORCE or the G(PO)MDP gradient estimator is used in Equation $\ref{E:policygradient.estimate}$.
 Under Assumptions~\ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Algorithm~\ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size $\alpha$ and the epoch size $m$, the following property:
 \begin{align*}
 	&\EVV[]
@@ -498,17 +498,12 @@ where $\psi,\zeta,\xi$ depend only on $\GRADLOG,\HESSLOG,\VARRF,\VARIS,\alpha$ a
 % Specific constants and meta-parameter constraints are provided in the proof of the theorem in Appendix \ref{app:proofs}.
 Refer to Appendix~\ref{app:proofs} for a detailed proof involving the definition of the constants and the meta-parameter constraints.
 %The theoretical settings may be too conservative.
-By analysing the upper-bound in Theorem~\ref{theo:convergence} we observe that: I) the $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on \textcolor{red}{non-concave} SVRG~\citep[\eg][]{reddi2016stochastic}; II) the $\mathcal{O}(\nicefrac{1}{N})$ term is due to the FG approximation and is analogous to the one in~\citep{harikandeh2015stopwasting}; III) the $\mathcal{O}(\nicefrac{1}{B})$ term is due to importance weighting.
+By analysing the upper-bound in Theorem~\ref{theo:convergence} we observe that: I) the $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on non-concave SVRG~\citep[\eg][]{reddi2016stochastic}; II) the $\mathcal{O}(\nicefrac{1}{N})$ term is due to the FG approximation and is analogous to the one in~\citep{harikandeh2015stopwasting}; III) the $\mathcal{O}(\nicefrac{1}{B})$ term is due to importance weighting.
 To achieve true convergence, both the batch size $N$ and the mini-batch size $B$ should increase over time. 
 In practice, it is enough to choose $N$ and $B$ large enough to make the second and the third term negligible, \ie to mitigate the variance introduced by FG approximation and importance sampling, respectively.
 Once the last two terms can be neglected, the number of trajectories needed to achieve $\norm[2]{\gradJ{\vtheta}}^2\leq\epsilon$ is $O(\frac{B+\nicefrac{N}{m}}{\epsilon})$. In this sense, advantage over batch gradient ascent can be achieved with properly selected meta-parameters. In Section~\ref{sec:stopping} we propose a joint selection of step size $\alpha$ and epoch size $m$.
 Finally, from the return statement of Algorithm \ref{alg:svrpg}, it is worth noting that $J(\vtheta_A)$ can be seen as the average performance of all the policies tried by the algorithm. This is particularly meaningful in the context of online learning that we are considering in this paper.
 
-{\color{red}
-\textbf{G(PO)MDP.} A similar result to the one stated in Thm~\ref{theo:convergence} can be derived for the G(PO)MDP estimator. A sketch of the proof is reported in~\ref{app:gpomdpproof}.
-In practice, due to the lower variance G(PO)MDP is preferred to REINFORCE.
-For this reason, we will use G(PO)MDP for the experiments (see Sec.~\ref{sec:exp}).
-\todopir{sketch of proof for GPOMDP in appendix, probably can be unified with the one of REINFORCE}}
 
 \section{Remarks on SVRPG}
 The convergence guarantees presented in the previous section come with requirements on the meta-parameters (\ie $\alpha$ and $m$) that may be too conservative for practical applications.
@@ -1100,7 +1095,7 @@ where $L=\max\left\{L1,L2\right\}$, \ie the greater of the Lipschitz constants f
 
 In particular, the following constraints on $\alpha_t$ and $\beta_t$ are sufficient:
 \begin{align*}
-&0\leq\alpha_t < \frac{2(1-\nicefrac{2c_{t+1}}{\beta_t})}{L+2c_{t+1}} \\
+&0\leq\alpha_t < \frac{1-\nicefrac{2c_{t+1}}{\beta_t}}{L+2c_{t+1}} \\
 &\beta_t > 2c_{t+1}.
 \end{align*}
 \end{restatable}
