@@ -402,6 +402,7 @@ For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of th
 %	\mathbb{V}ar\left[\gradApp{\vtheta^*}{N}\right].
 %\]
 %\end{restatable}
+Previous results hold both for REINFORCE and G(PO)MDP.
 In particular, the latter result suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance (at least asymptotically).
 Algorithm~\ref{alg:svrpg} presents the details of the SVRPG method for policy optimization.\footnote{Note that when $t=0$ we can avoid to sample trajectories and instead directly perform the policy update using the FG. For the sake of clarity, we have not explicitly differentiated this step from the standard update rule in Algorithm~\ref{alg:svrpg}.}
 
@@ -485,7 +486,7 @@ Differently from Assumptions~\ref{ass:bounded_score} and ~\ref{ass:REINFORCE}, A
 
 We can now state the convergence guarantees for SVRPG.
 \begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
-Assume the REINFORCE or the G(PO)MDP gradient estimator is used in Equation $\ref{E:policygradient.estimate}$.
+Assume the REINFORCE or the G(PO)MDP gradient estimator is used in SVRPG (see Equation~\eqref{E:svrpg.estimate.batch}).
 Under Assumptions~\ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Algorithm~\ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size $\alpha$ and the epoch size $m$, the following property:
 \begin{align*}
 	&\EVV[]
