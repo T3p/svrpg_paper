@@ -1026,7 +1026,7 @@ where (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}
 Under Assumption \ref{ass:bounded_score}, for any function $\varphi(\vtheta_t^{s+1})$ which is deterministic for a fixed $\vtheta_t^{s+1}$:
 \begin{align*}
 \left|\Ets[t]{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}}
--\Ets[t-1]{\dotprod{\gradJ{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}}
+-\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}}
 \right|
 \leq
 \frac{1}{2N}\Vars{g(\cdot\vert\wt{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\varphi(\vtheta_t^{s+1})}^2}
@@ -1039,19 +1039,19 @@ Under Assumption \ref{ass:bounded_score}, for any function $\varphi(\vtheta_t^{s
 	\Ets{\dotprod{\gradIdeal{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}} +
 	\Ets[t-1]{\dotprod{e_s}{\varphi(\vtheta_t^{s+1})}} \label{eq:6}\\
 	&=
-	\Ets[t-1]{\dotprod{\gradJ{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}} +
+	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}} +
 	\Ets[t-1]{\dotprod{e_s}{\varphi(\vtheta_t^{s+1})}} \label{eq:7}\\
 	&=
-	\Ets[t-1]{\dotprod{\gradJ{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}} \nonumber\\
+	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}} \nonumber\\
 	&\qquad+
-	\dotprod{\Ets[t-1]{e_s}}{\Ets[t-1]{\varphi(\vtheta_t^{s+1})}}
+	\dotprod{\Ets{e_s}}{\Ets{\varphi(\vtheta_t^{s+1})}}
 	+\Covts[t-1]{\gradApp{\wt{\vtheta}^s}{N}}{\varphi(\vtheta_t^{s+1})}  \label{eq:new1}\\
 	&= 
-	\Ets[t-1]{\dotprod{\gradJ{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}} \nonumber\\
+	\Ets{\dotprod{\gradJ{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}} \nonumber\\
 	&\qquad+
 	\Covts[t-1]{\gradApp{\wt{\vtheta}^s}{N}}{\varphi(\vtheta_t^{s+1})} \label{eq:8}
 \end{align}
-where~\eqref{eq:6} is from Definition~\ref{def:ideal};~\eqref{eq:7} is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $\varphi(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$;~\eqref{eq:new1} is from the fact that $\gradJ{\wt{\vtheta}^s}$ is constant \wrt $\Vars{\cdot}$;~\eqref{eq:8} is from $\Ets[\cdot]{e_s}=0$.
+where~\eqref{eq:6} is from Definition~\ref{def:ideal};~\eqref{eq:7} is from the fact that $\gradIdeal{\vtheta_t^{s+1}}$ is both unbiased and independent from $\varphi(\vtheta_t^{s+1})$ \wrt the sampling at time $t$ alone, which is not true for $\gradBlack{\vtheta_t^{s+1}}$;~\eqref{eq:new1} is from the fact that $\gradJ{\wt{\vtheta}^s}$ is constant \wrt $\Vars{\cdot}$;~\eqref{eq:8} is from $\Ets{e_s}=0$.
 Hence:
 \begin{align}
 	\left|\Ets{\dotprod{\gradBlack{\vtheta_t^{s+1}}}{\varphi(\vtheta_t^{s+1})}}
