@@ -643,19 +643,19 @@ Finally, we have empirically shown that practical variants of the theoretical SV
 \section{Policy Gradient Estimators} \label{A:gradient_estimators}
 We present a brief overview of two most widespread gradient estimators (REINFORCE~\citep{williams1992simple} and G(PO)MDP~\citep{baxter2001infinite}) both in on-policy and off-policy settings.
 Let $\tau = \{\langle s_t,a_t \rangle\}_{t=0}^{H}= \{z_t\}_{t=0}^{H} = z_{0:H}$ is a $(H+1)$-steps trajectory.
-Given that $\tau$ depends on the MDP $M=\{\mathcal{S},\mathcal{A}, p, r, \gamma, \rho\}$ and the actual policy $\pi$, the trajectory is
-said drawn from density distribution $\Delta(\tau|\pi,M)$ defined as:
+Given that $\tau$ depends on the MDP $M=\{\mathcal{S},\mathcal{A}, \mathcal{P}, \Reward, \gamma, \rho\}$ and the actual policy $\pi$, the trajectory is
+said drawn from density distribution $p(\tau|\pi,M)$ defined as:
 \[
-        \Delta(\tau|\pi,M) = \rho(s_0) \pi(z_0) \prod_{k=1}^{H} p(s_k|z_{k-1})\pi(z_k).
+        p(\tau|\pi,M) = \rho(s_0) \pi(z_0) \prod_{k=1}^{H} \mathcal{P}(s_k|z_{k-1})\pi(z_k).
 \]
 We can now recall the definition of policy performance 
 \[
-        J(\pol) = \EVV[\tau \sim \Delta(\cdot|\pol)]{\Reward(\tau)|M},
+        J(\pol) = \EVV[\tau \sim p(\cdot|\pol)]{\Reward(\tau)|M},
 \]
-where $\Reward(\tau) = \sum_{t=0}^{H}\gamma^t r(z_t)$.
+where $\Reward(\tau) = \sum_{t=0}^{H}\gamma^t \Reward(z_t)$.
 The policy gradient $\nabla J(\vtheta)$ is
 \begin{equation}\label{E:onpolicygradient}
-        \gradJ{\vtheta} = \EVV[\tau \sim \Delta(\cdot|\pol)]{\nabla \log\Delta(\tau|\vtheta)\Reward(\tau)} = \EVV[\tau \sim \Delta(\cdot|\pol)]{\sum_{j=0}^{H} \gamma^j \mathcal{R}(z_j) \sum_{i=0}^{H} \nabla \log\pi(z_i)}.
+        \gradJ{\vtheta} = \EVV[\tau \sim p(\cdot|\pol)]{\nabla \log\Delta(\tau|\vtheta)\Reward(\tau)} = \EVV[\tau \sim p(\cdot|\pol)]{\sum_{j=0}^{H} \gamma^j \mathcal{R}(z_j) \sum_{i=0}^{H} \nabla \log\pi(z_i)}.
 \end{equation}
 
 \textbf{On-policy setting.}
@@ -664,8 +664,8 @@ The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, u
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}
 \underbracket{
-\left(\sum_{h=0}^{H}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\sum_{h=0}^{H}\gamma^h r(s_h^n,a_h^n) - b\right)
-}_{g(\tau_n|\vtheta):=\nabla \log\Delta(\tau_n|\vtheta)\Reward(\tau_n)}
+        \left(\sum_{h=0}^{H}\nabla \log \pol(a_h^n\vert s_h^n) \right)\left(\sum_{h=0}^{H}\gamma^h \Reward(s_h^n,a_h^n) - b\right)
+}_{g(\tau_n|\vtheta):=\nabla \log p(\tau_n|\vtheta)\Reward(\tau_n)}
 ,
 \end{align*}
 where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and b can be any baseline provided $\EVV[a \sim \pol]{b(s,a)} = 0$, for any $s\in\Sspace$.\todopir{check definition of baseline}
@@ -673,7 +673,7 @@ The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REI
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}
 \underbracket{
-\sum_{h=0}^{H}\left(\sum_{k=0}^{h}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\gamma^h r(s_h^n,a_h^n) - b\right)
+        \sum_{h=0}^{H}\left(\sum_{k=0}^{h} \nabla \log \pol (a_h^n\vert s_h^n) \right)\left(\gamma^h \Reward(s_h^n,a_h^n) - b\right)
 }_{g(\tau_n|\vtheta)}.
 \end{align*}
 G(PO)MDP can be seen as a more efficient implementation
@@ -689,27 +689,27 @@ The first is used to select actions for the interaction with the system, while t
 Suppose now that we aim to estimate the performance of the target policy $\pi^T$ but we have samples collected using policy $\pi^B$.
 We can use importance weight correction to correct the shift in the distribution and obtain an unbiased estimate of $J(\pi^T)$:
 \[
-        J(\pi^T) = \EVV[\tau \sim \Delta(\cdot|\pi^T)]{\mathcal{R}(\tau)} = \EVV[\tau \sim \Delta(\cdot|\pi^B)]{\omega(\tau) \mathcal{R}(\tau)}
+        J(\pi^T) = \EVV[\tau \sim p(\cdot|\pi^T)]{\mathcal{R}(\tau)} = \EVV[\tau \sim p(\cdot|\pi^B)]{\omega(\tau) \mathcal{R}(\tau)}
 \]
-where $\omega(\tau|\pi^B,\pi^T) = \frac{\Delta(\tau,\pi^T)}{\Delta(\tau|\pi^B)} = \omega(z_{0:H}|\pi^B,\pi^T) = \prod_{w=0}^{H} \omega(z_w|\pi^B,\pi^T)$ and $\omega(z_w|\pi^B,\pi^T) = \frac{\pi^T(a_w|s_w)}{\pi^B(a_w|s_w)}$
+where $\omega(\tau|\pi^B,\pi^T) = \frac{p(\tau,\pi^T)}{p(\tau|\pi^B)} = \omega(z_{0:H}|\pi^B,\pi^T) = \prod_{w=0}^{H} \omega(z_w|\pi^B,\pi^T)$ and $\omega(z_w|\pi^B,\pi^T) = \frac{\pi^T(a_w|s_w)}{\pi^B(a_w|s_w)}$
 
 The definition of the off-policy version of~\eqref{E:onpolicygradient} is~\citep[\eg][]{jurvcivcek2012reinforcement}
 \begin{equation}\label{E:offpolicygradient}
-        \nabla J(\pi^T) = \EVV[\tau \sim \Delta(\cdot|\pi^B)]{\omega(\tau|\pi^B,\pi^T) \nabla \log \Delta(\tau|\pi^T) \mathcal{R}(\tau)} = \EVV[\tau \sim \Delta(\cdot|\pi^B)]{\omega(\tau|\pi^B,\pi^T) g(\tau|\pi^T)}. 
+        \nabla J(\pi^T) = \EVV[\tau \sim p(\cdot|\pi^B)]{\omega(\tau|\pi^B,\pi^T) \nabla \log p(\tau|\pi^T) \mathcal{R}(\tau)} = \EVV[\tau \sim p(\cdot|\pi^B)]{\omega(\tau|\pi^B,\pi^T) g(\tau|\pi^T)}. 
 \end{equation}
-For $\omega(\tau)$ being well defined the behavioural policy should have non-zero probability of selecting any action in every state \ie $\pi^B(a|s) > 0$ for any $(s,a)\in \mathcal{S} \times \mathcal{A}$.
+For $\omega(\tau|\pi^B,\pi^T)$ being well defined the behavioural policy should have non-zero probability of selecting any action in every state \ie $\pi^B(a|s) > 0$ for any $(s,a)\in \mathcal{S} \times \mathcal{A}$.
 Equation~\ref{E:offpolicygradient} is important for proving Theorem~\ref{theo:convergence} since it provides a common representation of REINFORCE and G(PO)MDP.
 
 The off-policy version of REINFORCE is easily obtained by taking the empirical average of~\eqref{E:offpolicygradient}:
 \[
-        \nabla J(\pi^T) = \frac{1}{N} \sum_{n=1}^{N} \omega(\tau^n)
-        \left(\sum_{h=0}^{H}\score{\vtheta}{a_h^n\vert s_h^n}\right)\left(\sum_{h=0}^{H}\gamma^h r(s_h^n,a_h^n)\right).
+        \nabla J(\pi^T) = \frac{1}{N} \sum_{n=1}^{N} \omega(\tau^n|\pi^B, \pi^T)
+        \left(\sum_{h=0}^{H} \nabla \log \pi^{T}(a_h^n\vert s_h^n) \right)\left(\sum_{h=0}^{H}\gamma^h \Reward(s_h^n,a_h^n)\right).
 \]
 
 The G(PO)MDP off-policy estimator is defined as follows
 \[
         \nabla J(\pi^T) = \frac{1}{N} \sum_{n=1}^{N}
-        \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(z_k)\right) \gamma^h r(z_h^n) \omega(z_{0:h})
+        \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(z_k^n)\right) \gamma^h \Reward(z_h^n) \omega(z_{0:h}|\pi^B,\pi^T)
 \]
 \todopir{Add proof of Def 2 from Luca's thesis}
 
@@ -1120,7 +1120,7 @@ In particular, the following constraints on $\alpha_t$ and $\beta_t$ are suffici
 	\frac{\alpha_t}{2N}\Vars{g(\cdot\vert\wt{\vtheta}^s)} -\frac{\alpha_t}{2}\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}, \label{eq:13}
 \end{align}
 where~\eqref{eq:11} is from the L-smoothness of $J(\vtheta)$ and \eqref{eq:12} is from the SVRPG update.
-{\color{blue} Inequality~\ref{eq:13} follows from Lemma~\ref{lemma:aux0} by noticing that $\nabla J(\vtheta^{s+1}_t)$ is a deterministic function given $\vtheta^{s+1}_t$. As a consequence we can directly apply Lemma~\ref{lemma:aux0} to lower-bound $\EVV[t|s]{\langle \nabla J(\vtheta^{s+1}_t, \blacktriangledown J(\vtheta^{s+1}_t \rangle}$ by $\norm[2]{\nabla J(\vtheta^{s+1}_t}^2 - f(\vtheta^{s+1}_t, \wt{\vtheta}^s)$.}
+{\color{blue} Inequality~\ref{eq:13} follows from Lemma~\ref{lemma:aux0} by noticing that $\nabla J(\vtheta^{s+1}_t)$ is a deterministic function given $\vtheta^{s+1}_t$. As a consequence we can directly apply Lemma~\ref{lemma:aux0} to lower-bound $\EVV[t|s]{\langle \nabla J(\vtheta^{s+1}_t), \blacktriangledown J(\vtheta^{s+1}_t) \rangle}$ by $\norm[2]{\nabla J(\vtheta^{s+1}_t}^2 - f(\vtheta^{s+1}_t, \wt{\vtheta}^s)$.}
 \todopir{is \eqref{eq:11} true just for smooth functions? Does it require convexity/concavity? Ref?}
 
 
