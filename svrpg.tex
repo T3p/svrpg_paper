@@ -402,8 +402,11 @@ As for claim (\ref{eq:zerovar}), note that as $\vtheta\to\vtheta^*$, also $\wt{\
 \end{align*}
 Note that it is important that the trajectories used in the second and the third term are the same for the variance to vanish.
 \end{proof}
+Previous results hold for both REINFORCE and G(PO)MDP.
 In particular, the latter result suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance (at least asymptotically).
 Algorithm~\ref{alg:svrpg} presents the details of the SVRPG method for policy optimization.\footnote{Note that when $t=0$ we can avoid to sample trajectories and instead directly perform the policy update using the FG. For the sake of clarity, we have not explicitly differentiated this step from the standard update rule in Algorithm~\ref{alg:svrpg}.}
+
+\todopir{mention that even if for theoretical guarantees we should return a random solution, this is not a problem for us because we are evaluating the performance on-line. And is always improving}
 
 To use SVRPG in practice, a number of additional details must be specified, namely the choice of epoch size $m$, the number $N$ of trajectories used to estimate the full gradient, the mini-batch size $B$, and the step size $\alpha$.
 Adaptive selection of these meta-parameters is also possible, and it is explored in Section~\ref{sec:stopping}.
@@ -483,7 +486,7 @@ Differently from Assumptions~\ref{ass:bounded_score} and ~\ref{ass:REINFORCE}, A
 
 We can now state the convergence guarantees for SVRPG.
 \begin{restatable}[Convergence of the SVRPG algorithm]{theorem}{convergence}\label{theo:convergence}
-Assume the REINFORCE or the G(PO)MDP gradient estimator is used in Equation $\ref{E:policygradient.estimate}$.
+Assume the REINFORCE or the G(PO)MDP gradient estimator is used in SVRPG (see Equation~\eqref{E:svrpg.estimate.batch}).
 Under Assumptions~\ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2}, the parameter vector $\vtheta_A$ returned by Algorithm~\ref{alg:svrpg} after $T=m\times S$ iterations has, for some positive constants $\psi,\zeta, \xi$ and for proper choice of the step size $\alpha$ and the epoch size $m$, the following property:
 \begin{align*}
 	&\EVV[]
@@ -1083,7 +1086,7 @@ Under Assumptions \ref{ass:bounded_score} ans \ref{ass:M2}, the expected squared
 	where
 \begin{align*}
 	&R_t^{s+1}\coloneqq \Ets[t-1]{J(\vtheta_t^{s+1}) - c_t\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}^2}, \\
-	&c_{m-1} = 0, \\
+	&c_{m} = 0, \\
 	&c_t = c_{t+1}\left(1+\alpha_t\beta_t+\alpha_t+\frac{\alpha_t^2L^2}{B}\right)+\frac{\alpha_t^2L^3}{2B}, \\
 	&\Psi_t = \alpha_t\left(\frac{1}{2}-\frac{c_{t+1}}{\beta_t}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right), \\
 	&d_t = \frac{\alpha_t}{2}\left(1+2c_{t+1}+\alpha_tL+2\alpha_tc_{t+1}\right), \\
@@ -1221,8 +1224,7 @@ Starting from Lemma \ref{lemma:aux1}, summing over iterations of an epoch $s$ an
  \frac{\sum_{t=0}^{m-1}\left(R_{t+1}^{s+1} - R_t^{s+1}\right)}{\psi} + \frac{m\zeta}{N} + \frac{m\xi}{B} \nonumber\\
  & = \frac{R^{s+1}_m - R^{s+1}_0}{\psi}  + \frac{m\zeta}{N} + \frac{m\xi}{B}
 \end{align*}
-By using the definition of $R^s_t$ in~\eqref{E:lyapunov.function}, the fact that $c_m = 0$ and $\vtheta^{s+1}_0 = \wt{\vtheta}^s = \vtheta^s_m$, we can state that
-\todopir{Why $c_m =0$? In the previous theorem  was $c_{m-1} = 0$}
+By using the definition of $R^s_t$ in~\eqref{E:lyapunov.function}, the fact that $c_m = 0$ and $\vtheta^{s+1}_0 = \wt{\vtheta}^s = \vtheta^s_m$, we can state that:
 \begin{align*}
         R^{s+1}_m - R^{s+1}_0 
         &= \EVV[m|s]{J(\vtheta^{s+1}_{m})- c_m \norm[]{\vtheta^{s+1}_{m} - \wt{\vtheta}^s}^2 } - \EVV[0|s]{J(\vtheta^{s+1}_{0}) - c_0 \norm[]{\vtheta^{s+1}_0 - \wt{\vtheta}^s}^2}\\
@@ -1342,6 +1344,7 @@ It is a common practice to learn also the variance of the policy in order to ada
  \label{A:adam}
  Adam}
 \end{algorithm}
+\todopir{Explain how we use adam and when/if it is reset on snapshots}
 
 \section{Experimental Details}\label{app:exp}
 Setting specifications for all the used environments:
