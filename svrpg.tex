@@ -1083,13 +1083,13 @@ where (\ref{eq:6}) is from Definition \ref{def:ideal}; (\ref{eq:7}) is from the 
 \begin{restatable}[]{lemma}{auxone}\label{lemma:aux1}
 Under Assumptions \ref{ass:bounded_score} ans \ref{ass:M2}, the expected squared norm of the true gradient $\gradJ{\vtheta_t^{s+1}}$, for appropriate choices of $\alpha_t\geq0$ and $\beta_t>0$, can be bounded as follows:
 \[
-	\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \leq
+	\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \leq
 	\frac{R_{t+1}^{s+1} - R_t^{s+1}}{\Psi_t} + \frac{d_tV}{N\Psi_t}
 	+\frac{f_tW}{B\Psi_t},
 \]
 	where
 \begin{align*}
-	&R_t^{s+1}\coloneqq \Ets{J(\vtheta_t^{s+1}) - c_t\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}^2}, \\
+	&R_t^{s+1}\coloneqq \Ets[t-1]{J(\vtheta_t^{s+1}) - c_t\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}^2}, \\
 	&c_{m-1} = 0, \\
 	&c_t = c_{t+1}\left(1+\alpha_t\beta_t+\alpha_t+\frac{\alpha_t^2L^2}{B}\right)+\frac{\alpha_t^2L^3}{2B}, \\
 	&\Psi_t = \alpha_t\left(\frac{1}{2}-\frac{c_{t+1}}{\beta_t}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right), \\
@@ -1115,10 +1115,8 @@ In particular, the following constraints on $\alpha_t$ and $\beta_t$ are suffici
 	&\qquad-
 	\frac{\alpha_t}{2N}\Vars{g(\cdot\vert\wt{\vtheta}^s)} -\frac{\alpha_t}{2}\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}, \label{eq:13}
 \end{align}
-where~\eqref{eq:11} is from the L-smoothness of $J(\vtheta)$ and \eqref{eq:12} is from the SVRPG update.
-{\color{blue} Inequality~\ref{eq:13} follows from Lemma~\ref{lemma:aux0} by noticing that $\nabla J(\vtheta^{s+1}_t)$ is a deterministic function given $\vtheta^{s+1}_t$. As a consequence we can directly apply Lemma~\ref{lemma:aux0} to lower-bound $\EVV[t|s]{\langle \nabla J(\vtheta^{s+1}_t), \blacktriangledown J(\vtheta^{s+1}_t) \rangle}$ by $\norm[2]{\nabla J(\vtheta^{s+1}_t}^2 - f(\vtheta^{s+1}_t, \wt{\vtheta}^s)$.}
-\todopir{is \eqref{eq:11} true just for smooth functions? Does it require convexity/concavity? Ref?}
-
+where~\eqref{eq:11} is from the L-smoothness of $J(\vtheta)$ \cite{nesterov2013introductory} and \eqref{eq:12} is from the SVRPG update.
+Inequality~\ref{eq:13} follows from Lemma~\ref{lemma:aux0} by noticing that $\nabla J(\vtheta^{s+1}_t)$ is a deterministic function given $\vtheta^{s+1}_t$. As a consequence, we can directly apply Lemma~\ref{lemma:aux0} with $\vphi(\vtheta_t^{s+1})\coloneqq\gradJ{\vtheta_t^{s+1}}$.
 
 Next we have:
 \begingroup
@@ -1133,23 +1131,23 @@ Next we have:
 \frac{\alpha_t}{N}\Vars{g(\cdot\vert\wt{\vtheta}^s)} +\alpha_t\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}^2} \label{eq:15}\\
 %
 &\leq \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}^2}
-+2\alpha_t\Ets{\left|\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_t^{s+1}-\wt{\vtheta}^s}\right|} \nonumber\\ 
++2\alpha_t\Ets[t-1]{\left|\dotprod{\gradJ{\vtheta_t^{s+1}}}{\vtheta_t^{s+1}-\wt{\vtheta}^s}\right|} \nonumber\\ 
 &\qquad+
 \frac{\alpha_t}{N}\Vars{g(\cdot\vert\wt{\vtheta}^s)} +\alpha_t\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}^2} \nonumber\\
 %
 &\leq \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}^2}
-+2\alpha_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}} \nonumber\\ 
++2\alpha_t\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}} \nonumber\\ 
 &\qquad+
 \frac{\alpha_t}{N}\Vars{g(\cdot\vert\wt{\vtheta}^s)} +\alpha_t\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}^2} \nonumber\\
 %
 &\leq \Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}^2}
-+2\alpha_t\Ets{\frac{1}{2\beta_t}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2+\frac{\beta_t}{2}\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}^2} \label{eq:16a}\\ 
++2\alpha_t\Ets[t-1]{\frac{1}{2\beta_t}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2+\frac{\beta_t}{2}\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}^2} \label{eq:16a}\\ 
 &\qquad
 +\frac{\alpha_t}{N}\Vars{g(\cdot\vert\wt{\vtheta}^s)} +\alpha_t\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\wt{\vtheta}^s}^2}, \label{eq:16}
 \end{align}
 \endgroup
-where~\eqref{eq:14a} is obtained using the triangular inequality,~\eqref{eq:14} is from the SVRPG update,~\eqref{eq:15} is from Lemma~\ref{lemma:aux0},~\eqref{eq:16a} is from Cauchy-Schwarz inequality, and~\eqref{eq:16} is from Young's inequality in the `Peter-Paul' variant.
-Let's us consider the following function:
+where~\eqref{eq:14a} is obtained using the triangular inequality,~\eqref{eq:14} is from the SVRPG update,~\eqref{eq:15} is from Lemma~\ref{lemma:aux0} with $\vphi(\vtheta_t^{s+1})\coloneqq\vtheta_t^{s+1}-\tilde{\vtheta}^s$,~\eqref{eq:16a} is from Cauchy-Schwarz inequality, and~\eqref{eq:16} is from Young's inequality in the `Peter-Paul' variant.
+Let us consider the following function:
 \[
 	R_{t+1}^{s+1} \coloneqq \Ets{J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2}. 
 \]
@@ -1158,9 +1156,6 @@ The objective is now to provide a lower bound to it.
 \allowdisplaybreaks
 \begin{align}
 	R_{t+1}^{s+1} 
-    % &= \Ets{J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\
-	%
-	%&\geq	\Ets{J(\vtheta_t^{s+1})+\frac{\alpha_t}{2}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\geq	\Ets{J(\vtheta_t^{s+1}) - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2}
     + \EVV[t-1|s]{\frac{\alpha_t}{2}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
     \nonumber\\
@@ -1168,46 +1163,47 @@ The objective is now to provide a lower bound to it.
 	\frac{\alpha_t}{2N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	-c_{t+1}\Ets{\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:17}\\
 	%
-	&\geq \Ets{J(\vtheta_t^{s+1})+\frac{\alpha_t}{2}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} 
+	&\geq \Ets{J(\vtheta_t^{s+1}) - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} 
+	+ \Ets[t-1]{\frac{\alpha_t}{2}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 }
 	-\frac{\alpha_t}{2N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
 	&\qquad -c_{t+1}\Ets{\alpha_t^2\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2+\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	\nonumber\\
-	&\qquad-2c_{t+1}\alpha_t\Ets{\frac{1}{2\beta_t}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2+\frac{\beta_t}{2}\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\ 
+	&\qquad-2c_{t+1}\alpha_t\Ets[t-1]{\frac{1}{2\beta_t}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2+\frac{\beta_t}{2}\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\ 
 	&\qquad
 	-c_{t+1}\frac{\alpha_t}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)} -c_{t+1}\alpha_t\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:18}\\
 	%
-	&= \Ets{J(\vtheta_t^{s+1})} - c_{t+1}\left(1+\alpha_t\beta_t+\alpha_t\right)\Ets{\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
+	&= \Ets[t-1]{J(\vtheta_t^{s+1})} - c_{t+1}\left(1+\alpha_t\beta_t+\alpha_t\right)\Ets[t-1]{\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
 	&\qquad-\alpha_t^2\left(\frac{L}{2}+c_{t+1}\right)\Ets{\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2}
-	+\frac{\alpha_t}{2}\left(1-\frac{2c_{t+1}}{\beta_t}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
+	+\frac{\alpha_t}{2}\left(1-\frac{2c_{t+1}}{\beta_t}\right)\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}\right)\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
 	%
-	&\geq  \Ets{J(\vtheta_t^{s+1})} - c_{t+1}\left(1+\alpha_t\beta_t+\alpha_t\right)\Ets{\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
+	&\geq  \Ets[t-1]{J(\vtheta_t^{s+1})} - c_{t+1}\left(1+\alpha_t\beta_t+\alpha_t\right)\Ets[t-1]{\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
 	&\qquad
 	-\alpha_t^2\left(\frac{L}{2}+c_{t+1}\right)\left(\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	\right.\nonumber\\
 	&\left.\qquad+\frac{L^2}{B}\Ets[t-1]{\norm[]{\vtheta_t^{s+1}-\tilde{\vtheta}^s}^2}
 	+\frac{\Gamma W}{B}\right)
-	+\frac{\alpha_t}{2}\left(1-2\frac{c_{t+1}}{\beta_t}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
+	+\frac{\alpha_t}{2}\left(1-2\frac{c_{t+1}}{\beta_t}\right)\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}\right)\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \label{eq:19}\\
 	%
-	& = \Ets{J(\vtheta_t^{s+1}) - \left(c_{t+1}\left(1+\alpha_t\beta_t+\alpha_t+\frac{\alpha_t^2L^2}{B}\right)+\frac{\alpha_t^2L^3}{2B}\right)\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
+	& = \Ets[t-1]{J(\vtheta_t^{s+1}) - \left(c_{t+1}\left(1+\alpha_t\beta_t+\alpha_t+\frac{\alpha_t^2L^2}{B}\right)+\frac{\alpha_t^2L^3}{2B}\right)\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
 	&\qquad
-	+\alpha_t\left(\frac{1}{2}-\frac{c_{t+1}}{\beta_t}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
+	+\alpha_t\left(\frac{1}{2}-\frac{c_{t+1}}{\beta_t}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right)\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
 	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}+\alpha_tL+2\alpha_tc_{t+1}\right)\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
 	&\qquad-\alpha_t^2\frac{(L+2c_{t+1})\Gamma\VARIS}{2B} \nonumber\\
 	%
 	&= R_t^{s+1}
-	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
+	+\Psi_t\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
 	-\frac{d_t}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	-\frac{f_t}{b}\VARIS,\nonumber\\
 	&\geq R_t^{s+1}
-	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
+	+\Psi_t\Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
 	-\frac{d_t}{N}\VARRF
 	-\frac{f_t}{b}\VARIS, \label{eq:20}
 \end{align}
 \endgroup
-where~\eqref{eq:17} is from~\eqref{eq:13} noticing that $\EVV[t|s]{\norm[]{\nabla J(\vtheta^{s+1}_t)}^2} = \EVV[t|s]{\norm[]{\nabla J(\vtheta^{s+1}_t)}^2}$,~\eqref{eq:18} is from~\eqref{eq:16},~\eqref{eq:19} is from Lemma~\ref{lemma:aux2}, and (\ref{eq:20}) is from Assumption \ref{ass:REINFORCE}.
+where~\eqref{eq:17} is from~\eqref{eq:13} noticing that $\EVV[t|s]{\norm[]{\nabla J(\vtheta^{s+1}_t)}^2} = \EVV[t-1|s]{\norm[]{\nabla J(\vtheta^{s+1}_t)}^2}$,~\eqref{eq:18} is from~\eqref{eq:16},~\eqref{eq:19} is from Lemma~\ref{lemma:aux2}, and (\ref{eq:20}) is from Assumption \ref{ass:REINFORCE}.
 To complete the proof, besides rearranging terms, we have to ensure that $\Psi_t>0$ for each $t$. This gives the constraints on $\alpha_t$ and $\beta_t$.
 \end{proof}
 
