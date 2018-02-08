@@ -1160,7 +1160,10 @@ The objective is now to provide a lower bound to it.
 	R_{t+1}^{s+1} 
     % &= \Ets{J(\vtheta_{t+1}^{s+1}) - c_{t+1}\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} \nonumber\\
 	%
-	&\geq	\Ets{J(\vtheta_t^{s+1})+\frac{\alpha_t}{2}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
+	%&\geq	\Ets{J(\vtheta_t^{s+1})+\frac{\alpha_t}{2}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2 - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2} \nonumber\\
+	&\geq	\Ets{J(\vtheta_t^{s+1}) - \frac{\alpha_t^2L}{2}\norm[]{\gradBlack{\vtheta_t^{s+1}}}^2}
+    + \EVV[t-1|s]{\frac{\alpha_t}{2}\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
+    \nonumber\\
 	&\qquad-
 	\frac{\alpha_t}{2N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
 	-c_{t+1}\Ets{\norm[]{\vtheta_{t+1}^{s+1}-\tilde{\vtheta}^s}^2} \label{eq:17}\\
@@ -1204,7 +1207,7 @@ The objective is now to provide a lower bound to it.
 	-\frac{f_t}{b}\VARIS, \label{eq:20}
 \end{align}
 \endgroup
-where (\ref{eq:17}) is from (\ref{eq:13}), (\ref{eq:18}) is from (\ref{eq:16}), (\ref{eq:19}) is from Lemma \ref{lemma:aux2}, and (\ref{eq:20}) is from Assumption \ref{ass:REINFORCE}.
+where~\eqref{eq:17} is from~\eqref{eq:13} noticing that $\EVV[t|s]{\norm[]{\nabla J(\vtheta^{s+1}_t)}^2} = \EVV[t|s]{\norm[]{\nabla J(\vtheta^{s+1}_t)}^2}$,~\eqref{eq:18} is from~\eqref{eq:16},~\eqref{eq:19} is from Lemma~\ref{lemma:aux2}, and (\ref{eq:20}) is from Assumption \ref{ass:REINFORCE}.
 To complete the proof, besides rearranging terms, we have to ensure that $\Psi_t>0$ for each $t$. This gives the constraints on $\alpha_t$ and $\beta_t$.
 \end{proof}
 
