@@ -1194,17 +1194,18 @@ The objective is now to provide a lower bound to it.
 	& = \Ets{J(\vtheta_t^{s+1}) - \left(c_{t+1}\left(1+\alpha_t\beta_t+\alpha_t+\frac{\alpha_t^2L^2}{B}\right)+\frac{\alpha_t^2L^3}{2B}\right)\norm[]{\vtheta_{t}^{s+1}-\tilde{\vtheta}}^2} \nonumber\\
 	&\qquad
 	+\alpha_t\left(\frac{1}{2}-\frac{c_{t+1}}{\beta_t}-\frac{\alpha_tL}{2}-\alpha_tc_{t+1}\right)\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} \nonumber\\
-	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}+\alpha_tL+2\alpha_tc_{t+1}\right)\Vars{g(\cdot\vert\tilde{\vtheta}^s)} \nonumber\\
-	&\qquad-\alpha_t^2\frac{(L+2c_{t+1})\Gamma\VARIS}{2B} \nonumber\\
+	&\qquad-\frac{\alpha_t}{2N}\left(1+2c_{t+1}+\alpha_tL+2\alpha_tc_{t+1}\right)\Vars{g(\cdot\vert\tilde{\vtheta}^s)} 
+%    \nonumber\\ &\qquad
+    -\alpha_t^2\frac{(L+2c_{t+1})\Gamma\VARIS}{2B} \nonumber\\
 	%
 	&= R_t^{s+1}
 	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
 	-\frac{d_t}{N}\Vars{g(\cdot\vert\tilde{\vtheta}^s)}
-	-\frac{f_t}{b}\VARIS,\nonumber\\
+	-\frac{f_t}{B}\VARIS,\nonumber\\
 	&\geq R_t^{s+1}
 	+\Psi_t\Ets{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
 	-\frac{d_t}{N}\VARRF
-	-\frac{f_t}{b}\VARIS, \label{eq:20}
+	-\frac{f_t}{B}\VARIS, \label{eq:20}
 \end{align}
 \endgroup
 where~\eqref{eq:17} is from~\eqref{eq:13} noticing that $\EVV[t|s]{\norm[]{\nabla J(\vtheta^{s+1}_t)}^2} = \EVV[t|s]{\norm[]{\nabla J(\vtheta^{s+1}_t)}^2}$,~\eqref{eq:18} is from~\eqref{eq:16},~\eqref{eq:19} is from Lemma~\ref{lemma:aux2}, and (\ref{eq:20}) is from Assumption \ref{ass:REINFORCE}.
