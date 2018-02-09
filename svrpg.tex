@@ -453,7 +453,7 @@ In Appendix~\ref{app:gauss} we show how Gaussian policies satisfy these assumpti
 \textit{1) Non-concavity.} A common assumption, in this case, is to assume the objective function to be $L$-smooth.
 However, in RL we can consider the following assumption which is sufficient for the $L$-smoothness of the objective (see Lemma~\ref{lemma:lsmooth}).
 	\begin{restatable}[On policy derivatives]{assumption}{boundedscore}\label{ass:bounded_score}
-		For each state-action pair $(s,a)$, value of $\vtheta$ and dimensions $i,j$ there are positive constants $G,F<\infty$ such that:
+		For each state-action pair $(s,a)$, any value of $\vtheta$ and all parameter components $i,j$ there are positive constants $G,F<\infty$ such that:
 \[
 		\left|\nabla_{\theta_i}\log\pi_{\vtheta}(a\vert s)\right| \leq \GRADLOG, \qquad
         \left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(a \vert s)\right| \leq \HESSLOG.
@@ -498,7 +498,7 @@ where $\psi,\zeta,\xi$ depend only on $\GRADLOG,\HESSLOG,\VARRF,\VARIS,\alpha$ a
 Refer to Appendix~\ref{app:proofs} for a detailed proof involving the definition of the constants and the meta-parameter constraints.
 %The theoretical settings may be too conservative.
 By analysing the upper-bound in Theorem~\ref{theo:convergence} we observe that: I) the $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on non-concave SVRG~\citep[\eg][]{reddi2016stochastic}; II) the $\mathcal{O}(\nicefrac{1}{N})$ term is due to the FG approximation and is analogous to the one in~\citep{harikandeh2015stopwasting}; III) the $\mathcal{O}(\nicefrac{1}{B})$ term is due to importance weighting.
-To achieve true convergence, both the batch size $N$ and the mini-batch size $B$ should increase over time. 
+To achieve asymptotic convergence, the batch size $N$ and the mini-batch size $B$ should increase over time. 
 In practice, it is enough to choose $N$ and $B$ large enough to make the second and the third term negligible, \ie to mitigate the variance introduced by FG approximation and importance sampling, respectively.
 Once the last two terms can be neglected, the number of trajectories needed to achieve $\norm[2]{\gradJ{\vtheta}}^2\leq\epsilon$ is $O(\frac{B+\nicefrac{N}{m}}{\epsilon})$. In this sense, an advantage over batch gradient ascent can be achieved with properly selected meta-parameters. In Section~\ref{sec:stopping} we propose a joint selection of step size $\alpha$ and epoch size $m$.
 Finally, from the return statement of Algorithm \ref{alg:svrpg}, it is worth noting that $J(\vtheta_A)$ can be seen as the average performance of all the policies tried by the algorithm. This is particularly meaningful in the context of online learning that we are considering in this paper.
@@ -598,7 +598,7 @@ Task implementations are from the \textit{rllab} library \cite{duan2016benchmark
 
 \begin{figure}[t]
 	\includegraphics[width=0.5\textwidth]{images/cart_pole_SVRPG_vs_GPOMDP}
-	\caption{On-line performance over sampled trajectories of SVRPG vs G(PO)MDP in the Cart-pole task, with 90\% confidence intervals}
+	\caption{On-line performance over sampled trajectories of SVRPG vs G(PO)MDP in the Cart-pole task, with 90\% t-student confidence intervals. Results denoted with $\dagger$ are taken from \cite{duan2016benchmarking}.}
 	\label{fig:cartpole}
 \end{figure}
 
@@ -618,7 +618,7 @@ Task implementations are from the \textit{rllab} library \cite{duan2016benchmark
 \begin{table*}[t]
 	\caption{
 		\label{tab:1}
-		Comparison between G(PO)MDP and SVRPG on different tasks. Average return over the whole learning process is reported, together with normalized standard deviation and 90\% confidence intervals.}
+		Comparison between G(PO)MDP and SVRPG on different tasks. Average return over the whole learning process is reported, together with normalized standard deviation and 90\% confidence intervals. Results denoted with $\dagger$ are taken from \cite{duan2016benchmarking}.}
 	\centering
 	\begin{tabular}{@{}lccccccc@{}} 
 		\toprule
@@ -627,10 +627,10 @@ Task implementations are from the \textit{rllab} library \cite{duan2016benchmark
 		\phantom{abc} & Avg Return & Norm. Std & C.I. & \phantom{abc}
 		& Avg Return & Norm. Std & C.I.
 		\\\cmidrule{2-8}
-		Cart-pole & 618.49 & 21.09 & [579.82, 657.16] & \phantom{abc} 
-		& \textbf{736.31} & 16.51 & [706.04, 766.57] \\ 
-		\phantom{abc} & \phantom{abc} & \phantom{abc} & \phantom{abc} & \phantom{abc} & \phantom{abc} & \phantom{abc} \\
-		Swimmer & 39.86 & 3.84 & [32.82, \:\:\: 46.89] & \phantom{abc} & 49.60 & 3.27 & [43.60, \:\:\: 55.60]\\
+		Cart-pole & $618.49$ & $21.09$ & $[579.82, 657.16]$ & \phantom{abc} 
+		& $736.31$ & $16.51$ & $[706.04, 766.57]$ \\
+		Swimmer & $39.86$ & $3.84$ & $[32.82, 46.89]$ & \phantom{abc} & $49.60$ & $3.27$ & $[43.60, 55.60]$\\
+		Half-cheetah & $1183.1^\dagger$ & $69.20^\dagger$ & $[1035.58, 1330.62]^\dagger$ & \phantom{abc} & $1480.95$ & $73.21$ & $[1324.87, 1637.03]$\\
 		\bottomrule
 	\end{tabular}
 \end{table*}
@@ -642,7 +642,7 @@ The Swimmer task is a 3D continuous-control locomotion task. This is more diffic
 Table \ref{tab:1} compares G(PO)MDP and SVRPG in terms of the average return computed on the whole learning process, which is a common metric for on-line learning~\citep[\eg][]{duan2016benchmarking}. This corresponds to the area below the curves in the figures. Note also that the convergence result Theorem \ref{theo:convergence} is precisely about average return. We also report normalized standard deviation and 90\% bootstrap confidence intervals.
 In all the tasks, our algorithm has higher average return and lower normalized standard deviation. In the case of Cart-pole, disjoint confidence intervals show that the advantage is statistically significant. 
 
-\paragraph{Preliminary results on actor-critic.}As mentioned, another variance-reduction technique in policy gradient is to employ baselines, or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without baseline. In order to move towards a more general understanding of the problem of variance in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we use the more challenging mujoco Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Table \ref{tab:1} also reports the comparison between SVRPG and G(PO)MDP on Half-cheetah using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve.
+\paragraph{Preliminary results on actor-critic.}As mentioned, another variance-reduction technique in policy gradient is to employ baselines, or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without baseline. In order to move towards a more general understanding of the problem of variance in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we use the more challenging mujoco Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Table \ref{tab:1} also reports the comparison between SVRPG and G(PO)MDP\footnote{\cite{duan2016benchmarking} report results on REINFORCE. However, inspection on \textit{rllab} code and documentation reveals that it is actually PGT \cite{sutton2000policy}, which is equivalent to G(PO)MDP \citep[shown by][]{peters2008reinforcement}. Using the name REINFORCE in a general way is inaccurate, but widespread.} on Half-cheetah using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve.
 
 %\begin{figure}[t]	
 %    \includegraphics[width=0.5\textwidth]{half_cheetah_self_norm_baseline_SVRPG_vs_GPOMDP100_baseline}
@@ -676,7 +676,7 @@ Finally, we have empirically shown that practical variants of the theoretical SV
 \appendix
 
 \section{Policy Gradient Estimators} \label{A:gradient_estimators}
-We present a brief overview of two most widespread gradient estimators (REINFORCE~\citep{williams1992simple} and G(PO)MDP~\citep{baxter2001infinite}) both in on-policy and off-policy settings.
+We present a brief overview of the two most widespread gradient estimators (REINFORCE~\citep{williams1992simple} and G(PO)MDP~\citep{baxter2001infinite}) both in on-policy and off-policy settings.
 Let $\tau = \{\langle s_t,a_t \rangle\}_{t=0}^{H}= \{z_t\}_{t=0}^{H} = z_{0:H}$ is a $(H+1)$-steps trajectory.
 Given that $\tau$ depends on the MDP $M=\{\mathcal{S},\mathcal{A}, \mathcal{P}, \Reward, \gamma, \rho\}$ and the actual policy $\pi$, the trajectory is
 said drawn from density distribution $p(\tau|\pi,M)$ defined as:
