@@ -279,7 +279,7 @@ For this reason, literature has focused on the introduction of baselines (\ie fu
 These baselines are usually designed to minimize the variance of the gradient estimate, but even them need to be estimated from data, partially reducing their effectiveness.
 On the other hand, there has been a surge of recent interest in variance reduction techniques for gradient optimization in supervised learning.
 Although these techniques have been mainly derived for finite-sum problems, we will show in Section~\ref{sec:alg} how they can be used in RL.
-In particular, we will show that the proposed SVRPG algorithm can take the best of both worlds (\ie SL and RL) since it can be plugged onto a policy gradient estimate using baselines.
+In particular, we will show that the proposed SVRPG algorithm can take the best of both worlds (\ie SL and RL) since it can be plugged into a policy gradient estimate using baselines.
 The next section has the aim to describe variance reduction techniques for finite-sum problems. In particular, we will present the SVRG algorithm that is at the core of this work.
 
 
@@ -310,7 +310,7 @@ Between snapshots, the parameter is updated with $\blacktriangledown f(\vtheta)$
 \end{equation} 
 where $x$ is sampled uniformly at random from $\mathcal{D}_N$ (\ie $x \sim \mathcal{U}(\mathcal{D}_N)$).
 Note that $t=0$ corresponds to a FG step (\ie $\blacktriangledown f(\vtheta_0) = \nabla f(\wt{\vtheta})$) since $\vtheta_0 := \wt{\vtheta}$.
-The corrected gradient $\blacktriangledown f(\vtheta)$ is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, achieving a linear convergence rate without resorting to plain full gradient.
+The corrected gradient $\blacktriangledown f(\vtheta)$ is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, achieving a linear convergence rate without resorting to a plain full gradient.
 
 More recently, some extensions of variance reduction algorithms to the non-concave objectives have been proposed~\citep[\eg][]{reddi2016stochastic,allen2016variance,reddi2016stochastic,reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[2]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[2]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the convergence rate of SG is $O(\nicefrac{1}{\sqrt{T}})$ \cite{ghadimi2013stochastic}, \ie $T=O(\nicefrac{1}{\epsilon^2})$ iterations are required to get $\norm[2]{\nabla f(\vtheta)}^2\leq\epsilon$. Again, SVRG achieves the same rate as FG \cite{reddi2016stochastic}, which is $O(\frac{1}{T})$ in this case \cite{nesterov2013introductory}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value.
 
@@ -347,7 +347,7 @@ Recall that, compared to SL, the samples are not fixed in advance but we need to
 Since this operation may be costly, we would like to minimize the number of interactions with the environment.
 For these reasons, we would like to apply SVRG to RL problems in order to limit the variance introduced by sampling trajectories, which would ultimately lead to faster convergence.
 However, a direct application of SVRG to RL is not possible due to the following issues:
-% In on-line policy gradient problems, SG is not really a choice, but is dictated by the necessity of interacting with an unknown environment.\todopir{I do not understand the meaning of this sentence. I would say that SG is not a choice by referring to papers that uses batches}
+% In on-line policy gradient problems, SG is not really a choice, but is dictated by the necessity of interacting with an unknown environment.\todopir{I do not understand the meaning of this sentence. I would say that SG is not a choice by referring to papers that use batches}
 % We would like to apply SVRG to the policy gradient framework in order to limit the variance introduced by sampling trajectories, which would ultimately lead to faster convergence. In this scenario, the function $f(\vtheta)$ to optimize is $J(\vtheta)$ and the (implicit) dataset $\mathcal{D}$ is the set of all possible trajectories $\mathcal{T}$. Compared to the typical finite sum optimization scenario, we have the following additional challenges:
 \begin{description}
         \item[Non-concavity:] the objective function $J(\vtheta)$ is typically non-concave.
@@ -766,7 +766,7 @@ The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REI
 }_{g(\tau_n|\vtheta)}.
 \end{align*}
 G(PO)MDP can be seen as a more efficient implementation of the REINFORCE algorithm. 
-In fact the latter does not perform an optimal credit assignment, since it ignores that the reward at time $t$ does not depend on the action performed after time $t$.
+In fact, the latter does not perform an optimal credit assignment since it ignores that the reward at time $t$ does not depend on the action performed after time $t$.
 G(PO)MDP overcomes this issue taking into account the causality of rewards in the REINFORCE definition of policy gradient.
 
 \textbf{Off-policy setting.}
@@ -1247,7 +1247,7 @@ In particular, the following constraints on $\alpha_t$ and $\beta_t$ are suffici
 where~\eqref{eq:11} is from the L-smoothness of $J(\vtheta)$ \cite{nesterov2013introductory} and \eqref{eq:12} is from the SVRPG update.
 Inequality~\ref{eq:13} follows from Lemma~\ref{lemma:aux0} by noticing that $\nabla J(\vtheta^{s+1}_t)$ is a deterministic function given $\vtheta^{s+1}_t$. As a consequence, we can directly apply Lemma~\ref{lemma:aux0} with $\vphi(\vtheta_t^{s+1})\coloneqq\gradJ{\vtheta_t^{s+1}}$.
 
-Next we have:
+Next, we have:
 \begingroup
 \allowdisplaybreaks
 \begin{align}
@@ -1488,7 +1488,7 @@ Let us give a deeper insight on the two different learning rate schedules used b
 \end{align*}
 
 where separate histories are kept for estimated first moments $\kappa_{FG},\kappa_{IS}$ and estimated second moments $\nu_{FG},\nu_{IS}$.
-The meta-parameters $\alpha,\beta_1,\beta_2$ are constant and set to default values or with minor manual tuning (see table \ref{table:metaparams}). Note that we double $\alpha$ for the snapshot ADAM, since we can rely on a larger number of trajectories ($N$ instead of $B$) to control the variance. 
+The meta-parameters $\alpha,\beta_1,\beta_2$ are constant and set to default values or with minor manual tuning (see table \ref{table:metaparams}). Note that we double $\alpha$ for the snapshot ADAM since we can rely on a larger number of trajectories ($N$ instead of $B$) to control the variance. 
 
 \subsection{Baseline}
 The baseline used in the Half Cheetah experiment is the one used in \cite{duan2016benchmarking}. It is a linear state-value function estimator, or critic. 
@@ -1516,9 +1516,9 @@ When used with SVRPG, the critic parameter $\mathbf{\lambda}$ is updated only at
 \section{Experimental Details}\label{app:exp}
 We describe the RL tasks of Section \ref{sec:exp} in more detail:
 \begin{enumerate}
-	\item \emph{Cart-Pole Balancing} : an inverted pendulum mounted on a cart must be kept standing by moving the cart backward or forward ;4-dimensional state space: cart position x, pole angle $\theta$, cart velocity $\dot{x}$ and pole velocity $\dot{\theta}$; 1-dimensional action space: the horizontal force applied to the cart body. Reward function  is defined as $r(s, a) := 10 - (1 - cos(\theta)) - 10^{-5}\norm[] a^2$. The episodes terminates when $|x|>2.4$ or $|\theta|>0.2$ or the number of time steps T is greater than 100.
-    \item \emph{Mujoco Swimmer}: a snake-like robot immersed in a fluid must move forward; 13-dimensional state space: 3 links velocities ($v_x$ and $v_y$ of center of masses) and 2 actuated joints angles. 2-dimensional action space: the two momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 10^{-4}\norm[2]{a}^2$. The episodes terminates when the number of time steps T is greater than 500.
-    \item \emph{Mujoco Half Cheetah}: a planar biped robot must move forward; 20-dimensional state space: 9 links and 6 actuated joints angles. 6-dimensional action space: the 6 momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 0.05\norm[2]{a}^2$. The episodes terminates when the number of time steps T is greater than 500.
+	\item \emph{Cart-Pole Balancing} : an inverted pendulum mounted on a cart must be kept standing by moving the cart backward or forward ;4-dimensional state space: cart position x, pole angle $\theta$, cart velocity $\dot{x}$ and pole velocity $\dot{\theta}$; 1-dimensional action space: the horizontal force applied to the cart body. Reward function  is defined as $r(s, a) := 10 - (1 - cos(\theta)) - 10^{-5}\norm[] a^2$. The episodes terminate when $|x|>2.4$ or $|\theta|>0.2$ or the number of time steps T is greater than 100.
+    \item \emph{Mujoco Swimmer}: a snake-like robot immersed in a fluid must move forward; 13-dimensional state space: 3 links velocities ($v_x$ and $v_y$ of center of masses) and 2 actuated joints angles. 2-dimensional action space: the two momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 10^{-4}\norm[2]{a}^2$. The episodes terminate when the number of time steps T is greater than 500.
+    \item \emph{Mujoco Half Cheetah}: a planar biped robot must move forward; 20-dimensional state space: 9 links and 6 actuated joints angles. 6-dimensional action space: the 6 momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 0.05\norm[2]{a}^2$. The episodes terminate when the number of time steps T is greater than 500.
 \end{enumerate}
 
 All the parameters used in the experiments, including neural network architectures, are reported in the following table:
