@@ -1446,7 +1446,15 @@ For all batch gradient-based algorithms, we use the same time-varying feature en
 \begin{align*}
 \psi_{s,t}=concat(s, s \odot s, 0.01t, (0.01t)^2, (0.01t)^3,1)
 \end{align*}
-where $s$ is the state vector and $\odot$ is the element-wise product.
+where $s$ is the state vector and $\odot$ is the element-wise product. In the case of our algorithm the model representing the baseline is fitted every snapshot so we have:\\
+\begin{align*}
+        \nabla J(\pi^T) =\frac{1}{N} \sum_{n=1}^{N}
+                \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(y_k^n)\right) (\gamma^h \Reward(y_h^n)-b_{sn})
+          + \frac{1}{B} \sum_{n=1}^{B}
+                \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(z_k^n)\right) (\gamma^h \Reward(z_h^n) - b_{si})\\ - \frac{1}{B} \sum_{n=1}^{B}
+                \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(z_k^n)\right) (\gamma^h \Reward(z_h^n) - b_{si})\omega(z_{0:h}|\pi^B,\pi^T)
+\end{align*}
+Where $b_{sn}$ is the prediction given by the baseline at the snapshot, whereas $b_{si}$ is the prediction given by the baseline at a given subiteration. 
 \section{Experimental Details}\label{app:exp}
 Used environments:
 \begin{enumerate}
