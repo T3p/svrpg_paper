@@ -649,7 +649,7 @@ More details on meta-parameters and exhaustive task descriptions are provided in
 	\end{tabular}
 \end{table*}
 
-Figure \ref{fig:cartpole} compares SVRPG with G(PO)MDP on a continuous variant of the classical Cart-pole task, which is a 2D balancing task. Despite using more trajectories for each parameter,\todopirout{I do not understand this sentence} our algorithm shows faster convergence, which can be ascribed to the better quality of updates due to variance reduction.
+Figure \ref{fig:cartpole} compares SVRPG with G(PO)MDP on a continuous variant of the classical Cart-pole task, which is a 2D balancing task. {\color{blue}Despite using more trajectories for each parameter update}, our algorithm shows faster convergence, which can be ascribed to the better quality of updates due to variance reduction.
 
 The Swimmer task is a 3D continuous-control locomotion task. This is more difficult than cart-pole. In particular, the longer horizon and the more complex dynamics can have a dangerous impact on the variance of importance weights. In this case, the self-normalization technique proposed in Section \ref{sec:prac} brings an improvement, as shown in Figure \ref{fig:swimmertwo}. Although the confidence intervals are never disjoint, the average of the self-normalized version is always higher, which we consider enough to employ the variant in the next comparison. Figure \ref{fig:swimmerone} shows self-normalized SVRPG against G(PO)MDP. On average, our algorithm dominates for almost the entire task. Also here, we note an increase of speed in early iterations. Toward the end of the task, the improvement becomes statistically significant.
 
@@ -658,13 +658,7 @@ In all the tasks, our algorithm has higher average return and lower normalized s
 In Cart-pole, disjoint confidence intervals show that the advantage is statistically significant. 
 
 \textbf{Preliminary results on actor-critic.} %As mentioned, 
-Another variance-reduction technique in policy gradient is to employ baselines, or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without baseline. In order to move towards a more general understanding of the problem of variance in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we use the more challenging MuJoCo~\citep{todorov2012mujoco} Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Table \ref{tab:1} also reports the comparison between SVRPG and G(PO)MDP on Half-cheetah using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve.
-
-%\begin{figure}[t]	
-%    \includegraphics[width=0.5\textwidth]{half_cheetah_self_norm_baseline_SVRPG_vs_GPOMDP100_baseline}
-%    \caption{Self-Normalized SVRPG with baseline vs GPOMDP with baseline in half cheetah}
-%    \label{fig:halfcheetah}
-%\end{figure}
+Another variance-reduction technique in policy gradient is to employ baselines, or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without baseline. In order to move towards a more general understanding of the problem of variance in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we use the more challenging MuJoCo~\citep{todorov2012mujoco} Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Table \ref{tab:1} also reports the comparison between SVRPG and G(PO)MDP\footnote{\cite{duan2016benchmarking} report results on REINFORCE. However, inspection on \textit{rllab} code and documentation reveals that it is actually PGT \cite{sutton2000policy}, which is equivalent to G(PO)MDP \citep[shown by][]{peters2008reinforcement}. Using the name REINFORCE in a general way is inaccurate, but widespread.} on Half-cheetah using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve.
 
 
 \section{Conclusion}
@@ -1440,8 +1434,14 @@ It is a common practice to learn also the variance of the policy in order to ada
  \label{A:adam}
  Adam}
 \end{algorithm}
-\todopir{Explain how we use adam and when/if it is reset on snapshots}
-
+\subsection{Learning Rates}
+Let us give a deeper insight on the two different learning rate used by our algorithm. We have already said that we use two different ADAM one related to the snapshots and another one related to the sub-iterations. In this way tha ADAM associated to the snapshots will take into account only the snapshots history through the parameters $m_{t-1}$ and $v_{t-1}$. The same reasoning holds for the sub-iterations. This, of course, allows our algorithm to take into account the different variabilities in a more accurate manner.
+\subsection{Baseline}
+For all batch gradient-based algorithms, we use the same time-varying feature encoding for the linear baseline:
+\begin{align*}
+\psi_{s,t}=concat(s, s \odot s, 0.01t, (0.01t)^2, (0.01t)^3,1)
+\end{align*}
+where $s$ is the state vector and $\odot$ is the element-wise product.
 \section{Experimental Details}\label{app:exp}
 Used environments:
 \begin{enumerate}
