@@ -523,10 +523,10 @@ Due to this feature, we would like to incorporate ADAM in the structure of the S
 Recall that SVRPG performs two different updates of the parameters $\vtheta$: I) FG update in the snapshot; II) corrected gradient update in the sub-iterations.
 Given this structure, we suggest using two separate ADAM estimators:
 \begin{align*}
-        \vtheta^{s+1}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\wh{\nabla}_N J(\wt{\vtheta}^s)\\
-        \vtheta^{s+1}_{t+1} &= \vtheta^{s+1}_t + \alpha^{\textsc{SI}}_{s+1,t} 
+        \vtheta^{s+1}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\left(\wh{\nabla}_N J(\wt{\vtheta}^s) \right)\\
+        \vtheta^{s+1}_{t+1} &= \vtheta^{s+1}_t + \alpha^{\textsc{SI}}_{s+1,t} \Big( 
 %        v_t^{s+1}
-        \blacktriangledown J(\vtheta^{s+1}_t)
+        \blacktriangledown J(\vtheta^{s+1}_t)\Big)
         \text{ for $t=1,\dots,m-1$},
 \end{align*}
 where $\alpha^{\textsc{FG}}_{s}$ is associated with the snapshot and $\alpha^{\textsc{SI}}_{s+1,t}$ with the sub-iterations (see Appendix~\ref{app:practicalsvrpg} for details).
@@ -686,7 +686,7 @@ We can now recall the definition of policy performance
 where $\Reward(\tau) = \sum_{t=0}^{H}\gamma^t \Reward(z_t)$.
 The policy gradient $\nabla J(\vtheta)$ is
 \begin{equation}\label{E:onpolicygradient}
-        \gradJ{\vtheta} = \EVV[\tau \sim p(\cdot|\pol)]{\nabla \log\Delta(\tau|\vtheta)\Reward(\tau)} = \EVV[\tau \sim p(\cdot|\pol)]{\sum_{j=0}^{H} \gamma^j \mathcal{R}(z_j) \sum_{i=0}^{H} \nabla \log\pi(z_i)}.
+        \gradJ{\vtheta} = \EVV[\tau \sim p(\cdot|\pol)]{\nabla \log p(\tau|\vtheta)\Reward(\tau)} = \EVV[\tau \sim p(\cdot|\pol)]{\sum_{j=0}^{H} \gamma^j \mathcal{R}(z_j) \sum_{i=0}^{H} \nabla \log\pi(z_i)}.
 \end{equation}
 
 \textbf{On-policy setting.}
@@ -695,16 +695,22 @@ The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, u
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}
 \underbracket{
-        \left(\sum_{h=0}^{H}\nabla \log \pol(z_h^n) \right)\left(\sum_{h=0}^{H}\gamma^h \Reward(z_h^n) - b\right)
+        \left(\sum_{h=0}^{H}\nabla \log \pol(z_h^n) \right)\left(\sum_{h=0}^{H}\gamma^h 
+%        \Reward(z_h^n)
+        r_h^n
+- b(z_h^n)\right)
 }_{g(\tau_n|\vtheta):=\nabla \log p(\tau_n|\vtheta)\Reward(\tau_n)}
 ,
 \end{align*}
-where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and $b : \mathcal{S}\times\mathcal{A} \to \realspace$~\citep[\eg][]{Thomas2017actionbaseline}.
+where subscripts denote the time step, superscripts denote the trajectory, $r_h^n$ is the reward actually collected at time $h$ from trajectory $\tau^n$ and $b : \mathcal{S}\times\mathcal{A} \to \realspace$~\citep[\eg][]{Thomas2017actionbaseline}.
 The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance \cite{zhao2011analysis} while preserving the unbiasedness:
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}
 \underbracket{
-        \sum_{h=0}^{H}\left(\sum_{k=0}^{h} \nabla \log \pol (z_h^n) \right)\left(\gamma^h \Reward(z_h^n) - b\right)
+        \sum_{h=0}^{H}\left(\sum_{k=0}^{h} \nabla \log \pol (z_h^n) \right)\left(\gamma^h 
+%        \Reward(z_h^n)
+        r_h^n
+        - b(z^n_h)\right)
 }_{g(\tau_n|\vtheta)}.
 \end{align*}
 G(PO)MDP can be seen as a more efficient implementation of the REINFORCE algorithm. 
@@ -1445,7 +1451,15 @@ For all batch gradient-based algorithms, we use the same time-varying feature en
 \begin{align*}
 \psi_{s,t}=concat(s, s \odot s, 0.01t, (0.01t)^2, (0.01t)^3,1)
 \end{align*}
-where $s$ is the state vector and $\odot$ is the element-wise product.
+where $s$ is the state vector and $\odot$ is the element-wise product. In the case of our algorithm the model representing the baseline is fitted every snapshot so we have:\\
+\begin{align*}
+        \nabla J(\pi^T) =\frac{1}{N} \sum_{n=1}^{N}
+                \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(y_k^n)\right) (\gamma^h \Reward(y_h^n)-b_{sn})
+          + \frac{1}{B} \sum_{n=1}^{B}
+                \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(z_k^n)\right) (\gamma^h \Reward(z_h^n) - b_{si})\\ - \frac{1}{B} \sum_{n=1}^{B}
+                \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(z_k^n)\right) (\gamma^h \Reward(z_h^n) - b_{si})\omega(z_{0:h}|\pi^B,\pi^T)
+\end{align*}
+Where $b_{sn}$ is the prediction given by the baseline at the snapshot, whereas $b_{si}$ is the prediction given by the baseline at a given subiteration. 
 \section{Experimental Details}\label{app:exp}
 Used environments:
 \begin{enumerate}
