@@ -205,7 +205,7 @@
         Stochastic variance-reduced gradient (SVRG) methods have proven to be very successful in supervised learning.
         However, their adaptation to policy gradient is not straightforward and needs to account for I) a non-concave objective function; II) approximations in the full gradient computation; and III) a non-stationary sampling process.
         The result is SVRPG, a stochastic variance-reduced policy gradient algorithm that leverages on importance weight to preserve the unbiasedness of the gradient estimate.
-        We further analyse its convergence guarantees under standard assumptions on the MDP.
+        {\color{blue}Under standard assumptions on the MDP, we provide convergence guarantees for SVRPG with a convergence rate that is linear under increasing batch sizes.}
         Finally, we suggest practical variants of SVRPG, and we empirically evaluate them on continuous MDPs.
 \end{abstract}
 
@@ -228,7 +228,7 @@ SVRG has been used in RL as an efficient technique for optimizing the per-iterat
 In both the cases, the optimization problems faced resemble the SL scenario and are not affected by all the previously mentioned issues.
 
 %Paper structure
-After providing background on policy gradient and SVRG in Section \ref{sec:pre}, in Section \ref{sec:alg} propose SVRPG, a variant of SVRG for the policy gradient framework, addressing all the difficulties mentioned above. In Section \ref{sec:conv} we provide convergence guarantees for our algorithm which also offers insights on the challenges of variance reduction in RL. In Section \ref{sec:stopping} we suggest how to set the meta-parameters of SVRPG, while in Section \ref{sec:prac} we discuss some practical variants of the algorithm. Finally, in Section \ref{sec:exp} we empirically evaluate the performance of our method on popular continuous RL tasks.
+After providing background on policy gradient and SVRG in Section \ref{sec:pre}, in Section \ref{sec:alg} propose SVRPG, a variant of SVRG for the policy gradient framework, addressing all the difficulties mentioned above. {\color{blue} In Section \ref{sec:conv} we provide convergence guarantees for our algorithm, and we show a convergence rate that has an $O(\nicefrac{1}{T})$ dependence on the number $T$ of iterations}. In Section \ref{sec:stopping} we suggest how to set the meta-parameters of SVRPG, while in Section \ref{sec:prac} we discuss some practical variants of the algorithm. Finally, in Section \ref{sec:exp} we empirically evaluate the performance of our method on popular continuous RL tasks.
 
 \vspace{-0.05in}
 \section{Preliminaries}\label{sec:pre}
