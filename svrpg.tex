@@ -1483,12 +1483,12 @@ Let us give a deeper insight on the two different learning rate used by our algo
 \subsection{Baseline}
 For all batch gradient-based algorithms, we use the same time-varying feature encoding for the linear baseline:
 \begin{align*}
-        \psi(s,t)=concat(s, s \odot s, 0.01t, (0.01t)^2, (0.01t)^3,1)
+        \psi(s,t)=concat(s, s \circ s, 0.01t, (0.01t)^2, (0.01t)^3,1)
 \end{align*}
-where $s$ is the state vector and $\odot$ is the element-wise product.
+where $s$ is the state vector, $\circ$ is the Hadamard (element-wise) product.
 As a consequence, the baseline for both SVRPG and G(PO)MDP is defined as follows:
 \[
-        b(s,a) = \transpose{\boldsymbol{\lambda}} \psi(s,t)
+        b(s,a,t) = \transpose{\boldsymbol{\lambda}} \psi(s,t)
 \]
 \section{Experimental Details}\label{app:exp}
 Used environments:
