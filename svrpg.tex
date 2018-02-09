@@ -261,9 +261,9 @@ We refer the reader to Appendix~\ref{A:gradient_estimators} for details and a fo
 
 The main limitation of plain policy gradient is the high variance of these estimators.
 The na\"ive approach of increasing the batch size is not an option in RL due to the high cost of collecting samples, \ie by interacting with the environment.
-For this reason, literature has focused on the introduction of baselines (\ie functions $b : \mathcal{S} \times \mathcal{A} \to \realspace$) aiming to reduce the variance~\citep[\eg][]{williams1992simple,Peters2008reinf,Thomas2017actionbaseline,wu2018variance}.
+For this reason, literature has focused on the introduction of baselines (\ie functions $b : \mathcal{S} \times \mathcal{A} \to \realspace$) aiming to reduce the variance~\citep[\eg][]{williams1992simple,Peters2008reinf,Thomas2017actionbaseline,wu2018variance}, see Appendix~\ref{A:gradient_estimators} for a formal definition of $b$.
 {\color{red}
-This baselines are usually designed in order to minimize the variance of the gradient estimate but even them need to be estimated from data, partially reducing they effectiveness.
+These baselines are usually designed in order to minimize the variance of the gradient estimate but even them need to be estimated from data, partially reducing they effectiveness.
 On the other hand, there has been a surge of recent interest in variance reduction techniques for gradient optimization in supervised learning.
 Although these techniques have been mainly derived for finite-sum problems, we will show in Section~\ref{sec:alg} how they can be used in RL.
 In particular, we will shown that the proposed SVRPG algorithm can take the best of both worlds (\ie SL and RL) since it can be plugged over a policy gradient estimate using baselines.
@@ -674,14 +674,15 @@ Among them, non-concavity and approximate estimates of the FG have been analysed
 Nevertheless, the main issue in RL is the non-stationarity of the sampling process since the distribution underlying the objective function is policy-dependent.
 We have shown that by exploiting importance weighting techniques, it is possible to overcome this issue and preserve the unbiasedness of the corrected gradient.
 We have additionally shown that, under mild assumptions that are often verified in RL applications, it is possible to derive convergence guarantees for SVRPG.
-{\color{red}SVRG has been previously used in RL for policy evaluation~\citep{du2017svrgpe} and as alternative optimization method for TRPO~\citep{xu2017svrgtrpo}.
-The first case is much more similar to the SL case since the problem is stationary and may be made concave, removing several issues we have faced here.
-In the second case, it was used as a better optimization technique to solve the per-iteration problem imposed by TRPO.
-}
-\todomatout{Repetition of Section 6?}
+%{\color{red}SVRG has been previously used in RL for policy evaluation~\citep{du2017svrgpe} and as alternative optimization method for TRPO~\citep{xu2017svrgtrpo}.
+%The first case is much more similar to the SL case since the problem is stationary and may be made concave, removing several issues we have faced here.
+%In the second case, it was used as a better optimization technique to solve the per-iteration problem imposed by TRPO.
+%}
+%\todomatout{Repetition of Section 6?}
 Finally, we have empirically shown that practical variants of the theoretical SVRPG version can outperform classical actor-only approaches on benchmark tasks.
-\todomat{add future work}
-
+Preliminary results support the effectiveness of SVRPG also with a commonly used baseline for the policy gradient.
+Despite that, we believe that it will be possible to derive a baseline specifically designed for SVRPG in order to jointly exploit the RL structure and the SVRG idea.
+\todomat{Other future work}
 
 \FloatBarrier
 \bibliography{svrpg}
