@@ -1462,7 +1462,10 @@ In complex continuous tasks, $\mu(s)$ often represents a deep neural network, or
 \paragraph{Adaptive variance.}
 It is a common practice to learn also the variance of the policy in order to adapt the degree of exploration. The variance (or diagonal covariance matrix in the multi-dimensional case) can be learned as a separate parameter or be state-dependent like the mean. In any case, adaptive variance must be carefully employed since it can clearly undermine all the three assumptions of Theorem \ref{theo:convergence}.
 
-\section{Practical SVRPG versions}\label{app:practicalsvrpg}
+\section{Practical SVRPG Versions}\label{app:practicalsvrpg}
+We provide more details on the practical variants of SVRPG.
+
+\subsection{Adpative Step Size}
 \begin{algorithm}[h]
 	\begin{algorithmic}
 		\STATE \textbf{Input:} A gradient estimate $g_t$ and parameters $\beta_1$, $\beta_2$, $\epsilon$ and $\alpha$.
@@ -1548,5 +1551,7 @@ All the parameters used in the experiments, including neural network architectur
 \end{table}
 Where not specified, meta-parameters are shared among G(PO)MDP and SVRPG.
 Refer to \cite{duan2016benchmarking} for more details about G(PO)MDP (REINFORCE in the paper) on the Half Cheetah task.
+
+\paragraph{Videos:} The supplementary materials include videos showing the behavior of the final SVRPG policy on the three considered tasks. 
 
 \end{document}
