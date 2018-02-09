@@ -775,7 +775,11 @@ For random vectors X, Y:
 	\Covs{X}{Y} &\coloneqq \Tr\left(\Ets{(X-\Ets{X})(Y-\Ets{Y})^T}\right), \\
 	\Vars{X} &\coloneqq \Covs{X}{Y},
 \end{align*}
-where $\Tr(\cdot)$ denotes the trace of a matrix. $\Covts[t]{X}{Y}$ and $\Varts[t]{X}$ are defined in the same way from $\Ets[t]{X}$.
+where $\Tr(\cdot)$ denotes the trace of a matrix. From the linearity of expected value we have the following:
+\begin{equation}\label{neweq:1}
+\Vars{X} = \Es{\norm[]{X-\Es{X}}^2} \leq \Es{\norm[]{X}^2}
+\end{equation}
+$\Covts[t]{X}{Y}$ and $\Varts[t]{X}$ are defined in the same way from $\Ets[t]{X}$.
 \end{definition}
 
 \begin{definition}
@@ -881,7 +885,7 @@ For REINFORCE we have, from Assumption \ref{ass:bounded_score}:
 	\norm[2]{\score{\vtheta}{\tau}R(\tau)}^2 \\
 	&=\norm[2]{\left(\sum_{t=0}^{H-1}\score{\vtheta}{a_t\vert s_t}\right)\left(\sum_{t=0}^{H-1}\gamma^t r_t\right)}^2\leq H^2G^2\frac{(1-\gamma^H)^2}{(1-\gamma)^2}R^2\dim(\vTheta) \coloneqq \Gamma
 \end{align*}
-For G(PO)MDP, we do not have a compact expression for $g$, but since it is derived from REINFORCE by neglecting some terms of the kind $\nabla \log \pi_{\vtheta}{a_t | s_t}\gamma^t r_t$ \cite{baxter2001infinite,peters2008reinforcement}, the above bound still holds. \todopir{we need to prove it formally if we have time}
+For G(PO)MDP, we do not have a compact expression for $g$, but since it is derived from REINFORCE by neglecting some terms of the kind $\nabla \log \pi_{\vtheta}{a_t | s_t}\gamma^t r_t$ \cite{baxter2001infinite,peters2008reinforcement}, the above bound still holds.
 \end{proof}
 %Lemma 2
 \begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
@@ -933,7 +937,21 @@ For ease of notation denote $\omega(\tau_i) := \omega(\tau_i|\vtheta^{s+1}_t, \w
 				\omega(\tau_i)g(\tau_i\vert\wt{\vtheta}^s)\right)}\right\|^2\right] 
 	\nonumber\\
 	%
-	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2}
+	+\Vars{\gradApp{\wt{\vtheta}^s}{N}} \nonumber\\
+	&\qquad+ 
+	\mathbb{E}_{t\vert s}\left[\left\|
+	\frac{1}{B}\sum_{i=0}^{B-1}\left(
+	g(\tau_i\vert\vtheta_t^{s+1}) -
+	\omega(\tau_i)g(\tau_i\vert\wt{\vtheta}^s)\right)
+	%	\right.\right.\nonumber\\&\qquad\left.\left.
+	- \Ets{
+		\frac{1}{B}\sum_{i=0}^{B-1}\left(
+		g(\tau_i\vert\vtheta_t^{s+1}) -
+		\omega(\tau_i)g(\tau_i\vert\wt{\vtheta}^s)\right)}\right\|^2\right] 
+	\label{neweq:2}\\
+	%
+	&= \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\wt{\vtheta}^s)}
 	\nonumber\\
 	&\qquad+ 
@@ -1017,9 +1035,8 @@ For ease of notation denote $\omega(\tau_i) := \omega(\tau_i|\vtheta^{s+1}_t, \w
 	+\frac{\Gamma\VARIS}{B}, \label{eq:5}
 \end{align}
 \endgroup
-where (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from $\EVV[]{\norm[]{X-\EVV[]{X}}^2}\leq\EVV[]{\norm[]{X}^2}$ for any stochastic variable $X$\todopirout{ref}, (\ref{eq:3}) is from Lemma \ref{lemma:gsmooth}, 
+where (\ref{neweq:2}) is from (\ref{neweq:1}), (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from (\ref{neweq:1}), (\ref{eq:3}) is from Lemma \ref{lemma:gsmooth}, 
 (\ref{eq:4}) is from Lemma \ref{lemma:gbound}, and (\ref{eq:5}) is from Assumption \ref{ass:M2}.
-\todopir{Explain step $E[\|\|^2] \leq Var$}
 \end{proof}
 
 %Lemma 0
@@ -1071,14 +1088,13 @@ Hence:
 	%
 	&\leq
 	\frac{1}{2N}\Vars{g(\cdot\vert\wt{\vtheta}^s)} +\frac{1}{2}\Ets[t-1]{\norm[]{\varphi(\vtheta_t^{s+1})}^2},
-	\nonumber
+	\label{neweq:3}
 \end{align}
 where~\eqref{eq:9a} comes from Cauchy-Schwarz inequality
 \[
         |\Cov(X,Y)| = |\EVV[]{(X-\mu_X)\transpose{(Y-\mu_Y)}}| \leq \EVV[]{(X-\mu_X)^2}^{1/2}\EVV[]{(Y-\mu_Y)^2}^{1/2} = \sqrt{\Var(X) \Var(Y)},
 \]
-\eqref{eq:9} is from Young's inequality, and~\eqref{eq:10} is from the definition of $\gradApp{\vtheta}{N}$.
-\todopir{comment the last step.}
+\eqref{eq:9} is from Young's inequality,~\eqref{eq:10} is from the definition of $\gradApp{\vtheta}{N}$, and \eqref{neweq:3} is from \eqref{neweq:1}.
 \end{proof}
 
 %Lemma 1
