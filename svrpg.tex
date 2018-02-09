@@ -261,9 +261,9 @@ We refer the reader to Appendix~\ref{A:gradient_estimators} for details and a fo
 
 The main limitation of plain policy gradient is the high variance of these estimators.
 The na\"ive approach of increasing the batch size is not an option in RL due to the high cost of collecting samples, \ie by interacting with the environment.
-For this reason, literature has focused on the introduction of baselines (\ie functions $b : \mathcal{S} \times \mathcal{A} \to \realspace$) aiming to reduce the variance~\citep[\eg][]{williams1992simple,Peters2008reinf,Thomas2017actionbaseline,wu2018variance}.
+For this reason, literature has focused on the introduction of baselines (\ie functions $b : \mathcal{S} \times \mathcal{A} \to \realspace$) aiming to reduce the variance~\citep[\eg][]{williams1992simple,Peters2008reinf,Thomas2017actionbaseline,wu2018variance}, see Appendix~\ref{A:gradient_estimators} for a formal definition of $b$.
 {\color{red}
-This baselines are usually designed in order to minimize the variance of the gradient estimate but even them need to be estimated from data, partially reducing they effectiveness.
+These baselines are usually designed in order to minimize the variance of the gradient estimate but even them need to be estimated from data, partially reducing they effectiveness.
 On the other hand, there has been a surge of recent interest in variance reduction techniques for gradient optimization in supervised learning.
 Although these techniques have been mainly derived for finite-sum problems, we will show in Section~\ref{sec:alg} how they can be used in RL.
 In particular, we will shown that the proposed SVRPG algorithm can take the best of both worlds (\ie SL and RL) since it can be plugged over a policy gradient estimate using baselines.
@@ -537,10 +537,10 @@ Due to this feature, we would like to incorporate ADAM in the structure of the S
 Recall that SVRPG performs two different updates of the parameters $\vtheta$: I) FG update in the snapshot; II) corrected gradient update in the sub-iterations.
 Given this structure, we suggest using two separate ADAM estimators:
 \begin{align*}
-        \vtheta^{s+1}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\wh{\nabla}_N J(\wt{\vtheta}^s)\\
-        \vtheta^{s+1}_{t+1} &= \vtheta^{s+1}_t + \alpha^{\textsc{SI}}_{s+1,t} 
+        \vtheta^{s+1}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\left(\wh{\nabla}_N J(\wt{\vtheta}^s) \right)\\
+        \vtheta^{s+1}_{t+1} &= \vtheta^{s+1}_t + \alpha^{\textsc{SI}}_{s+1,t}\left( 
 %        v_t^{s+1}
-        \blacktriangledown J(\vtheta^{s+1}_t)
+        \blacktriangledown J(\vtheta^{s+1}_t)\right)
         \text{ for $t=1,\dots,m-1$},
 \end{align*}
 where $\alpha^{\textsc{FG}}_{s}$ is associated with the snapshot and $\alpha^{\textsc{SI}}_{s+1,t}$ with the sub-iterations (see Appendix~\ref{app:practicalsvrpg} for details).
@@ -649,7 +649,7 @@ More details on meta-parameters and exhaustive task descriptions are provided in
 	\end{tabular}
 \end{table*}
 
-Figure \ref{fig:cartpole} compares SVRPG with G(PO)MDP on a continuous variant of the classical Cart-pole task, which is a 2D balancing task. Despite using more trajectories for each parameter,\todopirout{I do not understand this sentence} our algorithm shows faster convergence, which can be ascribed to the better quality of updates due to variance reduction.
+Figure \ref{fig:cartpole} compares SVRPG with G(PO)MDP on a continuous variant of the classical Cart-pole task, which is a 2D balancing task. {\color{blue}Despite using more trajectories for each parameter update}, our algorithm shows faster convergence, which can be ascribed to the better quality of updates due to variance reduction.
 
 The Swimmer task is a 3D continuous-control locomotion task. This is more difficult than cart-pole. In particular, the longer horizon and the more complex dynamics can have a dangerous impact on the variance of importance weights. In this case, the self-normalization technique proposed in Section \ref{sec:prac} brings an improvement, as shown in Figure \ref{fig:swimmertwo}. Although the confidence intervals are never disjoint, the average of the self-normalized version is always higher, which we consider enough to employ the variant in the next comparison. Figure \ref{fig:swimmerone} shows self-normalized SVRPG against G(PO)MDP. On average, our algorithm dominates for almost the entire task. Also here, we note an increase of speed in early iterations. Toward the end of the task, the improvement becomes statistically significant.
 
@@ -658,13 +658,7 @@ In all the tasks, our algorithm has higher average return and lower normalized s
 In Cart-pole, disjoint confidence intervals show that the advantage is statistically significant. 
 
 \textbf{Preliminary results on actor-critic.} %As mentioned, 
-Another variance-reduction technique in policy gradient is to employ baselines, or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without baseline. In order to move towards a more general understanding of the problem of variance in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we use the more challenging MuJoCo~\citep{todorov2012mujoco} Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Table \ref{tab:1} also reports the comparison between SVRPG and G(PO)MDP on Half-cheetah using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve.
-
-%\begin{figure}[t]	
-%    \includegraphics[width=0.5\textwidth]{half_cheetah_self_norm_baseline_SVRPG_vs_GPOMDP100_baseline}
-%    \caption{Self-Normalized SVRPG with baseline vs GPOMDP with baseline in half cheetah}
-%    \label{fig:halfcheetah}
-%\end{figure}
+Another variance-reduction technique in policy gradient is to employ baselines, or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without baseline. In order to move towards a more general understanding of the problem of variance in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we use the more challenging MuJoCo~\citep{todorov2012mujoco} Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Table \ref{tab:1} also reports the comparison between SVRPG and G(PO)MDP\footnote{\cite{duan2016benchmarking} report results on REINFORCE. However, inspection on \textit{rllab} code and documentation reveals that it is actually PGT \cite{sutton2000policy}, which is equivalent to G(PO)MDP \citep[shown by][]{peters2008reinforcement}. Using the name REINFORCE in a general way is inaccurate, but widespread.} on Half-cheetah using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve.
 
 
 \section{Conclusion}
@@ -674,14 +668,14 @@ Among them, non-concavity and approximate estimates of the FG have been analysed
 Nevertheless, the main issue in RL is the non-stationarity of the sampling process since the distribution underlying the objective function is policy-dependent.
 We have shown that by exploiting importance weighting techniques, it is possible to overcome this issue and preserve the unbiasedness of the corrected gradient.
 We have additionally shown that, under mild assumptions that are often verified in RL applications, it is possible to derive convergence guarantees for SVRPG.
-{\color{red}SVRG has been previously used in RL for policy evaluation~\citep{du2017svrgpe} and as alternative optimization method for TRPO~\citep{xu2017svrgtrpo}.
-The first case is much more similar to the SL case since the problem is stationary and may be made concave, removing several issues we have faced here.
-In the second case, it was used as a better optimization technique to solve the per-iteration problem imposed by TRPO.
-}
-\todomatout{Repetition of Section 6?}
+%{\color{red}SVRG has been previously used in RL for policy evaluation~\citep{du2017svrgpe} and as alternative optimization method for TRPO~\citep{xu2017svrgtrpo}.
+%The first case is much more similar to the SL case since the problem is stationary and may be made concave, removing several issues we have faced here.
+%In the second case, it was used as a better optimization technique to solve the per-iteration problem imposed by TRPO.
+%}
+%\todomatout{Repetition of Section 6?}
 Finally, we have empirically shown that practical variants of the theoretical SVRPG version can outperform classical actor-only approaches on benchmark tasks.
-\todomat{add future work}
-
+Preliminary results support the effectiveness of SVRPG also with a commonly used baseline for the policy gradient.
+Despite that, we believe that it will be possible to derive a baseline specifically designed for SVRPG in order to jointly exploit the RL structure and the SVRG idea. Future work should also focus on making batch sizes $N$ and $B$ adaptive, as suggested in \cite{papini2017adaptive}.
 
 \FloatBarrier
 \bibliography{svrpg}
@@ -706,7 +700,7 @@ We can now recall the definition of policy performance
 where $\Reward(\tau) = \sum_{t=0}^{H}\gamma^t \Reward(z_t)$.
 The policy gradient $\nabla J(\vtheta)$ is
 \begin{equation}\label{E:onpolicygradient}
-        \gradJ{\vtheta} = \EVV[\tau \sim p(\cdot|\pol)]{\nabla \log\Delta(\tau|\vtheta)\Reward(\tau)} = \EVV[\tau \sim p(\cdot|\pol)]{\sum_{j=0}^{H} \gamma^j \mathcal{R}(z_j) \sum_{i=0}^{H} \nabla \log\pi(z_i)}.
+        \gradJ{\vtheta} = \EVV[\tau \sim p(\cdot|\pol)]{\nabla \log p(\tau|\vtheta)\Reward(\tau)} = \EVV[\tau \sim p(\cdot|\pol)]{\sum_{j=0}^{H} \gamma^j \mathcal{R}(z_j) \sum_{i=0}^{H} \nabla \log\pi(z_i)}.
 \end{equation}
 
 \textbf{On-policy setting.}
@@ -715,16 +709,22 @@ The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, u
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}
 \underbracket{
-        \left(\sum_{h=0}^{H}\nabla \log \pol(z_h^n) \right)\left(\sum_{h=0}^{H}\gamma^h \Reward(z_h^n) - b\right)
+        \left(\sum_{h=0}^{H}\nabla \log \pol(z_h^n) \right)\left(\sum_{h=0}^{H}\gamma^h 
+%        \Reward(z_h^n)
+        r_h^n
+- b(z_h^n)\right)
 }_{g(\tau_n|\vtheta):=\nabla \log p(\tau_n|\vtheta)\Reward(\tau_n)}
 ,
 \end{align*}
-where subscripts denote the time step, superscripts denote the trajectory, $r_h$ is the reward actually collected at time $h$ and $b : \mathcal{S}\times\mathcal{A} \to \realspace$~\citep[\eg][]{Thomas2017actionbaseline}.
+where subscripts denote the time step, superscripts denote the trajectory, $r_h^n$ is the reward actually collected at time $h$ from trajectory $\tau^n$ and $b : \mathcal{S}\times\mathcal{A} \to \realspace$~\citep[\eg][]{Thomas2017actionbaseline}.
 The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REINFORCE which is subject to less variance \cite{zhao2011analysis} while preserving the unbiasedness:
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}
 \underbracket{
-        \sum_{h=0}^{H}\left(\sum_{k=0}^{h} \nabla \log \pol (z_h^n) \right)\left(\gamma^h \Reward(z_h^n) - b\right)
+        \sum_{h=0}^{H}\left(\sum_{k=0}^{h} \nabla \log \pol (z_h^n) \right)\left(\gamma^h 
+%        \Reward(z_h^n)
+        r_h^n
+        - b(z^n_h)\right)
 }_{g(\tau_n|\vtheta)}.
 \end{align*}
 G(PO)MDP can be seen as a more efficient implementation of the REINFORCE algorithm. 
