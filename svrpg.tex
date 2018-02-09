@@ -661,7 +661,7 @@ The REINFORCE gradient estimator~\citep{williams1992simple} provides a simple, u
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}
 \underbracket{
-        \left(\sum_{h=0}^{H}\nabla \log \pol(a_h^n\vert s_h^n) \right)\left(\sum_{h=0}^{H}\gamma^h \Reward(s_h^n,a_h^n) - b\right)
+        \left(\sum_{h=0}^{H}\nabla \log \pol(z_h^n) \right)\left(\sum_{h=0}^{H}\gamma^h \Reward(z_h^n) - b\right)
 }_{g(\tau_n|\vtheta):=\nabla \log p(\tau_n|\vtheta)\Reward(\tau_n)}
 ,
 \end{align*}
@@ -670,15 +670,12 @@ The G(PO)MDP gradient estimator~\cite{baxter2001infinite} is a refinement of REI
 \begin{align*}
 \gradApp{\vtheta}{N} = \frac{1}{N}\sum_{n=1}^{N}
 \underbracket{
-        \sum_{h=0}^{H}\left(\sum_{k=0}^{h} \nabla \log \pol (a_h^n\vert s_h^n) \right)\left(\gamma^h \Reward(s_h^n,a_h^n) - b\right)
+        \sum_{h=0}^{H}\left(\sum_{k=0}^{h} \nabla \log \pol (z_h^n) \right)\left(\gamma^h \Reward(z_h^n) - b\right)
 }_{g(\tau_n|\vtheta)}.
 \end{align*}
-G(PO)MDP can be seen as a more efficient implementation
-of the REINFORCE algorithm. In fact the latter does not perform
-an optimal credit assignment, since it ignores that the reward at time $t$ does
-not depend on the action performed after time $t$. G(PO)MDP overcomes this
-issue taking into account the causality of rewards in the REINFORCE definition
-of policy gradient.
+G(PO)MDP can be seen as a more efficient implementation of the REINFORCE algorithm. 
+In fact the latter does not perform an optimal credit assignment, since it ignores that the reward at time $t$ does not depend on the action performed after time $t$.
+G(PO)MDP overcomes this issue taking into account the causality of rewards in the REINFORCE definition of policy gradient.
 
 \textbf{Off-policy setting.}
 In off-policy setting two policies, called behavioural $\pi^B$ and target $\pi^T$, are involved.
@@ -700,13 +697,17 @@ Equation~\ref{E:offpolicygradient} is important for proving Theorem~\ref{theo:co
 The off-policy version of REINFORCE is easily obtained by taking the empirical average of~\eqref{E:offpolicygradient}:
 \[
         \nabla J(\pi^T) = \frac{1}{N} \sum_{n=1}^{N} \omega(\tau^n|\pi^B, \pi^T)
-        \left(\sum_{h=0}^{H} \nabla \log \pi^{T}(a_h^n\vert s_h^n) \right)\left(\sum_{h=0}^{H}\gamma^h \Reward(s_h^n,a_h^n)\right).
+        \underbracket{
+                \left(\sum_{h=0}^{H} \nabla \log \pi^{T}(z_h^n) \right)\left(\sum_{h=0}^{H}\gamma^h \Reward(z_h^n)\right)
+        }_{g(\tau_n|\pi^T)}.
 \]
-
+%
 The G(PO)MDP off-policy estimator is defined as follows
 \[
         \nabla J(\pi^T) = \frac{1}{N} \sum_{n=1}^{N}
-        \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(z_k^n)\right) \gamma^h \Reward(z_h^n) \omega(z_{0:h}|\pi^B,\pi^T)
+        \underbracket{
+                \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(z_k^n)\right) \gamma^h \Reward(z_h^n) \omega(z_{0:h}|\pi^B,\pi^T)
+        }_{\omega(\tau_n|\pi^B,\pi^T)g(\tau_n|\pi^T)}.
 \]
 % \todopir{Add proof of Def 2 from Luca's thesis}
 
