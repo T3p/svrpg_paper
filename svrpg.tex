@@ -507,22 +507,27 @@ Finally, from the return statement of Algorithm \ref{alg:svrpg}, it is worth not
 \section{Remarks on SVRPG}
 The convergence guarantees presented in the previous section come with requirements on the meta-parameters (\ie $\alpha$ and $m$) that may be too conservative for practical applications.
 Here we provide a practical and automatic way to choose the step size $\alpha$ and the number of sub-iterations $m$ performed between snapshots.
-Additionally, we provide variants of SVRPG exploiting variance-reduction techniques for importance weights. Despite lacking theoretical guarantees, we will show that these methods can outperform the baseline SVRPG (Algorithm~\ref{alg:svrpg}).
+Additionally, we provide a variant of SVRPG exploiting a variance-reduction technique for importance weights.
+Despite lacking theoretical guarantees, we will show in Section~\ref{sec:exp} that this method can outperform the baseline SVRPG (Algorithm~\ref{alg:svrpg}).
 
-\subsection{Zeroth Update}
-As noted in Section \ref{sec:alg}, the update performed at the beginning of each epoch is equivalent to a full-gradient update. In our setting, where collecting samples is particularly expensive, the $B$ trajectories collected using the snapshot trajectory $\pi_{\tilde{\vtheta}^s}$ feel like a waste of data. In practice, we just perform an approximate full gradient update using the $N$ trajectories sampled to compute $\gradApp{\tilde{\vtheta}^s}{N}$, \ie
+\subsection{Full Gradient Update}
+As noted in Section \ref{sec:alg}, the update performed at the beginning of each epoch is equivalent to a full-gradient update. In our setting, where collecting samples is particularly expensive, the $B$ trajectories collected using the snapshot trajectory $\pi_{\wt{\vtheta}^s}$ feels like a waste of data (the term $\sum_i g(\tau_i) - \omega(\tau_i) g(\tau_i) =0$ since $\vtheta_0 = \wt{\vtheta}$).
+In practice, we just perform an approximate full gradient update using the $N$ trajectories sampled to compute $\gradApp{\wt{\vtheta}^s}{N}$, \ie
 \begin{align*}
-	&\vtheta_{1}^{s+1} = \tilde{\vtheta}^s + \alpha\gradApp{\tilde{\vtheta}^s}{N} \\
-	&\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha v_t^{s+1} \text{ for $t=1,\dots,m-1$}.
+	&\vtheta_{1}^{s+1} = \wt{\vtheta}^s + \alpha\gradApp{\wt{\vtheta}^s}{N} \\
+	&\vtheta_{t+1}^{s+1} = \vtheta_t^{s+1} + \alpha 
+%        v_t^{s+1}
+        \blacktriangledown J(\vtheta^{s+1}_t)
+        \text{ for $t=1,\dots,m-1$}.
 \end{align*}
 In the following, we will always assume this practical variant is employed.
 
 \subsection{Meta-Parameter Selection}\label{sec:stopping}
 % In section \ref{sec:conv}, we introduced the practical need to properly choose $\alpha$ and $m$, which are, respectively, the step size and the number of sub-iterations to perform after a snapshot.
 % At this point, the open question is how to properly select the step size $\alpha$ and the sub-iteration number $m$ in practical applications.
-The step size $\alpha$ is crucial to balance variance reduction and efficiency.
+The step size $\alpha$ is crucial to balance variance reduction and efficiency, while
 % The first parameter is crucial to balance the variance introduced by estimations within sub-iterations with respect to the variance introduced by estimations associated to the snapshots.
-Epoch length $m$ influences the variance introduced by the importance weights. Low values of $m$ are associated with small variance but increase the frequency of snapshot points (which means many FG computations). High values of $m$ may move policy $\pi_{\vtheta_t}$ far away from the snapshot policy $\pi_{\wt{\vtheta}}$, causing large variance in the importance weights. We propose to adapt the two meta-parameters jointly.
+the epoch length $m$ influences the variance introduced by the importance weights. Low values of $m$ are associated with small variance but increase the frequency of snapshot points (which means many FG computations). High values of $m$ may move policy $\pi_{\vtheta_t}$ far away from the snapshot policy $\pi_{\wt{\vtheta}}$, causing large variance in the importance weights. We propose to adapt the two meta-parameters jointly.
 % the farther the distance between the snapshot policy and the current one, the higher the variance of the importance weights.
 
 \textbf{Adaptive step size.}
@@ -533,7 +538,10 @@ Recall that SVRPG performs two different updates of the parameters $\vtheta$: I)
 Given this structure, we suggest using two separate ADAM estimators:
 \begin{align*}
         \vtheta^{s+1}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\wh{\nabla}_N J(\wt{\vtheta}^s)\\
-        \vtheta^{s+1}_{t+1} &= \vtheta^{s+1}_t + \alpha^{\textsc{SI}}_{s+1,t} v_t^{s+1} \text{ for $t=1,\dots,m-1$},
+        \vtheta^{s+1}_{t+1} &= \vtheta^{s+1}_t + \alpha^{\textsc{SI}}_{s+1,t} 
+%        v_t^{s+1}
+        \blacktriangledown J(\vtheta^{s+1}_t)
+        \text{ for $t=1,\dots,m-1$},
 \end{align*}
 where $\alpha^{\textsc{FG}}_{s}$ is associated with the snapshot and $\alpha^{\textsc{SI}}_{s+1,t}$ with the sub-iterations (see Appendix~\ref{app:practicalsvrpg} for details).
 By doing so, we decouple the contribution of the variance due to the approximate FG from the one introduced by the sub-iterations.
