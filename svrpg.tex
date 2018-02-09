@@ -550,16 +550,16 @@ This weighted approach comes from the fact that, as mentioned above, there is no
 Thus, we aim to facilitate sub-iterations rather than snapshots.
 
 \subsection{Normalized Importance Sampling}\label{sec:prac}
-As mentioned in Section~\ref{sec:stopping}, importance weights are an additional source of variance. A standard way to cope with this issue is self-normalization \citep{precup2000eligibility}.
-This technique can reduce the variance of the importance weights at the cost of introducing some bias. Whether the trade-off is advantageous depends on the specific task.  
+As mentioned in Section~\ref{sec:stopping}, importance weights are an additional source of variance. A standard way to cope with this issue is self-normalization~\citep[\eg][]{precup2000eligibility,owenmcbook}.
+This technique can reduce the variance of the importance weights at the cost of introducing some bias~\citep[][Chapter 9]{owenmcbook}.
+Whether the trade-off is advantageous depends on the specific task.  
 Introducing self-normalization in the context of our algorithm, we switch from Eq.~\eqref{E:svrpg.estimate.batch} to:
 \begin{align*}
-\blacktriangledown J(\vtheta_{t}) = \wh{\nabla}_N J(\wt{\vtheta})
- + \frac{1}{B} \sum_{i=0}^{B-1} \left[
-g(\tau_i|\vtheta_t)\right]\\ 
-- \frac{1}{ \sum_{i=0}^{B-1}\omega(\tau_i|\vtheta_t, \wt{\vtheta})} \sum_{i=0}^{B-1} \left[ \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
+        \blacktriangledown J(\vtheta_{t}) &= \wh{\nabla}_N J(\wt{\vtheta}) + \frac{1}{B} \sum_{i=0}^{B-1} \left[g(\tau_i|\vtheta_t)\right]\\ 
+                                          &\qquad{} - \frac{1}{\Omega} \sum_{i=0}^{B-1} \left[ \omega(\tau_i|\vtheta_t, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})
 \right].
 \end{align*}
+where $\Omega = \sum_{i=0}^{B-1}\omega(\tau_i|\vtheta_t, \wt{\vtheta})$.
 In Section \ref{sec:exp} we show that self-normalization can provide a performance improvement.
 
 \section{Related Work}
