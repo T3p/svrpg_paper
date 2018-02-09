@@ -1434,18 +1434,26 @@ In this appendix we provide more details on the practical variants of our algori
 \begin{algorithm}[h]
 	\begin{algorithmic}
 		\STATE \textbf{Input:} A gradient estimate $g_t$ and parameters $\beta_1$, $\beta_2$, $\epsilon$ and $\alpha$.
-		\STATE $m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$
-		\STATE $v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t \circ g_t$ ($\circ$ is the Hadamard (component-wise) product)
-		\STATE $\hat{m}_t = \dfrac{m_t}{1 - \beta^t_1}$
-		\STATE $\hat{v}_t = \dfrac{v_t}{1 - \beta^t_2}$
-		\STATE $\Delta(g_t) = \dfrac{\alpha}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t$
+		\STATE $\kappa_t = \beta_1 \kappa_{t-1} + (1 - \beta_1) g_t$
+		\STATE $\nu_t = \beta_2 \nu_{t-1} + (1 - \beta_2) g_t \circ g_t$ ($\circ$ is the Hadamard (component-wise) product)
+		\STATE $\hat{\kappa}_t = \dfrac{\kappa_t}{1 - \beta^t_1}$
+		\STATE $\hat{\nu}_t = \dfrac{\nu_t}{1 - \beta^t_2}$
+		\STATE $\Delta(g_t) = \dfrac{\alpha}{\sqrt{\hat{\nu}_t} + \epsilon} \hat{\kappa}_t$
 		\STATE \textbf{Return:} The increment $\Delta(g_t)$  of the parameters.
 	\end{algorithmic}
 	\caption{
 		\label{A:adam}
 		Adam}
 \end{algorithm}
-Let us give a deeper insight on the two different learning rate schedules used by our algorithm. We report pseudo-code of the original ADAM in Algorithm \ref{A:adam}. As mentioned, we use two distinct instances of ADAM: one related to the snapshots, and one to the sub-iterations. In this way the ADAM associated to the snapshots will take into account only the history of gradient moments at the snapshots. The same reasoning holds for the sub-iterations. This, of course, allows our algorithm to take into account the different variabilities in a more accurate manner.
+Let us give a deeper insight on the two different learning rate schedules used by our algorithm. We report pseudo-code of the original ADAM in Algorithm \ref{A:adam}. As mentioned, we use two distinct instances of ADAM to manage different sources of variance: one related to the snapshots, and one to the sub-iterations. In this way the ADAM associated to the snapshots takes into account only the history of gradient moments at the snapshots. Using the notation in Algorithm \ref{A:adam}, we can explicitly define our gradient updates:
+\begin{align*}
+\vtheta^{s+1}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\left(\wh{\nabla}_N J(\wt{\vtheta}^s) \right)\\
+\vtheta^{s+1}_{t+1} &= \vtheta^{s+1}_t + \alpha^{\textsc{SI}}_{s+1,t} \Big( 
+%        v_t^{s+1}
+\blacktriangledown J(\vtheta^{s+1}_t)\Big)
+\text{ for $t=1,\dots,m-1$},
+\end{align*}
+
 \subsection{Baseline}
 For all batch gradient-based algorithms, we use the same time-varying feature encoding for the linear baseline:
 \begin{align*}
