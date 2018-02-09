@@ -261,10 +261,14 @@ We refer the reader to Appendix~\ref{A:gradient_estimators} for details and a fo
 
 The main limitation of plain policy gradient is the high variance of these estimators.
 The na\"ive approach of increasing the batch size is not an option in RL due to the high cost of collecting samples, \ie by interacting with the environment.
-For this reason, literature has focused on the introduction of baselines (\ie functions $b : \mathcal{S} \times \mathcal{A} \to \realspace$) aiming to reduce the variance~\citep[\eg][]{Peters2008reinf,Thomas2017actionbaseline,wu2018variance}.
-There has been a surge of recent interest in variance reduction techniques for gradient optimization in supervised learning.
+For this reason, literature has focused on the introduction of baselines (\ie functions $b : \mathcal{S} \times \mathcal{A} \to \realspace$) aiming to reduce the variance~\citep[\eg][]{williams1992simple,Peters2008reinf,Thomas2017actionbaseline,wu2018variance}.
+{\color{red}
+This baselines are usually designed in order to minimize the variance of the gradient estimate but even them need to be estimated from data, partially reducing they effectiveness.
+On the other hand, there has been a surge of recent interest in variance reduction techniques for gradient optimization in supervised learning.
 Although these techniques have been mainly derived for finite-sum problems, we will show in Section~\ref{sec:alg} how they can be used in RL.
+In particular, we will shown that the proposed SVRPG algorithm can take the best of both worlds (\ie SL and RL) since it can be plugged over a policy gradient estimate using baselines.
 The next section has the aim to describe variance reduction techniques for finite-sum problems. In particular, we will present the SVRG algorithm that is at the core of this work.
+}
 
 
 \subsection{Stochastic Variance-Reduced Gradient}\label{sec:svrg}
@@ -335,7 +339,7 @@ However, a direct application of SVRG to RL is not possible due to the following
 %    \item[Approximation:] the dataset $\mathcal{T}$ can be infinite, but we can only sample a finite number of trajectories;
         \item[Non-stationarity:] the distribution of the samples changes over time. In particular, the value of the policy parameter $\vtheta$ influences the sampling process.
 \end{description}
-To deal with non-concavity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as Gaussian\footnote{see Appendix~\ref{app:gauss} for more details on the Gaussian policy case.} and softmax~\citep[\eg][]{Furmston2012unifying,pirotta2015lipschitz}.
+To deal with non-concavity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as Gaussian\footnote{See Appendix~\ref{app:gauss} for more details on the Gaussian policy case.} and softmax~\citep[\eg][]{Furmston2012unifying,pirotta2015lipschitz}.
 Because of the infinite dataset, we can only rely on an estimate of the full gradient.
 \citet{harikandeh2015stopwasting} analysed this scenario under the assumptions of $z$ being concave, showing that SVRG is robust to an inexact computation of the full gradient. In particular, it is still possible to recover the original convergence rate if the error decreases at an appropriate rate. In Section \ref{sec:conv} we will show how the estimation accuracy impacts on the convergence results with a non-concave objective.
 Finally, the non-stationarity of the optimization problem introduces a bias into the SVRG estimator in Eq.~\eqref{E:svrg.gradient.correction}.
@@ -381,7 +385,7 @@ To overcome this limitation we employ importance weighting~\citep[\eg][]{rubinst
 
 We can now introduce Stochastic Variance-Reduced Policy Gradient (SVRPG) for a generic policy gradient estimator $g$. Pseudo-code is provided in Algorithm \ref{alg:svrpg}.
 The overall structure is the same as Algorithm \ref{alg:svrg}, 
-but the snapshot gradient is not exact and the gradient estimate used between snapshots is corrected using importance weighting:
+but the snapshot gradient is not exact and the gradient estimate used between snapshots is corrected using importance weighting:\footnote{\color{red} Note that $g$ can be any unbiased estimator w/o baseline. The unbiasedness is required for theoretical results (\eg Appendix~\ref{A:gradient_estimators}).}
 \begin{align*}
         \blacktriangledown J(\vtheta_{t}) &= \wh{\nabla}_N J(\wt{\vtheta}) + g(\tau|\vtheta_t) - \omega(\tau|\vtheta_t, \wt{\vtheta}) g(\tau|\wt{\vtheta})
 \end{align*}
@@ -578,11 +582,12 @@ There are been a surge of work investigating variance reduction techniques for p
 % The most widespread technique of reducing the variance preserving the unbiasedness of the gradient is through baselines~\citep[\eg][]{williams1992simple,weaver2001optimal,peters2008reinforcement,Thomas2017actionbaseline,wu2018variance}.
 The specific structure of the policy gradient allows to incorporated a baseline (\ie a function $b :\mathcal{S}\times\mathcal{A} \to \realspace$) without affect the unbiasedness of the gradient~\citep[\eg][]{williams1992simple,weaver2001optimal,peters2008reinforcement,Thomas2017actionbaseline,wu2018variance}.
 Although the baseline can be arbitrarily selected, literature often refer to the optimal baseline as the one minimizing the variance of the estimate.
+Nevertheless, even the baseline needs to be estimated from data. This fact may partially reduce its effectiveness by introducing variance.
 Despite these approaches and SVRG has the same goal, they are substantially different.
-In particular, the proposed SVRPG does not make explicit use of the structure of the policy gradient framework.
+In particular, the proposed SVRPG does not make explicit use of the structure of the policy gradient framework and it is independent from the underline gradient estimate (\ie w/o baseline).
 This suggests that would be possible to integrate an ad-hoc SVRPG baseline in order to further reduce the variance of the estimate.
 But since this paper is about the applicability of SVRG technique to RL we consider this topic as future work.
-Additionally, the experiments show the advantage of using simple SVRPG against G(PO)MPD with baseline (see experiment of \textcolor{blue}{XXX} in Section~\ref{sec:exp}).
+Additionally, the experiments show the advantage of using simple SVRPG against G(PO)MPD with baseline (see the \textcolor{blue}{half-cheetah} domain in Section~\ref{sec:exp}).
 
 Concerning importance weighting techniques, RL has made wide use of them for off-policy problems~\citep[\eg][]{precup2000eligibility,thomas2015high}. However, as mentioned before, SVRPG cannot be compared to such methods since it is in all respects an on-policy algorithm. Here, importance weighting is just a statistical tool used to preserve the unbiasedness of the corrected gradient.
 
@@ -917,7 +922,7 @@ For REINFORCE we have, from Assumption \ref{ass:bounded_score}:
 	\norm[2]{\score{\vtheta}{\tau}R(\tau)}^2 \\
 	&=\norm[2]{\left(\sum_{t=0}^{H-1}\score{\vtheta}{a_t\vert s_t}\right)\left(\sum_{t=0}^{H-1}\gamma^t r_t\right)}^2\leq H^2G^2\frac{(1-\gamma^H)^2}{(1-\gamma)^2}R^2\dim(\vTheta) \coloneqq \Gamma
 \end{align*}
-For G(PO)MDP, we do not have a compact expression for $g$, but since it is derived from REINFORCE by neglecting some terms of the kind $\nabla \log \pi_{\vtheta}{a_t | s_t}\gamma^t r_t$ \cite{baxter2001infinite,peters2008reinforcement}, the above bound still holds.
+For G(PO)MDP, we do not have a compact expression for $g$, but since it is derived from REINFORCE by neglecting some terms of the kind $\nabla \log \pi_{\vtheta}(a_t | s_t)\gamma^t r_t$ \cite{baxter2001infinite,peters2008reinforcement}, the above bound still holds.
 \end{proof}
 %Lemma 2
 \begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
