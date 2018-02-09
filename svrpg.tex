@@ -650,7 +650,9 @@ The Swimmer task is a 3D continuous-control locomotion task. This is more diffic
 Table \ref{tab:1} compares G(PO)MDP and SVRPG in terms of the average return computed on the whole learning process, which is a common metric for on-line learning~\citep[\eg][]{duan2016benchmarking}. This corresponds to the area below the curves in the figures. Note also that the convergence result Theorem \ref{theo:convergence} is precisely about average return. We also report normalized standard deviation and 90\% bootstrap confidence intervals.
 In all the tasks, our algorithm has higher average return and lower normalized standard deviation. In the case of Cart-pole, disjoint confidence intervals show that the advantage is statistically significant. 
 
-%\begin{figure}[t]
+\paragraph{Preliminary results on actor-critic.}As mentioned, another variance-reduction technique in policy gradient is to employ baselines, or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without baseline. In order to move towards a more general understanding of the problem of variance in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we use the more challenging mujoco Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Table \ref{tab:1} also reports the comparison between SVRPG and G(PO)MDP on Half-cheetah using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve.
+
+%\begin{figure}[t]	
 %    \includegraphics[width=0.5\textwidth]{half_cheetah_self_norm_baseline_SVRPG_vs_GPOMDP100_baseline}
 %    \caption{Self-Normalized SVRPG with baseline vs GPOMDP with baseline in half cheetah}
 %    \label{fig:halfcheetah}
@@ -670,7 +672,7 @@ In the second case, it was used as a better optimization technique to solve the 
 }
 \todomatout{Repetition of Section 6?}
 Finally, we have empirically shown that practical variants of the theoretical SVRPG version can outperform classical actor-only approaches on benchmark tasks.
-
+\todomat{add future work}
 
 
 \FloatBarrier
@@ -914,7 +916,8 @@ Under Assumption \ref{ass:bounded_score}, whether we use the REINFORCE or the G(
 \]
 \end{restatable}
 \begin{proof}
-        For both REINFORCE and G(PO)MDP, $g(\tau\vert\vtheta)$ is a linear combination of terms of the kind $\nabla \log \pi_{\vtheta}(a_t\vert s_t)\gamma^t r_t$ \cite{peters2008reinforcement}. These terms have bounded gradient from the second inequality of Assumption \ref{ass:bounded_score} and the fact that $|r_t|\leq R$. Bounded gradient implies Lipschitz continuity. Finally, the linear combination of Lipschitz continuous functions is Lipschitz continuous.
+        For both REINFORCE and G(PO)MDP, $g(\tau\vert\vtheta)$ is a linear combination of terms of the kind $\nabla \log \pi_{\vtheta}(a_t\vert s_t)\gamma^t r_t$ \cite{peters2008reinforcement}. These terms have bounded gradient from the second inequality of Assumption \ref{ass:bounded_score} and the fact that $|r_t|\leq R$. If a baseline is used in REINFORCE or G(PO)MDP, we only need the additional assumption that said baseline is bounded.
+        Bounded gradient implies Lipschitz continuity. Finally, the linear combination of Lipschitz continuous functions is Lipschitz continuous.
 \end{proof}
 
 \begin{restatable}[]{lemma}{bounded-g}\label{lemma:gbound}
@@ -931,6 +934,7 @@ For REINFORCE we have, from Assumption \ref{ass:bounded_score}:
 	&=\norm[2]{\left(\sum_{t=0}^{H-1}\score{\vtheta}{a_t\vert s_t}\right)\left(\sum_{t=0}^{H-1}\gamma^t r_t\right)}^2\leq H^2G^2\frac{(1-\gamma^H)^2}{(1-\gamma)^2}R^2\dim(\vTheta) \coloneqq \Gamma
 \end{align*}
 For G(PO)MDP, we do not have a compact expression for $g$, but since it is derived from REINFORCE by neglecting some terms of the kind $\nabla \log \pi_{\vtheta}(a_t | s_t)\gamma^t r_t$ \cite{baxter2001infinite,peters2008reinforcement}, the above bound still holds.
+If a baseline is used in REINFORCE or G(PO)MDP, we only need the additional assumption that said baseline is bounded.
 \end{proof}
 
 %New Lemma on Variance
