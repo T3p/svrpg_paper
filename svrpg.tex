@@ -538,9 +538,9 @@ Recall that SVRPG performs two different updates of the parameters $\vtheta$: I)
 Given this structure, we suggest using two separate ADAM estimators:
 \begin{align*}
         \vtheta^{s+1}_1 &= \wt{\vtheta}^s + \alpha^{\textsc{FG}}_s\left(\wh{\nabla}_N J(\wt{\vtheta}^s) \right)\\
-        \vtheta^{s+1}_{t+1} &= \vtheta^{s+1}_t + \alpha^{\textsc{SI}}_{s+1,t}\left( 
+        \vtheta^{s+1}_{t+1} &= \vtheta^{s+1}_t + \alpha^{\textsc{SI}}_{s+1,t} \Big( 
 %        v_t^{s+1}
-        \blacktriangledown J(\vtheta^{s+1}_t)\right)
+        \blacktriangledown J(\vtheta^{s+1}_t)\Big)
         \text{ for $t=1,\dots,m-1$},
 \end{align*}
 where $\alpha^{\textsc{FG}}_{s}$ is associated with the snapshot and $\alpha^{\textsc{SI}}_{s+1,t}$ with the sub-iterations (see Appendix~\ref{app:practicalsvrpg} for details).
