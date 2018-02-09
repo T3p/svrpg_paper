@@ -4,7 +4,7 @@
 \usepackage{microtype}
 \usepackage{graphicx}
 \graphicspath{ {images/} }
-\usepackage{subfigure}
+%\usepackage{subfigure}
 \usepackage{booktabs} % for professional tables
 
 % hyperref makes hyperlinks in the resulting PDF.
@@ -596,23 +596,25 @@ The length of the experiment, \ie the total number of trajectories, is fixed for
 Task implementations are from the \textit{rllab} library \cite{duan2016benchmarking}, on which our agents are also based.\footnote{rllab can be found at \url{https://github.com/rll/rllab}, while the link to our implementation is not reported for blindness but it is already publically available.}
 More details on meta-parameters and exhaustive task descriptions are provided in Appendix \ref{app:exp}.
 
-\begin{figure}[t]
-	\includegraphics[width=0.5\textwidth]{images/cart_pole_SVRPG_vs_GPOMDP}
+\begin{figure*}[t]
+    \begin{minipage}[b]{0.3\textwidth}
+	\includegraphics[width=.95\textwidth]{images/cart_pole_SVRPG_vs_GPOMDP_tex.pdf}
 	\caption{On-line performance over sampled trajectories of SVRPG vs G(PO)MDP in the Cart-pole task, with 90\% t-student confidence intervals. Results denoted with $\dagger$ are taken from \cite{duan2016benchmarking}.}
 	\label{fig:cartpole}
-\end{figure}
-
-\begin{figure}[t]
-	\includegraphics[width=0.5\textwidth]{swimmer_self_normalized_SVRPG_vs_SVRPG}
+    \end{minipage}
+    \begin{minipage}[b]{0.3\textwidth}
+	\includegraphics[width=0.95\textwidth]{swimmer_self_normalized_SVRPG_vs_SVRPG_tex.pdf}
 	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs unbiased SVRPG in the Swimmer task, with 90\% confidence intervals.}
 	\label{fig:swimmertwo}
-\end{figure}
-
-\begin{figure}[t]
-	\includegraphics[width=0.5\textwidth]{swimmer_self_normalized_SVRPG_vs_GPOMDP}
+    \end{minipage}
+    \hfill
+        \begin{minipage}[b]{.3\textwidth}
+	\includegraphics[width=0.95\textwidth]{swimmer_self_normalized_SVRPG_vs_GPOMDP_tex.pdf}
 	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs G(PO)MDP in the Swimmer task, with 90\% confidence intervals}
 	\label{fig:swimmerone}
-\end{figure}
+    \end{minipage}
+\end{figure*}
+
 
 
 \begin{table*}[t]
