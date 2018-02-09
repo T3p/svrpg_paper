@@ -134,6 +134,14 @@
 \newcommand{\wb}[1]{\overline{#1}}
 %%%%%%
 
+
+\makeatletter
+\g@addto@macro\normalsize{%
+ \setlength\abovedisplayskip{6pt}
+ \setlength\belowdisplayskip{6pt}
+}
+\makeatother
+
 % The \icmltitle you define below is probably too long as a header.
 % Therefore, a short form for the running title is supplied here:
 \icmltitlerunning{Stochastic Variance-Reduced Policy Gradient}
@@ -201,7 +209,9 @@
         Finally, we suggest practical variants of SVRPG, and we empirically evaluate them on continuous MDPs.
 \end{abstract}
 
+\vspace{-0.05in}
 \section{Introduction}
+\vspace{-0.05in}
 %Similarities between RL and SL
 On a very general level, artificial intelligence addresses the problem of an agent that must select the right actions to solve a task. The approach of Reinforcement Learning~\citep{sutton1998reinforcement} is to learn the best actions by direct interaction with the environment and evaluation of the performance in the form of a reward signal. This makes RL fundamentally different from Supervised Learning (SL), where correct actions are explicitly prescribed by a human teacher (\eg for classification, in the form of class labels). However, the two approaches share many challenges and tools. The problem of estimating a model from samples, which is at the core of SL, is equally fundamental in RL, whether we choose to model the environment, a value function, or directly a policy defining the agent's behaviour. Furthermore, when the tasks are characterized by large or continuous state-action spaces, RL needs the powerful function approximators (\eg neural networks) that are the main subject of study of SL.
 % SL needs SVRG so RL
@@ -220,11 +230,15 @@ In both the cases, the optimization problems faced resemble the SL scenario and 
 %Paper structure
 After providing background on policy gradient and SVRG in Section \ref{sec:pre}, in Section \ref{sec:alg} propose SVRPG, a variant of SVRG for the policy gradient framework, addressing all the difficulties mentioned above. In Section \ref{sec:conv} we provide convergence guarantees for our algorithm which also offers insights on the challenges of variance reduction in RL. In Section \ref{sec:stopping} we suggest how to set the meta-parameters of SVRPG, while in Section \ref{sec:prac} we discuss some practical variants of the algorithm. Finally, in Section \ref{sec:exp} we empirically evaluate the performance of our method on popular continuous RL tasks.
 
+\vspace{-0.05in}
 \section{Preliminaries}\label{sec:pre}
+\vspace{-0.05in}
 In this section, we provide the essential background on policy gradient methods and stochastic variance-reduced gradient methods for finite-sum optimization.
 %In the next section we will show how these methods can be combined to solve Reinforcement Learning tasks.
 
+\vspace{-0.05in}
 \subsection{Policy Gradient}\label{subsec:PolicyGradient}
+\vspace{-0.05in}
 A Reinforcement Learning task~\citep{sutton1998reinforcement} can be modelled with a discrete-time continuous Markov Decision Process (MDP) $M = \{\Sspace,\Aspace,\Transition,\Reward,\gamma,\rho\}$, where $\Sspace$ is a continuous state space; $\Aspace$ is a continuous action space; $\Transition$ is a Markovian transition model, where $\Transition(s'|s,a)$ defines the transition density from state $s$ to $s'$ under action $a$; $\Reward$ is the reward function, where $\Reward(s,a) \in [-R,R]$ is the expected reward for state-action pair $(s,a)$;
 % and $R$ is the maximum absolute-value reward;
 $\gamma\in[0,1)$ is the discount factor; and $\rho$ is the initial state distribution.
@@ -271,7 +285,9 @@ The next section has the aim to describe variance reduction techniques for finit
 }
 
 
+\vspace{-0.05in}
 \subsection{Stochastic Variance-Reduced Gradient}\label{sec:svrg}
+\vspace{-0.05in}
 Finite-sum optimization is the problem of maximizing an objective function $f(\vtheta)$ which can be decomposed into the sum or average of a finite number of functions $z_i(\cdot|\vtheta)$:
 \begin{align*}
         \max_{\vtheta} \left\{ f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}z_i(\vtheta)\right\}.
@@ -325,7 +341,9 @@ More recently, some extensions of variance reduction algorithms to the non-conca
 	\end{algorithmic}
 \end{algorithm}
 
+\vspace{-0.05in}
 \section{SVRG in Reinforcement Learning}\label{sec:alg}
+\vspace{-0.05in}
 In online RL problems, the usual approach is to tune the batch size of SG to find the optimal trade-off between variance and speed.
 Recall that, compared to SL, the samples are not fixed in advance but we need to collect them at each policy change.
 Since this operation may be costly, we would like to minimize the number of interactions with the environment.
@@ -425,26 +443,28 @@ For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of th
     \Var\left[\wh{\nabla}_N J(\vtheta^*)\right].
 \end{equation}
 \end{lemma}
-\begin{proof}
-Claim (\ref{eq:unbiased}) is from the unbiasedness of the estimators:
-\begin{align*}
-\EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\wt{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} \\
-&\qquad- \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i|\vtheta, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} \\
-&= \gradJ{\wt{\vtheta}} + \gradJ{\vtheta} - \gradJ{\wt{\vtheta}} = \gradJ{\vtheta}.
-\end{align*}
-As for claim (\ref{eq:zerovar}), note that as $\vtheta\to\vtheta^*$, also $\wt{\vtheta}\to\vtheta^*$. Hence, by continuity of $J(\vtheta)$:
-\begin{align*}
-\Var\left[\gradBlack{\vtheta}\right] &\to \Var\left[\gradApp{\vtheta^*}{N}\right] + \frac{1}{B}\Var\left[g(\tau|\vtheta^*)\right. \\
-&\left.- \cancel{\omega(\tau|\vtheta^*,\vtheta^*)}g(\tau|\vtheta^*)\right]
-= \Var\left[\gradApp{\vtheta^*}{N}\right].
-\end{align*}
-Note that it is essential that the trajectories used in the second and the third term are the same for the variance to vanish.
-\end{proof}
+%\begin{proof}
+%Claim (\ref{eq:unbiased}) is from the unbiasedness of the estimators:
+%\begin{align*}
+%\EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\wt{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} \\
+%&\qquad- \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i|\vtheta, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} \\
+%&= \gradJ{\wt{\vtheta}} + \gradJ{\vtheta} - \gradJ{\wt{\vtheta}} = \gradJ{\vtheta}.
+%\end{align*}
+%As for claim (\ref{eq:zerovar}), note that as $\vtheta\to\vtheta^*$, also $\wt{\vtheta}\to\vtheta^*$. Hence, by continuity of $J(\vtheta)$:
+%\begin{align*}
+%\Var\left[\gradBlack{\vtheta}\right] &\to \Var\left[\gradApp{\vtheta^*}{N}\right] + \frac{1}{B}\Var\left[g(\tau|\vtheta^*)\right. \\
+%&\left.- \cancel{\omega(\tau|\vtheta^*,\vtheta^*)}g(\tau|\vtheta^*)\right]
+%= \Var\left[\gradApp{\vtheta^*}{N}\right].
+%\end{align*}
+%Note that it is essential that the trajectories used in the second and the third term are the same for the variance to vanish.
+%\end{proof}
 Previous results hold for both REINFORCE and G(PO)MDP.
 In particular, the latter result suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance (at least asymptotically).
 {\color{blue}Note that the randomized return value of Algorithm \ref{alg:svrpg} does not affect on-line learning at all, but will be used as a theoretical tool in the next section.}
 
+\vspace{-0.05in}
 \section{Convergence Guarantees of SVRPG}\label{sec:conv}
+\vspace{-0.05in}
 In this section, we state the convergence guarantees for SVRPG with REINFORCE or G(PO)MDP gradient estimator.
 We mainly leverage on the recent analysis of non-concave SVRG~\cite{reddi2016stochastic,allen2016variance}.
 Each of the three challenges presented at the beginning of Section~\ref{sec:alg} can potentially prevent convergence, so we need additional assumptions.
@@ -504,13 +524,17 @@ Once the last two terms can be neglected, the number of trajectories needed to a
 Finally, from the return statement of Algorithm \ref{alg:svrpg}, it is worth noting that $J(\vtheta_A)$ can be seen as the average performance of all the policies tried by the algorithm. This is particularly meaningful in the context of online learning that we are considering in this paper.
 
 
+\vspace{-0.05in}
 \section{Remarks on SVRPG}
+\vspace{-0.05in}
 The convergence guarantees presented in the previous section come with requirements on the meta-parameters (\ie $\alpha$ and $m$) that may be too conservative for practical applications.
 Here we provide a practical and automatic way to choose the step size $\alpha$ and the number of sub-iterations $m$ performed between snapshots.
 Additionally, we provide a variant of SVRPG exploiting a variance-reduction technique for importance weights.
 Despite lacking theoretical guarantees, we will show in Section~\ref{sec:exp} that this method can outperform the baseline SVRPG (Algorithm~\ref{alg:svrpg}).
 
+\vspace{-0.05in}
 \subsection{Full Gradient Update}
+\vspace{-0.05in}
 As noted in Section \ref{sec:alg}, the update performed at the beginning of each epoch is equivalent to a full-gradient update. In our setting, where collecting samples is particularly expensive, the $B$ trajectories collected using the snapshot trajectory $\pi_{\wt{\vtheta}^s}$ feels like a waste of data (the term $\sum_i g(\tau_i) - \omega(\tau_i) g(\tau_i) =0$ since $\vtheta_0 = \wt{\vtheta}$).
 In practice, we just perform an approximate full gradient update using the $N$ trajectories sampled to compute $\gradApp{\wt{\vtheta}^s}{N}$, \ie
 \begin{align*}
@@ -522,7 +546,9 @@ In practice, we just perform an approximate full gradient update using the $N$ t
 \end{align*}
 In the following, we will always assume this practical variant is employed.
 
+\vspace{-0.05in}
 \subsection{Meta-Parameter Selection}\label{sec:stopping}
+\vspace{-0.05in}
 % In section \ref{sec:conv}, we introduced the practical need to properly choose $\alpha$ and $m$, which are, respectively, the step size and the number of sub-iterations to perform after a snapshot.
 % At this point, the open question is how to properly select the step size $\alpha$ and the sub-iteration number $m$ in practical applications.
 The step size $\alpha$ is crucial to balance variance reduction and efficiency, while
@@ -562,7 +588,9 @@ The less the number of trajectories used to update the policy, the better.
 This weighted approach comes from the fact that, as mentioned above, there is no advantage in having $m$ too small.
 Thus, we aim to facilitate sub-iterations rather than snapshots.
 
+\vspace{-0.05in}
 \subsection{Normalized Importance Sampling}\label{sec:prac}
+\vspace{-0.05in}
 As mentioned in Section~\ref{sec:stopping}, importance weights are an additional source of variance. A standard way to cope with this issue is self-normalization~\citep[\eg][]{precup2000eligibility,owenmcbook}.
 This technique can reduce the variance of the importance weights at the cost of introducing some bias~\citep[][Chapter 9]{owenmcbook}.
 Whether the trade-off is advantageous depends on the specific task.  
@@ -575,7 +603,9 @@ Introducing self-normalization in the context of our algorithm, we switch from E
 where $\Omega = \sum_{i=0}^{B-1}\omega(\tau_i|\vtheta_t, \wt{\vtheta})$.
 In Section \ref{sec:exp} we show that self-normalization can provide a performance improvement.
 
+\vspace{-0.05in}
 \section{Related Work}
+\vspace{-0.05in}
 Despite the considerable interest received in SL, variance-reduced gradient approaches have not attracted the RL community.
 As far as we know, there are just two applications of SVRG in RL.
 The first approach~\citep{du2017svrgpe} aims to exploit SVRG for policy evaluation.
@@ -599,7 +629,9 @@ Additionally, the experiments show that SVRPG has an advantage over G(PO)MPD eve
 
 Concerning importance weighting techniques, RL has made extensive use of them for off-policy problems~\citep[\eg][]{precup2000eligibility,thomas2015high}. However, as mentioned before, SVRPG cannot be compared to such methods since it is in all respects an on-policy algorithm. Here, importance weighting is just a statistical tool used to preserve the unbiasedness of the corrected gradient.
 
+\vspace{-0.05in}
 \section{Experiments}\label{sec:exp}
+\vspace{-0.05in}
 In this section, we evaluate the performance of SVRPG and compare it with policy gradient (PG) on well known continuous RL tasks: Cart-pole balancing and Swimmer~\citep[\eg][]{duan2016benchmarking}.
 We consider G(PO)MDP since has a smaller variance than REINFORCE.
 % This comparison is performed using G(PO)MDP as an estimator of $\score{\vtheta}{\tau}\Reward(\tau)$ in both cases. 
@@ -611,19 +643,20 @@ Task implementations are from the \textit{rllab} library \cite{duan2016benchmark
 More details on meta-parameters and exhaustive task descriptions are provided in Appendix \ref{app:exp}.
 
 \begin{figure*}[t]
-    \begin{minipage}[b]{0.3\textwidth}
-	\includegraphics[width=.95\textwidth]{images/cart_pole_SVRPG_vs_GPOMDP_tex.pdf}
-	\caption{On-line performance over sampled trajectories of SVRPG vs G(PO)MDP in the Cart-pole task, with 90\% t-student confidence intervals. Results denoted with $\dagger$ are taken from \cite{duan2016benchmarking}.}
+    \begin{minipage}[t]{0.32\textwidth}
+	\includegraphics[width=.98\textwidth]{images/cart_pole_SVRPG_vs_GPOMDP_tex.pdf}
+	\caption{On-line performance over sampled trajectories of SVRPG vs G(PO)MDP in the Cart-pole task, with 90\% t-student confidence intervals.}
 	\label{fig:cartpole}
     \end{minipage}
-    \begin{minipage}[b]{0.3\textwidth}
-	\includegraphics[width=0.95\textwidth]{swimmer_self_normalized_SVRPG_vs_SVRPG_tex.pdf}
+    \hfill
+    \begin{minipage}[t]{0.32\textwidth}
+	\includegraphics[width=0.98\textwidth]{swimmer_self_normalized_SVRPG_vs_SVRPG_tex.pdf}
 	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs unbiased SVRPG in the Swimmer task, with 90\% confidence intervals.}
 	\label{fig:swimmertwo}
     \end{minipage}
     \hfill
-        \begin{minipage}[b]{.3\textwidth}
-	\includegraphics[width=0.95\textwidth]{swimmer_self_normalized_SVRPG_vs_GPOMDP_tex.pdf}
+    \begin{minipage}[t]{.32\textwidth}
+	\includegraphics[width=0.98\textwidth]{swimmer_self_normalized_SVRPG_vs_GPOMDP_tex.pdf}
 	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs G(PO)MDP in the Swimmer task, with 90\% confidence intervals}
 	\label{fig:swimmerone}
     \end{minipage}
@@ -665,7 +698,9 @@ In Cart-pole, disjoint confidence intervals show that the advantage is statistic
 Another variance-reduction technique in policy gradient is to employ baselines or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without the baseline. To move towards a more general understanding of the problem of variance in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we consider the more challenging MuJoCo~\citep{todorov2012mujoco} Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Table \ref{tab:1} also reports the comparison between SVRPG and G(PO)MDP\footnote{\citet{duan2016benchmarking} report results on REINFORCE. However, inspection on \textit{rllab} code and documentation reveals that it is actually PGT \cite{sutton2000policy}, which is equivalent to G(PO)MDP \citep[shown by][]{peters2008reinforcement}. Using the name REINFORCE in a general way is inaccurate, but widespread.} on Half-cheetah using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of the baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve.
 
 
+\vspace{-0.05in}
 \section{Conclusion}
+\vspace{-0.05in}
 In this paper, we introduced SVRPG, a variant of SVRG designed explicitly for RL problems.
 The control problem considered in the paper has a series of difficulties that are not common in SL.
 Among them, non-concavity and approximate estimates of the FG have been analysed independently in SL~\citep[\eg][]{allen2016variance,reddi2016stochastic,harikandeh2015stopwasting} but never combined.

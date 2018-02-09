@@ -5,6 +5,7 @@
 \definecolor{color1}{rgb}{1,0.541176470588235,0.145098039215686}
 
 \begin{axis}[
+width=8cm, height=7cm,
 xlabel={Trajectories},
 ylabel={Average Return},
 xmin=-495, xmax=10395,
@@ -16,7 +17,8 @@ y grid style={lightgray!92.02614379084967!black},
 legend cell align={left},
 legend entries={{Avg Return SVRPG},{Avg Return GPOMDP}},
 legend style={at={(0.97,0.03)}, anchor=south east, draw=white!80.0!black},
-font=\small
+font=\small,
+ylabel shift = -10pt
 ]
 % \addlegendimage{no markers, color0}
 % \addlegendimage{no markers, color1}
