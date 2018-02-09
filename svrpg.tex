@@ -1483,9 +1483,13 @@ Let us give a deeper insight on the two different learning rate used by our algo
 \subsection{Baseline}
 For all batch gradient-based algorithms, we use the same time-varying feature encoding for the linear baseline:
 \begin{align*}
-\psi_{s,t}=concat(s, s \odot s, 0.01t, (0.01t)^2, (0.01t)^3,1)
+        \psi(s,t)=concat(s, s \odot s, 0.01t, (0.01t)^2, (0.01t)^3,1)
 \end{align*}
 where $s$ is the state vector and $\odot$ is the element-wise product.
+As a consequence, the baseline for both SVRPG and G(PO)MDP is defined as follows:
+\[
+        b(s,a) = \transpose{\boldsymbol{\lambda}} \psi(s,t)
+\]
 \section{Experimental Details}\label{app:exp}
 Used environments:
 \begin{enumerate}
@@ -1495,9 +1499,12 @@ Used environments:
 \end{enumerate}
 
 Refer to \cite{duan2016benchmarking}  for more details about GPOMDP in Half Cheetah task.
-All the experiments' parameters are reported in the following table:
+All the experiments' parameters are reported in Table~\ref{T:exp_settings}.
 
+\begin{table}[b]
 \centering
+\caption{Settings of the experiments.}
+\label{T:exp_settings}
 \begin{tabular}{| l | c  c  c |}
 	\hline	
 	& Cart-Pole & Swimmer & Half Cheetah \\
@@ -1517,6 +1524,28 @@ All the experiments' parameters are reported in the following table:
 	Total number of trajectories& 10000 & 20000 & 50000 \\
 	\hline  
 \end{tabular}
+\end{table}
+In Figure~\ref{fig:cartpole_big},~\ref{fig:swimmertwo_big} and~\ref{fig:swimmerone_big} we have reported the same results presented in the main paper but on bigger figures.
 
+\begin{figure}[t]
+        \centering
+    \begin{minipage}[t]{0.48\textwidth}
+	\includegraphics[width=.98\textwidth]{images/cart_pole_SVRPG_vs_GPOMDP_tex.pdf}
+	\caption{On-line performance over sampled trajectories of SVRPG vs G(PO)MDP in the Cart-pole task, with 90\% t-student confidence intervals.}
+	\label{fig:cartpole_big}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+	\includegraphics[width=0.98\textwidth]{swimmer_self_normalized_SVRPG_vs_SVRPG_tex.pdf}
+	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs unbiased SVRPG in the Swimmer task, with 90\% confidence intervals.}
+	\label{fig:swimmertwo_big}
+    \end{minipage}
+\end{figure}
+\begin{figure}[t]
+        \centering
+	\includegraphics[width=0.47\textwidth]{swimmer_self_normalized_SVRPG_vs_GPOMDP_tex.pdf}
+	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs G(PO)MDP in the Swimmer task, with 90\% confidence intervals}
+	\label{fig:swimmerone_big}
+\end{figure}
 
 \end{document}
