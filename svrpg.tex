@@ -438,7 +438,7 @@ Note that it is essential that the trajectories used in the second and the third
 \end{proof}
 Previous results hold for both REINFORCE and G(PO)MDP.
 In particular, the latter result suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance (at least asymptotically).
-\todopir{mention that even if for theoretical guarantees we should return a random solution, this is not a problem for us because we are evaluating the performance on-line. And is always improving}
+{\color{blue}Note that the randomized return value of Algorithm \ref{alg:svrpg} does not affect on-line learning at all, but will be used as a theoretical tool in the next section.}
 
 \section{Convergence Guarantees of SVRPG}\label{sec:conv}
 In this section, we state the convergence guarantees for SVRPG with REINFORCE or G(PO)MDP gradient estimator.
@@ -655,7 +655,7 @@ We have additionally shown that, under mild assumptions that are often verified 
 The first case is much more similar to the SL case since the problem is stationary and may be made concave, removing several issues we have faced here.
 In the second case, it was used as a better optimization technique to solve the per-iteration problem imposed by TRPO.
 }
-\todomat{Repetition of Section 6?}
+\todomatout{Repetition of Section 6?}
 Finally, we have empirically shown that practical variants of the theoretical SVRPG version can outperform classical actor-only approaches on benchmark tasks.
 
 
