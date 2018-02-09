@@ -1439,8 +1439,14 @@ It is a common practice to learn also the variance of the policy in order to ada
  \label{A:adam}
  Adam}
 \end{algorithm}
-\todopir{Explain how we use adam and when/if it is reset on snapshots}
-
+\subsection{Learning Rates}
+Let us give a deeper insight on the two different learning rate used by our algorithm. We have already said that we use two different ADAM one related to the snapshots and another one related to the sub-iterations. In this way tha ADAM associated to the snapshots will take into account only the snapshots history through the parameters $m_{t-1}$ and $v_{t-1}$. The same reasoning holds for the sub-iterations. This, of course, allows our algorithm to take into account the different variabilities in a more accurate manner.
+\subsection{Baseline}
+For all batch gradient-based algorithms, we use the same time-varying feature encoding for the linear baseline:
+\begin{align*}
+\psi_{s,t}=concat(s, s \odot s, 0.01t, (0.01t)^2, (0.01t)^3,1)
+\end{align*}
+where $s$ is the state vector and $\odot$ is the element-wise product.
 \section{Experimental Details}\label{app:exp}
 Used environments:
 \begin{enumerate}
