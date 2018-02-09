@@ -22,7 +22,9 @@
 *.mtc1
 *.out
 *.synctex.gz
-*.pdf
+svrpg.pdf
+paper.pdf
+theorem1.pdf
 
 #Vim
 *~
