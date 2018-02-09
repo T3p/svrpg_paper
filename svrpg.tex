@@ -649,7 +649,7 @@ More details on meta-parameters and exhaustive task descriptions are provided in
 	\end{tabular}
 \end{table*}
 
-Figure \ref{fig:cartpole} compares SVRPG with G(PO)MDP on a continuous variant of the classical Cart-pole task, which is a 2D balancing task. Despite using more trajectories for each parameter,\todopirout{I do not understand this sentence} our algorithm shows faster convergence, which can be ascribed to the better quality of updates due to variance reduction.
+Figure \ref{fig:cartpole} compares SVRPG with G(PO)MDP on a continuous variant of the classical Cart-pole task, which is a 2D balancing task. {\color{blue}Despite using more trajectories for each parameter update}, our algorithm shows faster convergence, which can be ascribed to the better quality of updates due to variance reduction.
 
 The Swimmer task is a 3D continuous-control locomotion task. This is more difficult than cart-pole. In particular, the longer horizon and the more complex dynamics can have a dangerous impact on the variance of importance weights. In this case, the self-normalization technique proposed in Section \ref{sec:prac} brings an improvement, as shown in Figure \ref{fig:swimmertwo}. Although the confidence intervals are never disjoint, the average of the self-normalized version is always higher, which we consider enough to employ the variant in the next comparison. Figure \ref{fig:swimmerone} shows self-normalized SVRPG against G(PO)MDP. On average, our algorithm dominates for almost the entire task. Also here, we note an increase of speed in early iterations. Toward the end of the task, the improvement becomes statistically significant.
 
