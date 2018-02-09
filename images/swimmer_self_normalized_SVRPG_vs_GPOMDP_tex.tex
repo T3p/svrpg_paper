@@ -5,6 +5,7 @@
 \definecolor{color1}{rgb}{1,0.541176470588235,0.145098039215686}
 
 \begin{axis}[
+width=8cm, height=7cm,
 xlabel={Trajectories},
 ylabel={Average Return},
 xmin=-995, xmax=20895,
@@ -15,10 +16,11 @@ x grid style={lightgray!92.02614379084967!black},
 y grid style={lightgray!92.02614379084967!black},
 legend cell align={left},
 legend style={at={(0.97,0.03)}, anchor=south east, draw=white!80.0!black},
-legend entries={{Avg Return Self-Normalized SVRPG},{Avg Return GPOMDP}}
+legend entries={{Avg Return Self-Normalized SVRPG},{Avg Return GPOMDP}},
+font=\small
 ]
-\addlegendimage{no markers, color0}
-\addlegendimage{no markers, color1}
+% \addlegendimage{no markers, color0}
+% \addlegendimage{no markers, color1}
 \path [draw=color0, fill=color0, opacity=0.3] (axis cs:0,-8.60798658352297)
 --(axis cs:0,-0.640165236527953)
 --(axis cs:100,1.29802254511797)
@@ -1030,7 +1032,7 @@ table {%
 19800 64.3056597324908
 19900 65.2651903776615
 };
-\addplot [semithick, color0, opacity=0.5, mark=*, mark size=3, mark options={solid}, only marks]
+\addplot [semithick, color0, mark=+, mark size=3, mark options={solid}, only marks]
 table {%
 0 -4.31615541159232
 100 -2.90462735727176
@@ -1436,7 +1438,7 @@ table {%
 19800 46.6635425471211
 19900 46.3476114169098
 };
-\addplot [semithick, color1, opacity=0.5, mark=*, mark size=3, mark options={solid}, only marks]
+\addplot [semithick, color1, opacity=0.5, opacity=0.5, mark=*, mark size=3, mark options={solid}, only marks]
 table {%
 0 -4.35141071381525
 100 -2.58052900155983

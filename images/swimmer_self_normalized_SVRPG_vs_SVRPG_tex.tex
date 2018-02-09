@@ -5,6 +5,7 @@
 \definecolor{color0}{rgb}{0.345098039215686,0.756862745098039,0.27843137254902}
 
 \begin{axis}[
+width=8cm, height=7cm,
 xlabel={Trajectories},
 ylabel={Average Return},
 xmin=-995, xmax=20895,
@@ -15,10 +16,11 @@ x grid style={white!69.01960784313725!black},
 y grid style={white!69.01960784313725!black},
 legend style={at={(0.97,0.03)}, anchor=south east, draw=white!80.0!black},
 legend cell align={left},
-legend entries={{Avg Return Self-Normalized SVRPG},{Avg Return SVRPG}}
+legend entries={{Avg Return Self-Normalized SVRPG},{Avg Return SVRPG}},
+font=\small
 ]
-\addlegendimage{no markers, color0}
-\addlegendimage{no markers, color1}
+% \addlegendimage{no markers, color0}
+% \addlegendimage{no markers, color1}
 \path [draw=color0, fill=color0, opacity=0.3] (axis cs:0,-8.35304450467052)
 --(axis cs:0,-0.675630823320536)
 --(axis cs:100,0.912746402232858)
@@ -1030,7 +1032,7 @@ table {%
 19800 64.4342044368264
 19900 64.9909236822565
 };
-\addplot [semithick, color0, opacity=0.5, mark=*, mark size=3, mark options={solid}, only marks]
+\addplot [semithick, color0, opacity=0.5, mark=+, mark size=3, mark options={solid}, only marks]
 table {%
 0 -4.28118318302647
 100 -2.9064023887413
