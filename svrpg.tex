@@ -664,7 +664,7 @@ In the second case, it was used as a better optimization technique to solve the 
 }
 \todomatout{Repetition of Section 6?}
 Finally, we have empirically shown that practical variants of the theoretical SVRPG version can outperform classical actor-only approaches on benchmark tasks.
-
+\todomat{add future work}
 
 
 \FloatBarrier
@@ -908,7 +908,8 @@ Under Assumption \ref{ass:bounded_score}, whether we use the REINFORCE or the G(
 \]
 \end{restatable}
 \begin{proof}
-        For both REINFORCE and G(PO)MDP, $g(\tau\vert\vtheta)$ is a linear combination of terms of the kind $\nabla \log \pi_{\vtheta}(a_t\vert s_t)\gamma^t r_t$ \cite{peters2008reinforcement}. These terms have bounded gradient from the second inequality of Assumption \ref{ass:bounded_score} and the fact that $|r_t|\leq R$. Bounded gradient implies Lipschitz continuity. Finally, the linear combination of Lipschitz continuous functions is Lipschitz continuous.
+        For both REINFORCE and G(PO)MDP, $g(\tau\vert\vtheta)$ is a linear combination of terms of the kind $\nabla \log \pi_{\vtheta}(a_t\vert s_t)\gamma^t r_t$ \cite{peters2008reinforcement}. These terms have bounded gradient from the second inequality of Assumption \ref{ass:bounded_score} and the fact that $|r_t|\leq R$. If a baseline is used in REINFORCE or G(PO)MDP, we only need the additional assumption that said baseline is bounded.
+        Bounded gradient implies Lipschitz continuity. Finally, the linear combination of Lipschitz continuous functions is Lipschitz continuous.
 \end{proof}
 
 \begin{restatable}[]{lemma}{bounded-g}\label{lemma:gbound}
@@ -925,6 +926,7 @@ For REINFORCE we have, from Assumption \ref{ass:bounded_score}:
 	&=\norm[2]{\left(\sum_{t=0}^{H-1}\score{\vtheta}{a_t\vert s_t}\right)\left(\sum_{t=0}^{H-1}\gamma^t r_t\right)}^2\leq H^2G^2\frac{(1-\gamma^H)^2}{(1-\gamma)^2}R^2\dim(\vTheta) \coloneqq \Gamma
 \end{align*}
 For G(PO)MDP, we do not have a compact expression for $g$, but since it is derived from REINFORCE by neglecting some terms of the kind $\nabla \log \pi_{\vtheta}(a_t | s_t)\gamma^t r_t$ \cite{baxter2001infinite,peters2008reinforcement}, the above bound still holds.
+If a baseline is used in REINFORCE or G(PO)MDP, we only need the additional assumption that said baseline is bounded.
 \end{proof}
 
 %New Lemma on Variance
