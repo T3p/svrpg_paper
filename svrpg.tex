@@ -644,21 +644,25 @@ More details on meta-parameters and exhaustive task descriptions are provided in
 \begin{figure*}[t]
     \begin{minipage}[t]{0.32\textwidth}
 	\includegraphics[width=.98\textwidth]{images/cart_pole_SVRPG_vs_GPOMDP_tex.pdf}
+	\vspace{-0.1in}
 	\caption{On-line performance over sampled trajectories of SVRPG vs G(PO)MDP in the Cart-pole task, with 90\% confidence intervals.}
 	\label{fig:cartpole}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{0.32\textwidth}
 	\includegraphics[width=0.98\textwidth]{swimmer_self_normalized_SVRPG_vs_SVRPG_tex.pdf}
+	\vspace{-0.1in}
 	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs unbiased SVRPG in the Swimmer task, with 90\% confidence intervals.}
 	\label{fig:swimmertwo}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{.32\textwidth}
 	\includegraphics[width=0.98\textwidth]{swimmer_self_normalized_SVRPG_vs_GPOMDP_tex.pdf}
+	\vspace{-0.1in}
 	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs G(PO)MDP in the Swimmer task, with 90\% confidence intervals}
 	\label{fig:swimmerone}
     \end{minipage}
+    \vspace{-0.15in}
 \end{figure*}
 
 
@@ -681,6 +685,7 @@ More details on meta-parameters and exhaustive task descriptions are provided in
 		Half-cheetah & $1183.1^\dagger$ & $69.20^\dagger$ & $[1035.58, 1330.62]^\dagger$ & \phantom{abc} & $1480.95$ & $73.21$ & $[1324.87, 1637.03]$\\
 		\bottomrule
 	\end{tabular}
+    \vspace{-0.05in}
 \end{table*}
 
 Figure \ref{fig:cartpole} compares SVRPG with G(PO)MDP on a continuous variant of the classical Cart-pole task, which is a 2D balancing task. Despite using more trajectories on average for each parameter update, our algorithm shows faster convergence, which can be ascribed to the better quality of updates due to variance reduction.
@@ -713,7 +718,8 @@ We have additionally shown that, under mild assumptions that are often verified 
 %\todomatout{Repetition of Section 6?}
 Finally, we have empirically shown that practical variants of the theoretical SVRPG version can outperform classical actor-only approaches on benchmark tasks.
 Preliminary results support the effectiveness of SVRPG also with a commonly used baseline for the policy gradient.
-Despite that, we believe that it will be possible to derive a baseline designed explicitly for SVRPG to exploit the RL structure and the SVRG idea jointly. {\color{blue}Another possible improvement would be to employ the natural gradient \cite{kakade2002natural} to better control the effects of parameter updates to the variance of importance weights.} Future work should also focus on making batch sizes $N$ and $B$ adaptive, as suggested in \cite{papini2017adaptive}.
+Despite that, we believe that it will be possible to derive a baseline designed explicitly for SVRPG to exploit the RL structure and the SVRG idea jointly.
+Another possible improvement would be to employ the natural gradient~\cite{kakade2002natural} to better control the effects of parameter updates on the variance of importance weights. Future work should also focus on making batch sizes $N$ and $B$ adaptive, as suggested in~\cite{papini2017adaptive}.
 
 \FloatBarrier
 \bibliography{svrpg}
