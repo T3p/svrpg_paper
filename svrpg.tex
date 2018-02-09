@@ -277,7 +277,7 @@ The main limitation of plain policy gradient is the high variance of these estim
 The na\"ive approach of increasing the batch size is not an option in RL due to the high cost of collecting samples, \ie by interacting with the environment.
 For this reason, literature has focused on the introduction of baselines (\ie functions $b : \mathcal{S} \times \mathcal{A} \to \realspace$) aiming to reduce the variance~\citep[\eg][]{williams1992simple,Peters2008reinf,Thomas2017actionbaseline,wu2018variance}, see Appendix~\ref{A:gradient_estimators} for a formal definition of $b$.
 These baselines are usually designed to minimize the variance of the gradient estimate, but even them need to be estimated from data, partially reducing their effectiveness.
-On the other hand, there has been a surge of recent interest in variance reduction techniques for gradient optimization in supervised learning.
+On the other hand, there has been a surge of recent interest in variance reduction techniques for gradient optimization in supervised learning (SL).
 Although these techniques have been mainly derived for finite-sum problems, we will show in Section~\ref{sec:alg} how they can be used in RL.
 In particular, we will show that the proposed SVRPG algorithm can take the best of both worlds (\ie SL and RL) since it can be plugged into a policy gradient estimate using baselines.
 The next section has the aim to describe variance reduction techniques for finite-sum problems. In particular, we will present the SVRG algorithm that is at the core of this work.
@@ -296,7 +296,7 @@ This kind of optimization is very common in machine learning, where each $z_i$ m
 %% \max_{\vtheta} f(\vtheta) = \frac{1}{N}\sum_{i=1}^{N}g(x_i \vert \vtheta).
 %% \end{align*}
 A common requirement is that $z$ must be smooth and concave in $\vtheta$.\footnote{Note that we are considering a maximization problem instead of the classical minimization one.} 
-Under this hypothesis, full gradient (FG) ascent ~\citep{cauchy1847methode} with a constant step size achieves a linear convergence rate \cite{nesterov2013introductory}.
+Under this hypothesis, full gradient (FG) ascent~\citep{cauchy1847methode} with a constant step size achieves a linear convergence rate in the number $T$ of iterations (\ie parameter updates)~\citep{nesterov2013introductory}.
 However, each iteration requires $N$ gradient computations, which can be too expensive for large values of $N$. Stochastic Gradient (SG) ascent~\citep[\eg][]{robbins1951stochastic,bottou2004large} overcomes this problem by sampling a single sample $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. As a consequence, the lower per-iteration cost is paid with a worse, sub-linear convergence rate \cite{nemirovskii1983problem}.
 Starting from SAG, a series of variations to SG have been proposed to achieve a better trade-off between convergence speed and cost per iteration: \eg SAG~\citep{roux2012stochastic}, SVRG~\cite{johnson2013accelerating}, SAGA~\cite{defazio2014saga}, and Finito~\cite{defazio2014finito}. 
 The common idea is to reuse past gradient computations to reduce the variance of the current estimate.
@@ -312,7 +312,7 @@ where $x$ is sampled uniformly at random from $\mathcal{D}_N$ (\ie $x \sim \math
 Note that $t=0$ corresponds to a FG step (\ie $\blacktriangledown f(\vtheta_0) = \nabla f(\wt{\vtheta})$) since $\vtheta_0 := \wt{\vtheta}$.
 The corrected gradient $\blacktriangledown f(\vtheta)$ is an unbiased estimate of $\nabla f(\vtheta)$, and it is able to control the variance introduced by sampling even with a fixed step size, achieving a linear convergence rate without resorting to a plain full gradient.
 
-More recently, some extensions of variance reduction algorithms to the non-concave objectives have been proposed~\citep[\eg][]{reddi2016stochastic,allen2016variance,reddi2016stochastic,reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[2]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[2]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the convergence rate of SG is $O(\nicefrac{1}{\sqrt{T}})$ \cite{ghadimi2013stochastic}, \ie $T=O(\nicefrac{1}{\epsilon^2})$ iterations are required to get $\norm[2]{\nabla f(\vtheta)}^2\leq\epsilon$. Again, SVRG achieves the same rate as FG \cite{reddi2016stochastic}, which is $O(\frac{1}{T})$ in this case \cite{nesterov2013introductory}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value.
+More recently, some extensions of variance reduction algorithms to the non-concave objectives have been proposed~\citep[\eg][]{allen2016variance,reddi2016stochastic,reddi2016fast}. In this scenario, $f$ is typically required to be L-smooth, \ie $\norm[2]{\nabla f(\vtheta') - \nabla f(\vtheta)} \leq L\norm[2]{\vtheta'-\vtheta}$ for each $\vtheta,\vtheta'\in\realspace^n$ and for some Lipschitz constant $L$. Under this hypothesis, the convergence rate of SG is $O(\nicefrac{1}{\sqrt{T}})$ \cite{ghadimi2013stochastic}, \ie $T=O(\nicefrac{1}{\epsilon^2})$ iterations are required to get $\norm[2]{\nabla f(\vtheta)}^2\leq\epsilon$. Again, SVRG achieves the same rate as FG \cite{reddi2016stochastic}, which is $O(\frac{1}{T})$ in this case \cite{nesterov2013introductory}. The only additional requirement is to select $\vtheta^*$ uniformly at random among all the $\vtheta_k$ instead of simply setting it to the final value.
 
 \begin{algorithm}[tb]
 	\caption{SVRG}
@@ -621,7 +621,7 @@ The specific structure of the policy gradient allows incorporating a baseline (\
 Although the baseline can be arbitrarily selected, literature often refers to the optimal baseline as the one minimizing the variance of the estimate.
 Nevertheless, even the baseline needs to be estimated from data. This fact may partially reduce its effectiveness by introducing variance.
 Even if these approaches share the same goal as SVRG, they are substantially different.
-In particular, the proposed SVRPG does not make explicit use of the structure of the policy gradient framework, and it is independent of the underlying gradient estimate (\ie w/o baseline).
+In particular, the proposed SVRPG does not make explicit use of the structure of the policy gradient framework, and it is independent of the underlying gradient estimate (\ie with or without baseline).
 This suggests that would be possible to integrate an ad-hoc SVRPG baseline to further reduce the variance of the estimate.
 Since this paper is about the applicability of SVRG technique to RL, we consider this topic as future work.
 Additionally, the experiments show that SVRPG has an advantage over G(PO)MPD even when the baseline is used (see the half-cheetah domain in Section~\ref{sec:exp}).
@@ -644,21 +644,25 @@ More details on meta-parameters and exhaustive task descriptions are provided in
 \begin{figure*}[t]
     \begin{minipage}[t]{0.32\textwidth}
 	\includegraphics[width=.98\textwidth]{images/cart_pole_SVRPG_vs_GPOMDP_tex.pdf}
+	\vspace{-0.1in}
 	\caption{On-line performance over sampled trajectories of SVRPG vs G(PO)MDP in the Cart-pole task, with 90\% confidence intervals.}
 	\label{fig:cartpole}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{0.32\textwidth}
 	\includegraphics[width=0.98\textwidth]{swimmer_self_normalized_SVRPG_vs_SVRPG_tex.pdf}
+	\vspace{-0.1in}
 	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs unbiased SVRPG in the Swimmer task, with 90\% confidence intervals.}
 	\label{fig:swimmertwo}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{.32\textwidth}
 	\includegraphics[width=0.98\textwidth]{swimmer_self_normalized_SVRPG_vs_GPOMDP_tex.pdf}
+	\vspace{-0.1in}
 	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs G(PO)MDP in the Swimmer task, with 90\% confidence intervals}
 	\label{fig:swimmerone}
     \end{minipage}
+    \vspace{-0.15in}
 \end{figure*}
 
 
@@ -681,6 +685,7 @@ More details on meta-parameters and exhaustive task descriptions are provided in
 		Half-cheetah & $1183.1^\dagger$ & $69.20^\dagger$ & $[1035.58, 1330.62]^\dagger$ & \phantom{abc} & $1480.95$ & $73.21$ & $[1324.87, 1637.03]$\\
 		\bottomrule
 	\end{tabular}
+    \vspace{-0.05in}
 \end{table*}
 
 Figure \ref{fig:cartpole} compares SVRPG with G(PO)MDP on a continuous variant of the classical Cart-pole task, which is a 2D balancing task. Despite using more trajectories on average for each parameter update, our algorithm shows faster convergence, which can be ascribed to the better quality of updates due to variance reduction.
@@ -713,7 +718,8 @@ We have additionally shown that, under mild assumptions that are often verified 
 %\todomatout{Repetition of Section 6?}
 Finally, we have empirically shown that practical variants of the theoretical SVRPG version can outperform classical actor-only approaches on benchmark tasks.
 Preliminary results support the effectiveness of SVRPG also with a commonly used baseline for the policy gradient.
-Despite that, we believe that it will be possible to derive a baseline designed explicitly for SVRPG to exploit the RL structure and the SVRG idea jointly. {\color{blue}Another possible improvement would be to employ the natural gradient \cite{kakade2002natural} to better control the effects of parameter updates to the variance of importance weights.} Future work should also focus on making batch sizes $N$ and $B$ adaptive, as suggested in \cite{papini2017adaptive}.
+Despite that, we believe that it will be possible to derive a baseline designed explicitly for SVRPG to exploit the RL structure and the SVRG idea jointly.
+Another possible improvement would be to employ the natural gradient~\cite{kakade2002natural} to better control the effects of parameter updates on the variance of importance weights. Future work should also focus on making batch sizes $N$ and $B$ adaptive, as suggested in~\cite{papini2017adaptive}.
 
 \FloatBarrier
 \bibliography{svrpg}
