@@ -28,6 +28,7 @@
 \usepackage{mathtools}
 \usepackage{pifont}
 \usepackage[makeroom]{cancel}
+\usepackage{placeins}
 
 %%Theorems 
 \usepackage{amsthm}
@@ -579,32 +580,55 @@ Concerning importance weighting techniques, RL has made wide use of them for off
 
 
 \section{Experiments}\label{sec:exp}
-In this section, we evaluate the performance of SVRPG and compare it with policy gradient (PG) on well known continuous RL tasks. This comparison is performed using G(PO)MDP as an estimator of $\score{\vtheta}{\tau}\Reward(\tau)$ in both cases. For our algorithm, we use a batch size $N=100$, a mini-batch size $B=10$, and the jointly adaptive step size $\alpha$ and epoch length $m$ proposed in Section \ref{sec:stopping}. Since the aim of this comparison is to show the improvement that SVRG-flavored variance reduction brings to SG in the policy gradient framework, we set the batch size of the baseline policy gradient algorithm to $B$. In this sense, we measure the improvement yielded by computing snapshot gradients and using them to adjust parameter updates. Since we evaluate on-line performance over the number of sampled trajectories, the cost of computing such snapshot gradients is automatically taken into consideration. To make the comparison fair, we also use Adam in the baseline PG algorithm, which we will denote simply as G(PO)MDP in the following.
-In all the experiments we used deep Gaussian policies with adaptive standard deviation (details on network architecture in Appendix \ref{app:exp}). Each experiment is run 10 times with a random policy initialization, different each time, shared by all the algorithms under comparison. The length of the experiment, \ie the total number of trajectories, is fixed for each task. Performance is evaluated by using test-trajectories on a subset of the policies considered during the learning process. Of course, test trajectories are not counted, since they are only meant to improve the accuracy of reported results and do not affect learning. We provide average performance with 90\% bootstrap confidence intervals.  
-Task implementations are from the \textit{rllab} library \cite{duan2016benchmarking}\footnote{https://github.com/rll/rllab}, on which our agents are also based.
-
-\paragraph{Cart-pole.} Figure \ref{fig:cartpole} compares SVRPG with G(PO)MDP on the continuous cart-pole balancing task. Despite using more trajectories for each parameter, our algorithm shows faster convergence, which can be ascribed to the 
-better quality of updates due to variance reduction.
+In this section, we evaluate the performance of SVRPG and compare it with policy gradient (PG) on well known continuous RL tasks: Cart-pole balancing and Swimmer. This comparison is performed using G(PO)MDP as an estimator of $\score{\vtheta}{\tau}\Reward(\tau)$ in both cases. For our algorithm, we use a batch size $N=100$, a mini-batch size $B=10$, and the jointly adaptive step size $\alpha$ and epoch length $m$ proposed in Section \ref{sec:stopping}. Since the aim of this comparison is to show the improvement that SVRG-flavored variance reduction brings to SG in the policy gradient framework, we set the batch size of the baseline policy gradient algorithm to $B$. In this sense, we measure the improvement yielded by computing snapshot gradients and using them to adjust parameter updates. Since we evaluate on-line performance over the number of sampled trajectories, the cost of computing such snapshot gradients is automatically taken into consideration. To make the comparison fair, we also use Adam in the baseline PG algorithm, which we will denote simply as G(PO)MDP in the following.
+In all the experiments we used deep Gaussian policies with adaptive standard deviation (details on network architecture in Appendix \ref{app:exp}). Each experiment is run 10 times with a random policy initialization, different each time, shared by all the algorithms under comparison. The length of the experiment, \ie the total number of trajectories, is fixed for each task. Performance is evaluated by using test-trajectories on a subset of the policies considered during the learning process. We provide average performance with 90\% bootstrap confidence intervals.  
+Task implementations are from the \textit{rllab} library \cite{duan2016benchmarking}\footnote{https://github.com/rll/rllab}, on which our agents are also based. More details on meta-parameters and exhaustive task descriptions are provided in Appendix \ref{app:exp}.
 
 \begin{figure}[t]
 	\includegraphics[width=0.5\textwidth]{images/cart_pole_SVRPG_vs_GPOMDP}
-	\caption{SVRPG vs G(PO)MDP in the Cart-pole task}
+	\caption{On-line performance over sampled trajectories of SVRPG vs G(PO)MDP in the Cart-pole task, with 90\% confidence intervals}
 	\label{fig:cartpole}
 \end{figure}
 
-\paragraph{Swimmer} The mujoco swimmer task is far more difficult than cart-pole. The longer horizon and the more complex dynamics can have a dangerous impact on the variance of importance weights. In this case, the self-normalization technique proposed in Section \ref{sec:prac} brings an improvement, as shown in Figure \ref{fig:swimmertwo}. Although the confidence intervals are never disjoint, the average of the self-normalized version is always higher, which we consider enough to employ the variant in the next comparison. Figure \ref{fig:swimmerone} shows self-normalized SVRPG against G(PO)MDP. On average, our algorithm dominates for almost the entire task. Also here, we note an increase of speed in early iterations. Toward the end of the task, the improvement becomes statistically significant.
-
 \begin{figure}[t]
 	\includegraphics[width=0.5\textwidth]{swimmer_self_normalized_SVRPG_vs_SVRPG}
-	\caption{Self-Normalized SVRPG vs unbiased SVRPG in the Swimmer task}
+	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs unbiased SVRPG in the Swimmer task, with 90\% confidence intervals.}
 	\label{fig:swimmertwo}
 \end{figure}
 
 \begin{figure}[t]
 	\includegraphics[width=0.5\textwidth]{swimmer_self_normalized_SVRPG_vs_GPOMDP}
-	\caption{Self-Normalized SVRPG vs G(PO)MDP in the Swimmer task.}
+	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs G(PO)MDP in the Swimmer task, with 90\% confidence intervals}
 	\label{fig:swimmerone}
 \end{figure}
+
+
+\begin{table*}[t]
+	\caption{
+		\label{tab:1}
+		Comparison between G(PO)MDP and SVRPG on different tasks. Average return over the whole learning process is reported, together with normalized standard deviation and 90\% confidence intervals.}
+	\centering
+	\begin{tabular}{@{}lccccccc@{}} 
+		\toprule
+		\phantom{abc} & \multicolumn{3}{c}{G(PO)MDP} & \phantom{abc} & \multicolumn{3}{c}{SVRPG} \\
+		\cmidrule{2-4} \cmidrule{6-8}
+		\phantom{abc} & Avg Return & Norm. Std & C.I. & \phantom{abc}
+		& Avg Return & Norm. Std & C.I.
+		\\\cmidrule{2-8}
+		Cart-pole & 618.49 & 21.09 & [570.76, 666.20] & \phantom{abc} 
+		& \textbf{736.31} & 16.51 & [698.96, 773.65] \\ 
+		\phantom{abc} & \phantom{abc} & \phantom{abc} & \phantom{abc} & \phantom{abc} & \phantom{abc} & \phantom{abc} \\
+		Swimmer & 39.86 & 3.84 & [31.18, \:\:\: 48.53] & \phantom{abc} & 43.33 & 3.27 & [37.41, \:\:\: 49.25]\\
+		\bottomrule
+	\end{tabular}
+\end{table*}
+
+Figure \ref{fig:cartpole} compares SVRPG with G(PO)MDP on a continuous variant of the classical Cart-pole task, which is a 2D balancing task. Despite using more trajectories for each parameter, our algorithm shows faster convergence, which can be ascribed to the better quality of updates due to variance reduction.
+
+The Swimmer task is a 3D continuous-control locomotion task. This is more difficult than cart-pole. In particular, the longer horizon and the more complex dynamics can have a dangerous impact on the variance of importance weights. In this case, the self-normalization technique proposed in Section \ref{sec:prac} brings an improvement, as shown in Figure \ref{fig:swimmertwo}. Although the confidence intervals are never disjoint, the average of the self-normalized version is always higher, which we consider enough to employ the variant in the next comparison. Figure \ref{fig:swimmerone} shows self-normalized SVRPG against G(PO)MDP. On average, our algorithm dominates for almost the entire task. Also here, we note an increase of speed in early iterations. Toward the end of the task, the improvement becomes statistically significant.
+
+Table \ref{tab:1} compares G(PO)MDP and SVRPG in terms of the average return computed on the whole learning process, which is a common metric for on-line learning~\citep[\eg][]{duan2016benchmarking}. This corresponds to the area below the curves in the figures. Note also that the convergence result Theorem \ref{theo:convergence} is precisely about average return. We also report normalized standard deviation and 90\% bootstrap confidence intervals.
+In all the tasks, our algorithm has higher average return and lower normalized standard deviation. In the case of Cart-pole, disjoint confidence intervals show that the advantage is statistically significant. 
 
 %\begin{figure}[t]
 %    \includegraphics[width=0.5\textwidth]{half_cheetah_self_norm_baseline_SVRPG_vs_GPOMDP100_baseline}
@@ -629,7 +653,7 @@ Finally, we have empirically shown that practical variants of the theoretical SV
 
 
 
-
+\FloatBarrier
 \bibliography{svrpg}
 \bibliographystyle{icml2018}
 
