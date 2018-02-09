@@ -801,7 +801,7 @@ where the sequence $\wt{\vtheta}^s,\vtheta_0^{s+1},\dots,\vtheta_t^{s+1}$ is def
 \end{definition}
 Intuitively, the $\Ets{\cdot}$ operator computes the expected value with respect to the sampling of trajectories from the snapshot $\wt{\vtheta}^s$ up to the $t$-th iteration included. Note that the order in which expected values are taken is important since each $\vtheta_{t}^{s+1}$ is function of previously sampled trajectories and is used to sample new ones.
 
-\begin{definition}
+\begin{definition}\label{def:var}
 For random vectors X, Y:
 \begin{align*}
 	\Covs{X}{Y} &\coloneqq \Tr\left(\Ets{(X-\Ets{X})(Y-\Ets{Y})^T}\right), \\
@@ -809,7 +809,7 @@ For random vectors X, Y:
 \end{align*}
 where $\Tr(\cdot)$ denotes the trace of a matrix. From the linearity of expected value we have the following:
 \begin{equation}\label{neweq:1}
-\Vars{X} = \Es{\norm[]{X-\Es{X}}^2} \leq \Es{\norm[]{X}^2}
+\Vars{X} = \Es{\norm[]{X-\Es{X}}^2}
 \end{equation}
 $\Covts[t]{X}{Y}$ and $\Varts[t]{X}$ are defined in the same way from $\Ets[t]{X}$.
 \end{definition}
@@ -919,6 +919,22 @@ For REINFORCE we have, from Assumption \ref{ass:bounded_score}:
 \end{align*}
 For G(PO)MDP, we do not have a compact expression for $g$, but since it is derived from REINFORCE by neglecting some terms of the kind $\nabla \log \pi_{\vtheta}{a_t | s_t}\gamma^t r_t$ \cite{baxter2001infinite,peters2008reinforcement}, the above bound still holds.
 \end{proof}
+
+%New Lemma on Variance
+\begin{restatable}[]{lemma}{varineq}\label{lemma:varineq}
+For any random vector X, the variance (as defined in Definition \ref{def:var}), can be bounded as follows:
+\[
+	\Vars{X} \leq \Es{\norm[]{X}^2}.
+\]
+\end{restatable}
+\begin{proof}
+By using basic properties of expected value and scalar variance:
+\begin{align*}
+	\Vars{X} = \Es{\norm[]{X-\Es{X}}^2} &= \Es{\sum_{i=1}^{\dim(X)}\left(X_i-\Es{X_i}\right)^2} = \sum_{i=1}^{\dim(X)}\Es{\left(X_i-\Es{X_i}\right)^2} \\
+	&\leq \sum_{i=1}^{\dim(X)}\Es{X_i^2} = \Es{\sum_{i=1}^{\dim(X)}X_i^2} = \Es{\norm[]{X}^2}.
+\end{align*}
+\end{proof}
+
 %Lemma 2
 \begin{restatable}[]{lemma}{auxtwo}\label{lemma:aux2}
 Under Assumption \ref{ass:bounded_score}
@@ -1067,7 +1083,7 @@ For ease of notation denote $\omega(\tau_i) := \omega(\tau_i|\vtheta^{s+1}_t, \w
 	+\frac{\Gamma\VARIS}{B}, \label{eq:5}
 \end{align}
 \endgroup
-where (\ref{neweq:2}) is from (\ref{neweq:1}), (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from (\ref{neweq:1}), (\ref{eq:3}) is from Lemma \ref{lemma:gsmooth}, 
+where (\ref{neweq:2}) is from (\ref{neweq:1}), (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from Lemma \ref{lemma:varineq}, (\ref{eq:3}) is from Lemma \ref{lemma:gsmooth}, 
 (\ref{eq:4}) is from Lemma \ref{lemma:gbound}, and (\ref{eq:5}) is from Assumption \ref{ass:M2}.
 \end{proof}
 
@@ -1126,7 +1142,7 @@ where~\eqref{eq:9a} comes from Cauchy-Schwarz inequality
 \[
         |\Cov(X,Y)| = |\EVV[]{(X-\mu_X)\transpose{(Y-\mu_Y)}}| \leq \EVV[]{(X-\mu_X)^2}^{1/2}\EVV[]{(Y-\mu_Y)^2}^{1/2} = \sqrt{\Var(X) \Var(Y)},
 \]
-\eqref{eq:9} is from Young's inequality,~\eqref{eq:10} is from the definition of $\gradApp{\vtheta}{N}$, and \eqref{neweq:3} is from \eqref{neweq:1}.
+\eqref{eq:9} is from Young's inequality,~\eqref{eq:10} is from the definition of $\gradApp{\vtheta}{N}$, and \eqref{neweq:3} is from Lemma \ref{lemma:varineq}.
 \end{proof}
 
 %Lemma 1
