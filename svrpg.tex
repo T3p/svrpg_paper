@@ -137,8 +137,8 @@
 
 \makeatletter
 \g@addto@macro\normalsize{%
- \setlength\abovedisplayskip{6pt}
- \setlength\belowdisplayskip{6pt}
+%  \setlength\abovedisplayskip{6pt}
+%  \setlength\belowdisplayskip{6pt}
 }
 \makeatother
 
@@ -205,7 +205,7 @@
         Stochastic variance-reduced gradient (SVRG) methods have proven to be very successful in supervised learning.
         However, their adaptation to policy gradient is not straightforward and needs to account for I) a non-concave objective function; II) approximations in the full gradient computation; and III) a non-stationary sampling process.
         The result is SVRPG, a stochastic variance-reduced policy gradient algorithm that leverages on importance weight to preserve the unbiasedness of the gradient estimate.
-        {\color{blue}Under standard assumptions on the MDP, we provide convergence guarantees for SVRPG with a convergence rate that is linear under increasing batch sizes.}
+        Under standard assumptions on the MDP, we provide convergence guarantees for SVRPG with a convergence rate that is linear under increasing batch sizes.
         Finally, we suggest practical variants of SVRPG, and we empirically evaluate them on continuous MDPs.
 \end{abstract}
 
@@ -228,7 +228,7 @@ SVRG has been used in RL as an efficient technique for optimizing the per-iterat
 In both the cases, the optimization problems faced resemble the SL scenario and are not affected by all the previously mentioned issues.
 
 %Paper structure
-After providing background on policy gradient and SVRG in Section \ref{sec:pre}, in Section \ref{sec:alg} propose SVRPG, a variant of SVRG for the policy gradient framework, addressing all the difficulties mentioned above. {\color{blue} In Section \ref{sec:conv} we provide convergence guarantees for our algorithm, and we show a convergence rate that has an $O(\nicefrac{1}{T})$ dependence on the number $T$ of iterations}. In Section \ref{sec:stopping} we suggest how to set the meta-parameters of SVRPG, while in Section \ref{sec:prac} we discuss some practical variants of the algorithm. Finally, in Section \ref{sec:exp} we empirically evaluate the performance of our method on popular continuous RL tasks.
+After providing background on policy gradient and SVRG in Section \ref{sec:pre}, in Section \ref{sec:alg} propose SVRPG, a variant of SVRG for the policy gradient framework, addressing all the difficulties mentioned above. In Section \ref{sec:conv} we provide convergence guarantees for our algorithm, and we show a convergence rate that has an $O(\nicefrac{1}{T})$ dependence on the number $T$ of iterations. In Section \ref{sec:stopping} we suggest how to set the meta-parameters of SVRPG, while in Section \ref{sec:prac} we discuss some practical variants of the algorithm. Finally, in Section \ref{sec:exp} we empirically evaluate the performance of our method on popular continuous RL tasks.
 
 \vspace{-0.05in}
 \section{Preliminaries}\label{sec:pre}
@@ -583,8 +583,9 @@ Formally, the stopping condition is as follows
 \]
 where we have introduced $N$ and $B$ to take into account the trajectory efficiency (\ie weighted advantage).
 The less the number of trajectories used to update the policy, the better.
-This weighted approach comes from the fact that, as mentioned above, there is no advantage in having $m$ too small.
-Thus, we aim to facilitate sub-iterations rather than snapshots.
+Including the batch sizes in the stopping condition allows us to optimize the trade-off between the quality of the updates and the cost of performing them.
+% This weighted approach comes from the fact that, as mentioned above, there is no advantage in having $m$ too small.
+% Thus, we aim to facilitate sub-iterations rather than snapshots.
 
 \vspace{-0.05in}
 \subsection{Normalized Importance Sampling}\label{sec:prac}
@@ -688,12 +689,12 @@ The Swimmer task is a 3D continuous-control locomotion task. This task is more d
 % Although the confidence intervals are never disjoint, the average of the self-normalized version is always higher, which we consider enough to employ the variant in the next comparison. 
 Figure \ref{fig:swimmerone} shows self-normalized SVRPG against G(PO)MDP. Our algorithm outperforms G(PO)MDP for almost the entire learning process. Also here, we note an increase of speed in early iterations, and, toward the end of the learning process, the improvement becomes statistically significant.
 
-Table \ref{tab:1} compares G(PO)MDP and SVRPG in terms of the average return computed on the whole learning process, which is a common metric for online learning since it is related to an average regret~\citep[\eg][]{duan2016benchmarking}. This metric corresponds to the area below the curves in the figures. Note that the convergence result in Theorem \ref{theo:convergence} is precisely about the average return. We also report normalized standard deviations and 90\% $t$-confidence intervals.
+Table \ref{tab:1} compares G(PO)MDP and SVRPG in terms of the average return computed on the whole learning process, which is a common metric for online learning since it is related to an average regret~\citep[\eg][]{duan2016benchmarking}. This metric is related to the area below the curves. Note that the convergence result in Theorem \ref{theo:convergence} is precisely about the average return. We also report normalized standard deviations and 90\% $t$-confidence intervals.
 In both tasks, our algorithm has higher average return and lower normalized standard deviation.
 In Cart-pole, disjoint confidence intervals show that the advantage is statistically significant. 
 
 \textbf{Preliminary results on actor-critic.} %As mentioned, 
-Another variance-reduction technique in policy gradient is to employ baselines or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without the baseline. To move towards a more general understanding of the problem of variance in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we consider the more challenging MuJoCo~\citep{todorov2012mujoco} Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Table \ref{tab:1} also reports the comparison between SVRPG and G(PO)MDP\footnote{\citet{duan2016benchmarking} report results on REINFORCE. However, inspection on \textit{rllab} code and documentation reveals that it is actually PGT \cite{sutton2000policy}, which is equivalent to G(PO)MDP \citep[shown by][]{peters2008reinforcement}. Using the name REINFORCE in a general way is inaccurate, but widespread.} on Half-cheetah using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of the baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve.
+Another variance-reduction technique in policy gradient consists of using baselines or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without the baseline. To move towards a more general understanding of the variance issue in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we consider the more challenging MuJoCo~\citep{todorov2012mujoco} Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Table \ref{tab:1} also reports the comparison between SVRPG and G(PO)MDP\footnote{\citet{duan2016benchmarking} report results on REINFORCE. However, inspection on \textit{rllab} code and documentation reveals that it is actually PGT \cite{sutton2000policy}, which is equivalent to G(PO)MDP \citep[shown by][]{peters2008reinforcement}. Using the name REINFORCE in a general way is inaccurate, but widespread.} on Half-cheetah using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of the baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve.
 
 
 \vspace{-0.05in}
