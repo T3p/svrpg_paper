@@ -765,11 +765,11 @@ Note that in the following we will make wide use of the following properties.
 \begin{enumerate}
         \item \textit{On-policy Unbiased Estimator.} 
                 \[
-                        \EVV[\tau_i \sim \pi(\cdot|\vtheta)]{\wh{\nabla}_N J(\vtheta)} = \EVV[\tau_i \sim \pi(\cdot|\vtheta)]{\frac{1}{N} \sum_{i=0}^N g(\tau_i|\vtheta)} = \nabla J(\vtheta)
+                        \EVV[\tau_i \sim p(\cdot|\vtheta)]{\wh{\nabla}_N J(\vtheta)} = \EVV[\tau_i \sim p(\cdot|\vtheta)]{\frac{1}{N} \sum_{i=0}^N g(\tau_i|\vtheta)} = \nabla J(\vtheta)
                 \]
         \item \textit{Off-policy Unbiased Estimator.}
                 \[
-        \EVV[\tau_i \sim \Delta(\cdot|\pi^B)]{\frac{1}{N} \sum_{i=0}^N \omega(\tau_i|\pi^B,\vtheta) g(\tau_i|\vtheta) } 
+        \EVV[\tau_i \sim p(\cdot|\pi^B)]{\frac{1}{N} \sum_{i=0}^N \omega(\tau_i|\pi^B,\vtheta) g(\tau_i|\vtheta) } 
         = \nabla J(\vtheta) 
                 \]
 \end{enumerate}
@@ -778,6 +778,7 @@ Note that these assumptions are verified by REINFORCE and G(PO)MDP.
 
 \subsection*{Definitions}
 We give some additional definitions which will be useful in the proofs.
+In the rest of the proof we will always consider the $\ell_2$-norm when not explicitly stated.
 
 \begin{definition}
 For a random variable X:
@@ -950,17 +951,21 @@ If a baseline is used in REINFORCE or G(PO)MDP, we only need the additional assu
 \end{proof}
 
 %New Lemma on Variance
-\begin{restatable}[]{lemma}{varineq}\label{lemma:varineq}
+The following lemma is trivial but we report for sake of clarity.
+
+\begin{restatable}[Variance is upper-bounded by second moment.]{lemma}{varineq}\label{lemma:varineq}
 For any random vector X, the variance (as defined in Definition \ref{def:var}), can be bounded as follows:
 \[
 	\Vars{X} \leq \Es{\norm[]{X}^2}.
 \]
 \end{restatable}
 \begin{proof}
-By using basic properties of expected value and scalar variance:
+        By using Equation~\eqref{neweq:1} and the definition of variance of a scalar random variable:
 \begin{align*}
 	\Vars{X} = \Es{\norm[]{X-\Es{X}}^2} &= \Es{\sum_{i=1}^{\dim(X)}\left(X_i-\Es{X_i}\right)^2} = \sum_{i=1}^{\dim(X)}\Es{\left(X_i-\Es{X_i}\right)^2} \\
-	&\leq \sum_{i=1}^{\dim(X)}\Es{X_i^2} = \Es{\sum_{i=1}^{\dim(X)}X_i^2} = \Es{\norm[]{X}^2}.
+                                     &=\sum_{i=1}^{\dim(X)} \Es{X_i^2} - \left(\Es{X_i} \right)^2 \leq \sum_{i=1}^{\dim(X)}\Es{X_i^2}
+%    = \Es{\sum_{i=1}^{\dim(X)}X_i^2} 
+                                        = \Es{\norm[]{X}^2}.
 \end{align*}
 \end{proof}
 
@@ -1042,19 +1047,19 @@ For ease of notation denote $\omega(\tau_i) := \omega(\tau_i|\vtheta^{s+1}_t, \w
 			g(\tau_i\vert\vtheta_t^{s+1}) -
 			\omega(\tau_i)g(\tau_i\vert\wt{\vtheta}^s)\right)}\right\|^2\right] 
 		\label{eq:1}\\%
-	&\leq \Ets[t-1]{\norm[2]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\wt{\vtheta}^s)} 
 %    \nonumber\\ &\qquad
-    +\Ets{\norm[2]{
+    +\Ets{\norm[]{
 			\frac{1}{B}\sum_{i=0}^{B-1}\left(
 			g(\tau_i\vert\vtheta_t^{s+1}) -
 			\omega(\tau_i)g(\tau_i\vert\wt{\vtheta}^s)\right)}^2} \label{eq:2}\\
 	%
-	&\leq \Ets[t-1]{\norm[2]{\gradJ{\vtheta_t^{s+1}}}^2} 
+	&\leq \Ets[t-1]{\norm[]{\gradJ{\vtheta_t^{s+1}}}^2} 
 	+\frac{1}{N}\Vars{g(\cdot\vert\wt{\vtheta}^s)}
 %     \nonumber\\ 	&\qquad
 			+ \frac{1}{B^2}\sum_{i=0}^{B-1}
-			\Ets{\norm[2]{
+			\Ets{\norm[]{
 			g(\tau_i\vert\vtheta_t^{s+1}) -
     \omega(\tau_i)g(\tau_i\vert\wt{\vtheta}^s) \pm g(\tau_i|\wt{\vtheta}^s) }^2} \nonumber\\
 	%
@@ -1112,7 +1117,7 @@ For ease of notation denote $\omega(\tau_i) := \omega(\tau_i|\vtheta^{s+1}_t, \w
 	+\frac{\Gamma\VARIS}{B}, \label{eq:5}
 \end{align}
 \endgroup
-where (\ref{neweq:2}) is from (\ref{neweq:1}), (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$, (\ref{eq:2}) is from Lemma \ref{lemma:varineq}, (\ref{eq:3}) is from Lemma \ref{lemma:gsmooth}, 
+where (\ref{neweq:2}) is from (\ref{neweq:1}), (\ref{eq:1}) is from the definition of $\gradApp{\vtheta}{N}$,~\ref{eq:2} is from Lemma~\ref{lemma:varineq}, (\ref{eq:3}) is from Lemma \ref{lemma:gsmooth}, 
 (\ref{eq:4}) is from Lemma \ref{lemma:gbound}, and (\ref{eq:5}) is from Assumption \ref{ass:M2}.
 \end{proof}
 
@@ -1472,8 +1477,8 @@ Where $b_{sn}$ is the prediction given by the baseline at the snapshot, whereas 
 Used environments:
 \begin{enumerate}
 	\item \emph{Cart-Pole Balancing} : 4-dimensional state space: cart position x, pole angle $\theta$, cart velocity $\dot{x}$ and pole velocity $\dot{\theta}$; 1-dimensional action space: the horizontal force applied to the cart body. Reward function  is defined as $r(s, a) := 10 - (1 - cos(\theta)) - 10^{-5}\norm[] a^2$. The episodes terminates when $|x|>2.4$ or $|\theta|>0.2$ or the number of time steps T is greater than 100.
-	\item \emph{Mujoco Swimmer}: 13-dimensional state space: 3 links velocities ($v_x$ and $v_y$ of center of masses) and 2 actuated joints angles. 2-dimensional action space: the two momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 10^{-4}\norm[2] a^2$. The episodes terminates when the number of time steps T is greater than 500.
-	\item \emph{Mujoco Half Cheetah}: 20-dimensional state space: 9 links and 6 actuated joints angles. 6-dimensional action space: the 6 momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 0.05\norm[2] a^2$. The episodes terminates when the number of time steps T is greater than 500.
+    \item \emph{Mujoco Swimmer}: 13-dimensional state space: 3 links velocities ($v_x$ and $v_y$ of center of masses) and 2 actuated joints angles. 2-dimensional action space: the two momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 10^{-4}\norm[2]{a}^2$. The episodes terminates when the number of time steps T is greater than 500.
+    \item \emph{Mujoco Half Cheetah}: 20-dimensional state space: 9 links and 6 actuated joints angles. 6-dimensional action space: the 6 momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 0.05\norm[2]{a}^2$. The episodes terminates when the number of time steps T is greater than 500.
 \end{enumerate}
 
 Refer to \cite{duan2016benchmarking}  for more details about GPOMDP in Half Cheetah task.
