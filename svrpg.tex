@@ -253,7 +253,7 @@ $\Reward(\tau) = \sum_{t=0}^{H-1}\gamma^t\Reward(s_t,a_t).$
 Policies can be ranked based on their expected total reward: $J(\pi) = \EVV[\tau \sim p(\cdot|\pi)]{\Reward(\tau)|M}$.
 Solving an MDP $M$ means finding $\pi^* \in \argmax_{\pi} \{J(\pi)\}$.
 
-Policy gradient methods restrict the search for the performance-maximizing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^d\}$, with the only constraint that $\pol$ is differentiable \wrt $\vtheta$. For sake of brevity, we will denote the performance of a parametric policy with $J(\vtheta)$ and the probability of a trajectory $\tau$ with $p(\tau|\vtheta)$ (in some occasions, $p(\tau|\vtheta)$ will be replaced by $p_{\vtheta}(\tau)$ for the sake of readability).
+Policy gradient methods restrict the search for the best performing policy over a class of parametrized policies $\Pi_{\vtheta}=\{\pol: \vtheta \in \realspace^d\}$, with the only constraint that $\pol$ is differentiable \wrt $\vtheta$. For sake of brevity, we will denote the performance of a parametric policy with $J(\vtheta)$ and the probability of a trajectory $\tau$ with $p(\tau|\vtheta)$ (in some occasions, $p(\tau|\vtheta)$ will be replaced by $p_{\vtheta}(\tau)$ for the sake of readability).
 The search for a locally optimal policy is performed through gradient ascent, where the policy gradient
 %of $J(\vtheta)$ \wrt the policy parameters 
 is \cite{sutton2000policy, Peters2008reinf}:
@@ -471,7 +471,7 @@ In Appendix~\ref{app:gauss} we show how Gaussian policies satisfy these assumpti
 \textit{1) Non-concavity.} A common assumption, in this case, is to assume the objective function to be $L$-smooth.
 However, in RL we can consider the following assumption which is sufficient for the $L$-smoothness of the objective (see Lemma~\ref{lemma:lsmooth}).
 	\begin{restatable}[On policy derivatives]{assumption}{boundedscore}\label{ass:bounded_score}
-		For each state-action pair $(s,a)$, any value of $\vtheta$ and all parameter components $i,j$ there are positive constants $G,F<\infty$ such that:
+		For each state-action pair $(s,a)$, any value of $\vtheta$, and all parameter components $i,j$ there exist constants $0 \leq G,F<\infty$ such that:
 \[
 		\left|\nabla_{\theta_i}\log\pi_{\vtheta}(a\vert s)\right| \leq \GRADLOG, \qquad
         \left|\frac{\partial^2}{\partial\theta_i\partial\theta_j}\log\pi_{\vtheta}(a \vert s)\right| \leq \HESSLOG.
@@ -491,7 +491,7 @@ This assumption is similar in spirit to the one in~\citep{harikandeh2015stopwast
 \textit{3) Non-stationarity.} 
 Similarly to what done in SL~\citep{cortes2010learning}, we require the variance of the importance weight to be bounded.
 	\begin{restatable}[On the variance of importance weights]{assumption}{varweights}\label{ass:M2}
-		There is a constant $W<\infty$ such that, for each pair of policies encountered in Algorithm~\ref{alg:svrpg} and for each possible trajectory,
+		There is a constant $W<\infty$ such that, for each pair of policies encountered in Algorithm~\ref{alg:svrpg} and for each trajectory,
 		\[
                 \mathbb{V}ar\left[\omega(\tau| \vtheta_1, \vtheta_2)\right] \leq \VARIS, \quad \forall \vtheta_1,\vtheta_2 \in \realspace^d , \tau \sim p(\cdot|\vtheta_1).
 		\]
@@ -542,7 +542,7 @@ In practice, we just perform an approximate full gradient update using the $N$ t
         \blacktriangledown J(\vtheta^{s+1}_t)
         \text{ for $t=1,\dots,m-1$}.
 \end{align*}
-In the following, we will always assume this practical variant is employed.
+In the following, we will always use this practical variant.
 
 \vspace{-0.05in}
 \subsection{Meta-Parameter Selection}\label{sec:stopping}
@@ -551,7 +551,7 @@ In the following, we will always assume this practical variant is employed.
 % At this point, the open question is how to properly select the step size $\alpha$ and the sub-iteration number $m$ in practical applications.
 The step size $\alpha$ is crucial to balance variance reduction and efficiency, while
 % The first parameter is crucial to balance the variance introduced by estimations within sub-iterations with respect to the variance introduced by estimations associated to the snapshots.
-the epoch length $m$ influences the variance introduced by the importance weights. Low values of $m$ are associated with small variance but increase the frequency of snapshot points (which means many FG computations). High values of $m$ may move policy $\pi_{\vtheta_t}$ far away from the snapshot policy $\pi_{\wt{\vtheta}}$, causing large variance in the importance weights. We propose to adapt the two meta-parameters jointly.
+the epoch length $m$ influences the variance introduced by the importance weights. Low values of $m$ are associated with small variance but increase the frequency of snapshot points (which means many FG computations). High values of $m$ may move policy $\pi_{\vtheta_t}$ far away from the snapshot policy $\pi_{\wt{\vtheta}}$, causing large variance in the importance weights. We will jointly set the two meta-parameters.
 % the farther the distance between the snapshot policy and the current one, the higher the variance of the importance weights.
 
 \textbf{Adaptive step size.}
@@ -569,7 +569,7 @@ Given this structure, we suggest using two separate ADAM estimators:
 \end{align*}
 where $\alpha^{\textsc{FG}}_{s}$ is associated with the snapshot and $\alpha^{\textsc{SI}}_{s+1,t}$ with the sub-iterations (see Appendix~\ref{app:practicalsvrpg} for details).
 By doing so, we decouple the contribution of the variance due to the approximate FG from the one introduced by the sub-iterations.
-Note that these two terms have different orders of magnitude since are estimated with a different number of trajectories ($B \ll N$) and w/o importance weights.
+Note that these two terms have different orders of magnitude since are estimated with a different number of trajectories ($B \ll N$) and the estimator in the snapshot does not require importance weights.
 The use of two ADAM estimators allows to capture and exploit this property.
 
 \textbf{Adaptive epoch length.}
