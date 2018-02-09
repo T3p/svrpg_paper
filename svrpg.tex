@@ -1463,58 +1463,89 @@ It is a common practice to learn also the variance of the policy in order to ada
 
 \section{Practical SVRPG versions}\label{app:practicalsvrpg}
 \begin{algorithm}[h]
-        \begin{algorithmic}
-        \STATE \textbf{Input:} A gradient estimate $g_t$ and parameters $\beta_1$, $\beta_2$, $\epsilon$ and $\alpha$.
-        \STATE $m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$
-        \STATE $v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t \circ g_t$ ($\circ$ is the Hadamard (component-wise) product)
-        \STATE $\hat{m}_t = \dfrac{m_t}{1 - \beta^t_1}$
-        \STATE $\hat{v}_t = \dfrac{v_t}{1 - \beta^t_2}$
-        \STATE $\Delta(g_t) = \dfrac{\alpha}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t$
-        \STATE \textbf{Return:} The increment $\Delta(g_t)$  of the parameters.
-\end{algorithmic}
- \caption{
- \label{A:adam}
- Adam}
+	\begin{algorithmic}
+		\STATE \textbf{Input:} A gradient estimate $g_t$ and parameters $\beta_1$, $\beta_2$, $\epsilon$ and $\alpha$.
+		\STATE $\kappa_t = \beta_1 \kappa_{t-1} + (1 - \beta_1) g_t$
+		\STATE $\nu_t = \beta_2 \nu_{t-1} + (1 - \beta_2) g_t \circ g_t$ ($\circ$ is the Hadamard (component-wise) product)
+		\STATE $\hat{\kappa}_t = \dfrac{\kappa_t}{1 - \beta^t_1}$
+		\STATE $\hat{\nu}_t = \dfrac{\nu_t}{1 - \beta^t_2}$
+		\STATE $\Delta(g_t) = \dfrac{\alpha}{\sqrt{\hat{\nu}_t} + \epsilon} \hat{\kappa}_t$
+		\STATE \textbf{Return:} The increment $\Delta(g_t)$  of the parameters.
+	\end{algorithmic}
+	\caption{
+		\label{A:adam}
+		Adam}
 \end{algorithm}
-\subsection{Learning Rates}
-Let us give a deeper insight on the two different learning rate used by our algorithm. We have already said that we use two different ADAM one related to the snapshots and another one related to the sub-iterations. In this way tha ADAM associated to the snapshots will take into account only the snapshots history through the parameters $m_{t-1}$ and $v_{t-1}$. The same reasoning holds for the sub-iterations. This, of course, allows our algorithm to take into account the different variabilities in a more accurate manner.
-\subsection{Baseline}
-For all batch gradient-based algorithms, we use the same time-varying feature encoding for the linear baseline:
+Let us give a deeper insight on the two different learning rate schedules used by our algorithm. We report pseudo-code of the original ADAM \cite{kingma2014adam} in Algorithm \ref{A:adam}. As mentioned, we use two distinct instances of ADAM to manage different sources of variance: one related to the snapshots, and one to the sub-iterations. In this way the ADAM associated to the snapshots takes into account only the history of gradient moments at the snapshots. By using Algorithm \ref{A:adam} as a subroutine $\textbf{ADAM}(g,\alpha,\beta)$, we can explicitly define our gradient updates:
+
 \begin{align*}
-\psi_{s,t}=concat(s, s \odot s, 0.01t, (0.01t)^2, (0.01t)^3,1)
+\vtheta^{s+1}_1 &= \wt{\vtheta}^s + \textbf{ADAM}\left(\wh{\nabla}_N J(\wt{\vtheta}^s),\beta_1,\beta_2,2\alpha\right),\\
+\vtheta^{s+1}_{t+1} &= \textbf{ADAM}\Big( 
+%        v_t^{s+1}
+\blacktriangledown J(\vtheta^{s+1}_t),\beta_1,\beta_2,\alpha\Big)
+\text{ for $t=1,\dots,m-1$},
 \end{align*}
-where $s$ is the state vector and $\odot$ is the element-wise product.
+
+where separate histories are kept for estimated first moments $\kappa_{FG},\kappa_{IS}$ and estimated second moments $\nu_{FG},\nu_{IS}$.
+The meta-parameters $\alpha,\beta_1,\beta_2$ are constant and set to default values or with minor manual tuning (see table \ref{table:metaparams}). Note that we double $\alpha$ for the snapshot ADAM, since we can rely on a larger number of trajectories ($N$ instead of $B$) to control the variance. 
+
+\subsection{Baseline}
+The baseline used in the Half Cheetah experiment is the one used in \cite{duan2016benchmarking}. It is a linear state-value function estimator, or critic. 
+The (time-varying) feature encoding for the linear baseline is:
+\begin{align*}
+\vphi(s,t)=[s, s \odot s, 0.01t, (0.01t)^2, (0.01t)^3,1],
+\end{align*}
+where $s\in\mathbb{R}^d$ is the state vector and $\odot$ is the element-wise product. The baseline is then:
+\[
+b(s_t,a_t) = \mathbf{\lambda}^T\vphi(s_t,t).
+\]
+The baseline is fitted from scratch at each policy gradient iteration, with least squares, to match state-value function $V^{\pi}(s)$.
+When used with SVRPG, the critic parameter $\mathbf{\lambda}$ is updated only at the snapshot.
+
+%\begin{align*}
+%        \nabla J(\pi^T) =\frac{1}{N} \sum_{n=1}^{N}
+%                \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(y_k^n)\right) (\gamma^h \Reward(y_h^n)-b_{sn})
+%          + \frac{1}{B} \sum_{n=1}^{B}
+%                \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(z_k^n)\right) (\gamma^h \Reward(z_h^n) - b_{si})\\ - \frac{1}{B} \sum_{n=1}^{B}
+%                \sum_{h=0}^H \left(\sum_{k=0}^h \nabla \log\pi^T(z_k^n)\right) (\gamma^h \Reward(z_h^n) - b_{si})\omega(z_{0:h}|\pi^B,\pi^T)
+%\end{align*}
+%Where $b_{sn}$ is the prediction given by the baseline at the snapshot, whereas $b_{si}$ is the prediction given by the baseline at a given subiteration. 
+
+
 \section{Experimental Details}\label{app:exp}
-Used environments:
+We describe the RL tasks of Section \ref{sec:exp} in more detail:
 \begin{enumerate}
-	\item \emph{Cart-Pole Balancing} : 4-dimensional state space: cart position x, pole angle $\theta$, cart velocity $\dot{x}$ and pole velocity $\dot{\theta}$; 1-dimensional action space: the horizontal force applied to the cart body. Reward function  is defined as $r(s, a) := 10 - (1 - cos(\theta)) - 10^{-5}\norm[] a^2$. The episodes terminates when $|x|>2.4$ or $|\theta|>0.2$ or the number of time steps T is greater than 100.
-	\item \emph{Mujoco Swimmer}: 13-dimensional state space: 3 links velocities ($v_x$ and $v_y$ of center of masses) and 2 actuated joints angles. 2-dimensional action space: the two momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 10^{-4}\norm[2] a^2$. The episodes terminates when the number of time steps T is greater than 500.
-	\item \emph{Mujoco Half Cheetah}: 20-dimensional state space: 9 links and 6 actuated joints angles. 6-dimensional action space: the 6 momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 0.05\norm[2] a^2$. The episodes terminates when the number of time steps T is greater than 500.
+	\item \emph{Cart-Pole Balancing} : an inverted pendulum mounted on a cart must be kept standing by moving the cart backward or forward ;4-dimensional state space: cart position x, pole angle $\theta$, cart velocity $\dot{x}$ and pole velocity $\dot{\theta}$; 1-dimensional action space: the horizontal force applied to the cart body. Reward function  is defined as $r(s, a) := 10 - (1 - cos(\theta)) - 10^{-5}\norm[] a^2$. The episodes terminates when $|x|>2.4$ or $|\theta|>0.2$ or the number of time steps T is greater than 100.
+    \item \emph{Mujoco Swimmer}: a snake-like robot immersed in a fluid must move forward; 13-dimensional state space: 3 links velocities ($v_x$ and $v_y$ of center of masses) and 2 actuated joints angles. 2-dimensional action space: the two momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 10^{-4}\norm[2]{a}^2$. The episodes terminates when the number of time steps T is greater than 500.
+    \item \emph{Mujoco Half Cheetah}: a planar biped robot must move forward; 20-dimensional state space: 9 links and 6 actuated joints angles. 6-dimensional action space: the 6 momentums applied on actuated joints.  The reward function is defined as $r(s, a) := v_x - 0.05\norm[2]{a}^2$. The episodes terminates when the number of time steps T is greater than 500.
 \end{enumerate}
 
-Refer to \cite{duan2016benchmarking}  for more details about GPOMDP in Half Cheetah task.
-All the experiments' parameters are reported in the following table:
+All the parameters used in the experiments, including neural network architectures, are reported in the following table:
 
-\centering
-\begin{tabular}{| l | c  c  c |}
-	\hline	
-	& Cart-Pole & Swimmer & Half Cheetah \\
-	\hline
-	State space dimension  & 4 & 13 & 20 \\
-	Control space dimension & 1 & 2 & 6 \\
-	NN Hidden layers & 8 & 32x32 & 100x50x25 \\
-	Adam learning rate SVRPO & $5\cdotp10^{-2}$ & $10^{-3}$ & $10^{-3}$ \\
-	Adam learning rate GPOMDP & $10^{-2}$ & $10^{-3}$ & $10^{-2}$ \\
-	Snapshot batch size & 100 & 100 & 100 \\
-	Sub-iterations batch size & 10 & 10 & 10 \\
-	GPOMDP batch size & 10 & 10 & 100 \\
-	Max number of sub-iterations & 50 & 20 & 20 \\
-	Episodes horizon& 100 & 500 & 500 \\
-	Baseline& No & No & Yes \\
-	Discount $(\gamma)$& 0.99 & 0.995 & 0.99 \\
-	Total number of trajectories& 10000 & 20000 & 50000 \\
-	\hline  
-\end{tabular}
-
+\begin{table}[H]\caption{Parameters used in the experiments of Section \ref{sec:exp}.}\label{table:metaparams}
+	\centering
+	\begin{tabular}{| l | c  c  c |}
+		\hline	
+		& Cart-Pole & Swimmer & Half Cheetah \\
+		\hline
+		NN hidden weights & 8 & 32x32 & 100x50x25 \\
+		NN activation & tanh & tanh & tanh \\
+		Adam $\alpha$ (SVRPG) & $5\cdotp10^{-2}$ & $10^{-3}$ & $10^{-3}$ \\
+		Adam $\alpha$ (GPOMDP) & $10^{-2}$ & $10^{-3}$ & $10^{-2}$ \\
+		Adam $\beta_1$ & 0.9 & 0.9 & 0.9 \\
+		Adam $\beta_2$ & 0.99 & 0.99 & 0.99 \\ 
+		Snapshot batch size $N$ (SVRPG) & 100 & 100 & 100 \\
+		Mini-batch size $B$ (SVRPG) & 10 & 10 & 10 \\
+		Batch size (GPOMDP) & 10 & 10 & 100 \\
+		Max number of sub-iterations & 50 & 20 & 20 \\
+		Task horizon& 100 & 500 & 500 \\
+		Baseline& No & No & Yes \\
+		Discount factor $\gamma$& 0.99 & 0.995 & 0.99 \\
+		Total number of trajectories& 10000 & 20000 & 50000 \\
+		\hline  
+	\end{tabular}
+\end{table}
+Where not specified, meta-parameters are shared among G(PO)MDP and SVRPG.
+Refer to \cite{duan2016benchmarking} for more details about G(PO)MDP (REINFORCE in the paper) on the Half Cheetah task.
 
 \end{document}
