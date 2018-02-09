@@ -713,7 +713,7 @@ We have additionally shown that, under mild assumptions that are often verified 
 %\todomatout{Repetition of Section 6?}
 Finally, we have empirically shown that practical variants of the theoretical SVRPG version can outperform classical actor-only approaches on benchmark tasks.
 Preliminary results support the effectiveness of SVRPG also with a commonly used baseline for the policy gradient.
-Despite that, we believe that it will be possible to derive a baseline designed explicitly for SVRPG to exploit the RL structure and the SVRG idea jointly. Future work should also focus on making batch sizes $N$ and $B$ adaptive, as suggested in \cite{papini2017adaptive}.
+Despite that, we believe that it will be possible to derive a baseline designed explicitly for SVRPG to exploit the RL structure and the SVRG idea jointly. {\color{blue}Another possible improvement would be to employ the natural gradient \cite{kakade2002natural} to better control the effects of parameter updates to the variance of importance weights.} Future work should also focus on making batch sizes $N$ and $B$ adaptive, as suggested in \cite{papini2017adaptive}.
 
 \FloatBarrier
 \bibliography{svrpg}
