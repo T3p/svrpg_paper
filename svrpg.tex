@@ -410,7 +410,7 @@ This property will be used to prove Lemma~\ref{L:svrpg.properties}.
 %- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \wt{\vtheta})\Reward(\tau_i)\right].
 %\end{align*}
 The use of mini-batches is also common practice in SVRG since it can yield a performance improvement even in the supervised case~\citep{harikandeh2015stopwasting,konevcny2016mini}. It is easy to show that the SVRPG estimator has the following, desirable properties:
-\begin{lemma}\label{L:svrpg.properties}
+\begin{restatable}[]{lemma}{properties}\label{L:svrpg.properties}
         Let $\wh{\nabla}_N J(\vtheta)$ be an unbiased estimator of~\eqref{E:policygradient}
 %Denote by $\wh{\nabla}_N^{\textsc{RF}} J(\vtheta)$ the REINFORCE estimator in~\eqref{E:policygradient.estimate} 
 and let $\vtheta^* \in \argmin_{\vtheta} \{J(\vtheta)\}$. Then, the SVRG estimate in~\eqref{E:svrpg.estimate.batch} is \emph{unbiased}
@@ -424,22 +424,8 @@ For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of th
 	\Var\left[\gradBlack{\vtheta^*}\right] = 
     \Var\left[\wh{\nabla}_N J(\vtheta^*)\right].
 \end{equation}
-\end{lemma}
-\begin{proof}
-Claim (\ref{eq:unbiased}) is from the unbiasedness of the estimators:
-\begin{align*}
-\EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\wt{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} \\
-&\qquad- \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i|\vtheta, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} \\
-&= \gradJ{\wt{\vtheta}} + \gradJ{\vtheta} - \gradJ{\wt{\vtheta}} = \gradJ{\vtheta}.
-\end{align*}
-As for claim (\ref{eq:zerovar}), note that as $\vtheta\to\vtheta^*$, also $\wt{\vtheta}\to\vtheta^*$. Hence, by continuity of $J(\vtheta)$:
-\begin{align*}
-\Var\left[\gradBlack{\vtheta}\right] &\to \Var\left[\gradApp{\vtheta^*}{N}\right] + \frac{1}{B}\Var\left[g(\tau|\vtheta^*)\right. \\
-&\left.- \cancel{\omega(\tau|\vtheta^*,\vtheta^*)}g(\tau|\vtheta^*)\right]
-= \Var\left[\gradApp{\vtheta^*}{N}\right].
-\end{align*}
-Note that it is essential that the trajectories used in the second and the third term are the same for the variance to vanish.
-\end{proof}
+\end{restatable}
+
 Previous results hold for both REINFORCE and G(PO)MDP.
 In particular, the latter result suggests that an SVRG-like algorithm using $\gradBlack{\vtheta}$ can achieve faster convergence, by performing much more parameter updates with the same data without introducing additional variance (at least asymptotically).
 {\color{blue}Note that the randomized return value of Algorithm \ref{alg:svrpg} does not affect on-line learning at all, but will be used as a theoretical tool in the next section.}
@@ -889,6 +875,24 @@ The ideal SVRPG gradient estimate is:
 %\end{align*}
 %Note that it is important that the trajectories used in the second and the third term are the same for the variance to vanish.
 %\end{proof}
+
+\subsection*{Basic Properties of SVRPG}
+\properties
+\begin{proof}
+	Claim (\ref{eq:unbiased}) is from the unbiasedness of the estimators:
+	\begin{align*}
+	\EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\wt{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} \\
+	&\qquad- \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i|\vtheta, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} \\
+	&= \gradJ{\wt{\vtheta}} + \gradJ{\vtheta} - \gradJ{\wt{\vtheta}} = \gradJ{\vtheta}.
+	\end{align*}
+	As for claim (\ref{eq:zerovar}), note that as $\vtheta\to\vtheta^*$, also $\wt{\vtheta}\to\vtheta^*$. Hence, by continuity of $J(\vtheta)$:
+	\begin{align*}
+	\Var\left[\gradBlack{\vtheta}\right] &\to \Var\left[\gradApp{\vtheta^*}{N}\right] + \frac{1}{B}\Var\left[g(\tau|\vtheta^*)\right. \\
+	&\left.- \cancel{\omega(\tau|\vtheta^*,\vtheta^*)}g(\tau|\vtheta^*)\right]
+	= \Var\left[\gradApp{\vtheta^*}{N}\right].
+	\end{align*}
+	Note that it is essential that the trajectories used in the second and the third term are the same for the variance to vanish.
+\end{proof}
 
 \subsection*{Ancillary Lemmas}
 Before addressing the main convergence theorem, we prove some useful lemmas.
@@ -1419,22 +1423,23 @@ In complex continuous tasks, $\mu(s)$ often represents a deep neural network, or
 It is a common practice to learn also the variance of the policy in order to adapt the degree of exploration. The variance (or diagonal covariance matrix in the multi-dimensional case) can be learned as a separate parameter or be state-dependent like the mean. In any case, adaptive variance must be carefully employed since it can clearly undermine all the three assumptions of Theorem \ref{theo:convergence}.
 
 \section{Practical SVRPG versions}\label{app:practicalsvrpg}
-\begin{algorithm}[h]
-        \begin{algorithmic}
-        \STATE \textbf{Input:} A gradient estimate $g_t$ and parameters $\beta_1$, $\beta_2$, $\epsilon$ and $\alpha$.
-        \STATE $m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$
-        \STATE $v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t \circ g_t$ ($\circ$ is the Hadamard (component-wise) product)
-        \STATE $\hat{m}_t = \dfrac{m_t}{1 - \beta^t_1}$
-        \STATE $\hat{v}_t = \dfrac{v_t}{1 - \beta^t_2}$
-        \STATE $\Delta(g_t) = \dfrac{\alpha}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t$
-        \STATE \textbf{Return:} The increment $\Delta(g_t)$  of the parameters.
-\end{algorithmic}
- \caption{
- \label{A:adam}
- Adam}
-\end{algorithm}
+In this appendix we provide more details on the practical variants of our algorithm.
 \subsection{Learning Rates}
-Let us give a deeper insight on the two different learning rate used by our algorithm. We have already said that we use two different ADAM one related to the snapshots and another one related to the sub-iterations. In this way tha ADAM associated to the snapshots will take into account only the snapshots history through the parameters $m_{t-1}$ and $v_{t-1}$. The same reasoning holds for the sub-iterations. This, of course, allows our algorithm to take into account the different variabilities in a more accurate manner.
+\begin{algorithm}[h]
+	\begin{algorithmic}
+		\STATE \textbf{Input:} A gradient estimate $g_t$ and parameters $\beta_1$, $\beta_2$, $\epsilon$ and $\alpha$.
+		\STATE $m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$
+		\STATE $v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t \circ g_t$ ($\circ$ is the Hadamard (component-wise) product)
+		\STATE $\hat{m}_t = \dfrac{m_t}{1 - \beta^t_1}$
+		\STATE $\hat{v}_t = \dfrac{v_t}{1 - \beta^t_2}$
+		\STATE $\Delta(g_t) = \dfrac{\alpha}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t$
+		\STATE \textbf{Return:} The increment $\Delta(g_t)$  of the parameters.
+	\end{algorithmic}
+	\caption{
+		\label{A:adam}
+		Adam}
+\end{algorithm}
+Let us give a deeper insight on the two different learning rate schedules used by our algorithm. We report pseudo-code of the original ADAM in Algorithm \ref{A:adam}. As mentioned, we use two distinct instances of ADAM: one related to the snapshots, and one to the sub-iterations. In this way the ADAM associated to the snapshots will take into account only the history of gradient moments at the snapshots. The same reasoning holds for the sub-iterations. This, of course, allows our algorithm to take into account the different variabilities in a more accurate manner.
 \subsection{Baseline}
 For all batch gradient-based algorithms, we use the same time-varying feature encoding for the linear baseline:
 \begin{align*}
