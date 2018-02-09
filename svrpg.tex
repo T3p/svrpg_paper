@@ -658,13 +658,7 @@ In all the tasks, our algorithm has higher average return and lower normalized s
 In Cart-pole, disjoint confidence intervals show that the advantage is statistically significant. 
 
 \textbf{Preliminary results on actor-critic.} %As mentioned, 
-Another variance-reduction technique in policy gradient is to employ baselines, or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without baseline. In order to move towards a more general understanding of the problem of variance in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we use the more challenging MuJoCo~\citep{todorov2012mujoco} Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Table \ref{tab:1} also reports the comparison between SVRPG and G(PO)MDP on Half-cheetah using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve.
-
-%\begin{figure}[t]	
-%    \includegraphics[width=0.5\textwidth]{half_cheetah_self_norm_baseline_SVRPG_vs_GPOMDP100_baseline}
-%    \caption{Self-Normalized SVRPG with baseline vs GPOMDP with baseline in half cheetah}
-%    \label{fig:halfcheetah}
-%\end{figure}
+Another variance-reduction technique in policy gradient is to employ baselines, or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without baseline. In order to move towards a more general understanding of the problem of variance in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we use the more challenging MuJoCo~\citep{todorov2012mujoco} Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Table \ref{tab:1} also reports the comparison between SVRPG and G(PO)MDP\footnote{\cite{duan2016benchmarking} report results on REINFORCE. However, inspection on \textit{rllab} code and documentation reveals that it is actually PGT \cite{sutton2000policy}, which is equivalent to G(PO)MDP \citep[shown by][]{peters2008reinforcement}. Using the name REINFORCE in a general way is inaccurate, but widespread.} on Half-cheetah using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve.
 
 
 \section{Conclusion}
