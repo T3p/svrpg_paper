@@ -1489,15 +1489,15 @@ We provide more details on the practical variants of SVRPG.
 Let us give a deeper insight on the two different learning rate schedules used by our algorithm. We report pseudo-code of the original ADAM \cite{kingma2014adam} in Algorithm \ref{A:adam}. As mentioned, we use two distinct instances of ADAM to manage different sources of variance: one related to the snapshots, and one to the sub-iterations. In this way the ADAM associated to the snapshots takes into account only the history of gradient moments at the snapshots. By using Algorithm \ref{A:adam} as a subroutine $\textbf{ADAM}(g,\alpha,\beta)$, we can explicitly define our gradient updates:
 
 \begin{align*}
-\vtheta^{s+1}_1 &= \wt{\vtheta}^s + \textbf{ADAM}\left(\wh{\nabla}_N J(\wt{\vtheta}^s),\beta_1,\beta_2,2\alpha\right),\\
+\vtheta^{s+1}_1 &= \wt{\vtheta}^s + \textbf{ADAM}\left(\wh{\nabla}_N J(\wt{\vtheta}^s),\beta_1,\beta_2,\alpha\right),\\
 \vtheta^{s+1}_{t+1} &= \textbf{ADAM}\Big( 
 %        v_t^{s+1}
-\blacktriangledown J(\vtheta^{s+1}_t),\beta_1,\beta_2,\alpha\Big)
+\blacktriangledown J(\vtheta^{s+1}_t),\beta_1,\beta_2,\frac{\alpha}{2}\Big)
 \text{ for $t=1,\dots,m-1$},
 \end{align*}
 
 where separate histories are kept for estimated first moments $\kappa_{FG},\kappa_{IS}$ and estimated second moments $\nu_{FG},\nu_{IS}$.
-The meta-parameters $\alpha,\beta_1,\beta_2$ are constant and set to default values or with minor manual tuning (see table \ref{table:metaparams}). Note that we double $\alpha$ for the snapshot ADAM since we can rely on a larger number of trajectories ($N$ instead of $B$) to control the variance. 
+The meta-parameters $\alpha,\beta_1,\beta_2$ are constant and set to default values or with minor manual tuning (see table \ref{table:metaparams}). Note that we double the sub-iterations' learning rate for the snapshot ADAM since we can rely on a larger number of trajectories ($N$ instead of $B$) to control the variance. 
 
 \subsection{Baseline}
 The baseline used in the Half Cheetah experiment is the one used in \cite{duan2016benchmarking}. It is a linear state-value function estimator, or critic. 
