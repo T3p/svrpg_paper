@@ -6,11 +6,11 @@ The heuristics proposed in the paper were not developed with the main purpose of
 
 The proof to Lemma 3.1. was meant to be in the appendix and is missing by mistake. We will definitively include it. The variance property is true at convergence because the O(1/B) terms cancel out as both the parameter and the snapshot parameter approach the optimum. This is a nice property of SVRG mentioned also in Section 2 of the original SVRG paper.
 
-The performance of GPOMDP on Swimmer is lower than the one reported in Duan et al. because we do not employ the linear critic used in that paper. Since critic and SVRG are both ways to reduce the variance of the gradient estimate, and a combination of the two is non-trivial (how do you critique snapshot policies?) we turned the actor off to measure the net advantage of SVRG. Later, in the Half-Cheetah experiment, we include the actor in both GPOMDP and SVRPG. 
+The performance of GPOMDP on Swimmer is lower than the one reported in Duan et al. because we do not employ the linear critic used in that paper. Since critic and SVRG are both ways to reduce the variance of the gradient estimate, and a combination of the two is non-trivial (how do you critique snapshot policies?) we turned the critic off to measure the net advantage of SVRG. Later, in the Half-Cheetah experiment, we include the critic in both GPOMDP and SVRPG. 
 
-We reported Duan et al. values only for the Half-Cheetah experiment because it is the only case in which we used the actor. We recognize that this is confusing. In fact, we now have reproduced the GPOMDP/Half-Cheetah result and we will simply report our results, mentioning that the ones on Half-Cheetah are coherent with what is reported in Duan et al., while the ones on Cart-Pole and Swimmer cannot be compared since we did not use the critic.
+We reported Duan et al. values only for the Half-Cheetah experiment because it is the only case in which we used the critic (in order to evaluate the combination of SVRG and critic). We recognize that this is confusing. In fact, we now have reproduced the GPOMDP/Half-Cheetah result and we will simply report our results, mentioning that the ones on Half-Cheetah are coherent with what is reported in Duan et al., while the ones on Cart-Pole and Swimmer cannot be compared since we did not use the critic.
 
-The version of Cart-Pole we use is the same of Duan et al, and this should be mentioned, although the task is already described in Appendix E. The lower scores are due to the fact that we do not include a critic in GPOMDP.
+The version of Cart-Pole we use is the same of Duan et al, and this should be mentioned, although the task is already described in Appendix E. The lower scores are due to the fact that we do not include a critic in GPOMDP, to make the comparison with SVRPG (that does not use the critic on Cart-Pole) fair.
 
 As a first attempt to bring the SVRG technique to the policy optimization framework, we do not claim SVRPG has the maturity of algorithms like TRPO. Recent policy optimization algorithms employ a series of tools, e.g. natural gradients and exploration bonuses, that are outside the scope of this paper but represent promising future-work material.
 
@@ -26,7 +26,7 @@ Reviewer 2:
 6) We consider the horizon H to be part of the problem, but we should mention that problems with long horizons can be more difficult since we employ importance weighting.
 
 On experiments:
-1) The comparison is fair, figures have the number of trajectories on the horizontal axis, and the extra trajectories collected by  SVRPG at the snapshot are indeed counted. Our algorithm manages to be faster anyway because the quality of the updates is higher.
+1) The comparison is fair, figures have the number of trajectories on the horizontal axis, and the extra trajectories collected by  SVRPG at the snapshot are indeed counted. Our algorithm updates the policy less often, but manages to be faster anyway because the quality of the updates is higher.
 2) Using fixed batch sizes is indeed suboptimal, but we leave this aspect for future work since adapting batch sizes in the policy gradient framework is a  difficult problem that have been only slightly explored in the RL literature so far (cfr. Papini et al., "Adaptive batch size for safe policy gradients." NIPS 2017).
 3) This is because we used the rllab variant of Cart-Pole (Duan et al., 2016), where the agent collects a reward of ~10 at each time-step, as described in Appendix E.
 4) For SVRPG, \alpha is selected with the Adam variant described in Section 5.2. For GPOMDP, we use Adam. All meta-parameters are reported in Appendix E and have be chosen to make the comparison fair. 
