@@ -426,7 +426,8 @@ This property will be used to prove Lemma~\ref{L:svrpg.properties}.
 %- \omega(\tau_i)\nabla\log\pi(\tau_i \vert \wt{\vtheta})\Reward(\tau_i)\right].
 %\end{align*}
 The use of mini-batches is also common practice in SVRG since it can yield a performance improvement even in the supervised case~\citep{harikandeh2015stopwasting,konevcny2016mini}. It is easy to show that the SVRPG estimator has the following, desirable properties:
-\begin{lemma}\label{L:svrpg.properties}
+
+\begin{restatable}[]{lemma}{svrpgprop}\label{L:svrpg.properties}
         Let $\wh{\nabla}_N J(\vtheta)$ be an unbiased estimator of~\eqref{E:policygradient}
 %Denote by $\wh{\nabla}_N^{\textsc{RF}} J(\vtheta)$ the REINFORCE estimator in~\eqref{E:policygradient.estimate} 
 and let $\vtheta^* \in \argmin_{\vtheta} \{J(\vtheta)\}$. Then, the SVRG estimate in~\eqref{E:svrpg.estimate.batch} is \emph{unbiased}
@@ -440,7 +441,7 @@ For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of th
 	\Var\left[\gradBlack{\vtheta^*}\right] = 
     \Var\left[\wh{\nabla}_N J(\vtheta^*)\right].
 \end{equation}
-\end{lemma}
+\end{restatable}
 %\begin{proof}
 %Claim (\ref{eq:unbiased}) is from the unbiasedness of the estimators:
 %\begin{align*}
@@ -904,10 +905,10 @@ The ideal SVRPG gradient estimate is:
 \end{definition}
 
 
-%\subsection*{Basic Lemmas}
-%We prove two basic properties of the SVRPG update.
-%
-%%\unbias*
+\subsection*{Basic Lemmas}
+We prove two basic properties of the SVRPG update.
+
+\svrpgprop*
 %\begin{restatable}{lemma}{unbias}\label{lemma:unbias}
 %Consider Assumption~\ref{asm:unbiasedness}. Then, the SVRPG estimator is unbiased:
 %\[
@@ -915,15 +916,13 @@ The ideal SVRPG gradient estimate is:
 %\left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
 %\]
 %\end{restatable}
-%\begin{proof}
-%\begin{align*}
-%        \EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\wt{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} - \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i|\vtheta, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} \\
-%&= \gradJ{\wt{\vtheta}} + \gradJ{\vtheta} - \gradJ{\wt{\vtheta}} = \gradJ{\vtheta}.
-%\end{align*}
-%Note that the importance weight is necessary to guarantee unbiasedness, since the $\tau_i$ are sampled from $\pi_{\vtheta}$.
+\begin{proof}
+\begin{align*}
+        \EVV[]{\gradBlack{\vtheta}} &= \EVV[]{\gradApp{\wt{\vtheta}}{N}}  + \EVV[]{\gradApp{\vtheta}{B}} - \EVV[]{\frac{1}{B}\sum_{i=0}^{B-1}\omega(\tau_i|\vtheta, \wt{\vtheta}) g(\tau_i|\wt{\vtheta})} \\
+&= \gradJ{\wt{\vtheta}} + \gradJ{\vtheta} - \gradJ{\wt{\vtheta}} = \gradJ{\vtheta}.
+\end{align*}
+Note that the importance weight is necessary to guarantee unbiasedness, since the $\tau_i$ are sampled from $\pi_{\vtheta}$.
 %\end{proof}
-%
-%% \zerovar*
 %\begin{restatable}{lemma}{zerovar}\label{lemma:zerovar}
 %At convergence, the variance of the SVRPG estimator is equal to the variance of the gradient estimator, regardless of the mini-batch size $B$:
 %\[
@@ -932,13 +931,13 @@ The ideal SVRPG gradient estimate is:
 %\]
 %\end{restatable}
 %\begin{proof}
-%As $\vtheta\to\vtheta^*$, also $\wt{\vtheta}\to\vtheta^*$. Hence, by continuity of $J(\vtheta)$:
-%\begin{align*}
-%\Var\left[\gradBlack{\vtheta}\right] &\to \Var\left[\gradApp{\vtheta^*}{N}\right] + \frac{1}{B}\Var\left[g(\tau|\vtheta^*) - \cancel{\omega(\tau|\vtheta^*,\vtheta^*)}g(\tau|\vtheta^*)\right] \\
-%&= \Var\left[\gradApp{\vtheta^*}{N}\right].
-%\end{align*}
-%Note that it is important that the trajectories used in the second and the third term are the same for the variance to vanish.
-%\end{proof}
+As $\vtheta\to\vtheta^*$, also $\wt{\vtheta}\to\vtheta^*$. Hence, by continuity of $J(\vtheta)$:
+	\begin{align*}
+\Var\left[\gradBlack{\vtheta}\right] &\to \Var\left[\gradApp{\vtheta^*}{N}\right] + \frac{1}{B}\Var\left[g(\tau|\vtheta^*) - \cancel{\omega(\tau|\vtheta^*,\vtheta^*)}g(\tau|\vtheta^*)\right] \\
+&= \Var\left[\gradApp{\vtheta^*}{N}\right].
+\end{align*}
+Note that it is important that the trajectories used in the second and the third term are the same for the variance to vanish.
+\end{proof}
 
 \subsection*{Ancillary Lemmas}
 Before addressing the main convergence theorem, we prove some useful lemmas.
