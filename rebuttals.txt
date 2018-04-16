@@ -21,7 +21,7 @@ We see that meta-parameters are a delicate aspect of our algorithm. The pragmati
 3) In Thm 4.1, \theta^* denotes a global optimizer, although only convergence to a local optimum is guaranteed. We will make this more clear.
 4) \theta_m^0, \tilde\theta^0 and \theta_0^1 are all the same. Superscripts denote epochs and subscripts inner iterations (see pseudocode). 
 5) Also under these assumptions, plain PG is an instance of Stochastic Gradient, which has a 1/\sqrt{T} rate.
-6) We consider the horizon H to be part of the problem. Long horizons can be more difficult since we employ importance weighting we will mention this in the final version and we will a sensitivity analysis (if space will allow us).
+6) We consider the horizon H to be part of the problem. Long horizons can be more difficult since we employ importance weighting. We will mention this in the final version and we will perform a sensitivity analysis.
 
 On experiments:
 1) The comparison is fair, figures have the number of trajectories on the horizontal axis, and the extra trajectories collected by SVRPG at the snapshot are indeed counted. Our algorithm updates the policy less often but manages to be faster anyway because the quality of the updates is higher.
