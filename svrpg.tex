@@ -228,7 +228,7 @@ SVRG has been used in RL as an efficient technique for optimizing the per-iterat
 In both the cases, the optimization problems faced resemble the SL scenario and are not affected by all the previously mentioned issues.
 
 %Paper structure
-After providing background on policy gradient and SVRG in Section \ref{sec:pre}, in Section \ref{sec:alg} propose SVRPG, a variant of SVRG for the policy gradient framework, addressing all the difficulties mentioned above. In Section \ref{sec:conv} we provide convergence guarantees for our algorithm, and we show a convergence rate that has an $O(\nicefrac{1}{T})$ dependence on the number $T$ of iterations. In Section \ref{sec:stopping} we suggest how to set the meta-parameters of SVRPG, while in Section \ref{sec:prac} we discuss some practical variants of the algorithm. Finally, in Section \ref{sec:exp} we empirically evaluate the performance of our method on popular continuous RL tasks.
+After providing background on policy gradient and SVRG in Section \ref{sec:pre}, in Section \ref{sec:alg} we propose SVRPG, a variant of SVRG for the policy gradient framework, addressing all the difficulties mentioned above. In Section \ref{sec:conv} we provide convergence guarantees for our algorithm, and we show a convergence rate that has an $O(\nicefrac{1}{T})$ dependence on the number $T$ of iterations. In Section \ref{sec:stopping} we suggest how to set the meta-parameters of SVRPG, while in Section \ref{sec:prac} we discuss some practical variants of the algorithm. Finally, in Section \ref{sec:exp} we empirically evaluate the performance of our method on popular continuous RL tasks.
 
 \vspace{-0.05in}
 \section{Preliminaries}\label{sec:pre}
@@ -298,7 +298,7 @@ This kind of optimization is very common in machine learning, where each $z_i$ m
 A common requirement is that $z$ must be smooth and concave in $\vtheta$.\footnote{Note that we are considering a maximization problem instead of the classical minimization one.} 
 Under this hypothesis, full gradient (FG) ascent~\citep{cauchy1847methode} with a constant step size achieves a linear convergence rate in the number $T$ of iterations (\ie parameter updates)~\citep{nesterov2013introductory}.
 However, each iteration requires $N$ gradient computations, which can be too expensive for large values of $N$. Stochastic Gradient (SG) ascent~\citep[\eg][]{robbins1951stochastic,bottou2004large} overcomes this problem by sampling a single sample $x_i$ per iteration, but a vanishing step size is required to control the variance introduced by sampling. As a consequence, the lower per-iteration cost is paid with a worse, sub-linear convergence rate \cite{nemirovskii1983problem}.
-Starting from SAG, a series of variations to SG have been proposed to achieve a better trade-off between convergence speed and cost per iteration: \eg SAG~\citep{roux2012stochastic}, SVRG~\cite{johnson2013accelerating}, SAGA~\cite{defazio2014saga}, and Finito~\cite{defazio2014finito}. 
+Starting from SAG, a series of variations to SG have been proposed to achieve a better trade-off between convergence speed and cost per iteration: \eg SAG~\citep{roux2012stochastic}, SVRG~\cite{johnson2013accelerating}, SAGA~\cite{defazio2014saga}, Finito~\cite{defazio2014finito}, and MISO~\cite{mairal2015incremental}. 
 The common idea is to reuse past gradient computations to reduce the variance of the current estimate.
 In particular, Stochastic Variance-Reduced Gradient (SVRG) is often preferred to other similar methods for its limited storage requirements, which is a significant advantage when deep and/or wide neural networks are employed.  
 
@@ -357,7 +357,7 @@ However, a direct application of SVRG to RL is not possible due to the following
 \end{description}
 To deal with non-concavity, we require $J(\vtheta)$ to be $L$-smooth, which is a reasonable assumption for common policy classes such as Gaussian\footnote{See Appendix~\ref{app:gauss} for more details on the Gaussian policy case.} and softmax~\citep[\eg][]{Furmston2012unifying,pirotta2015lipschitz}.
 Because of the infinite dataset, we can only rely on an estimate of the full gradient.
-\citet{harikandeh2015stopwasting} analysed this scenario under the assumptions of $z$ being concave, showing that SVRG is robust to an inexact computation of the full gradient. In particular, it is still possible to recover the original convergence rate if the error decreases at an appropriate rate. In Section \ref{sec:conv} we will show how the estimation accuracy impacts on the convergence results with a non-concave objective.
+\citet{harikandeh2015stopwasting} analysed this scenario under the assumptions of $z$ being concave, showing that SVRG is robust to an inexact computation of the full gradient. In particular, it is still possible to recover the original convergence rate if the error decreases at an appropriate rate. \citet{bietti2017stochastic} performed a similar analysis on MISO. In Section \ref{sec:conv} we will show how the estimation accuracy impacts on the convergence results with a non-concave objective.
 Finally, the non-stationarity of the optimization problem introduces a bias into the SVRG estimator in Eq.~\eqref{E:svrg.gradient.correction}.
 To overcome this limitation we employ importance weighting~\citep[\eg][]{rubinstein1981simulation,precup2000eligibility} to correct the distribution shift.
 %Finally, we employ importance weighting~\citep[\eg]{rubinstein1981simulation,precup2000eligibility} to guarantee proper sampling of trajectories.
@@ -367,7 +367,7 @@ To overcome this limitation we employ importance weighting~\citep[\eg][]{rubinst
 	\caption{SVRPG}
 	\label{alg:svrpg}
 	\begin{algorithmic}
-		\STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, batch size $N$, mini-batch size $B$, gradient estimator $g$, initial parameter $\vtheta_{m}^0 := \wt{\vtheta}^0$
+		\STATE {\bfseries Input:} number of epochs $S$, epoch size $m$, step size $\alpha$, batch size $N$, mini-batch size $B$, gradient estimator $g$, initial parameter $\vtheta_{m}^0 \coloneqq \wt{\vtheta}^0 \coloneqq \vtheta_0$
 		\FOR{$s=0$ {\bfseries to} $S-1$}
 		\STATE $\vtheta_0^{s+1} := \wt{\vtheta}^{s} = \vtheta_{m}^s$
 		\STATE Sample $N$ trajectories $\{\tau_j\}$ from $p(\cdot\vert\wt{\vtheta}^{s})$
@@ -490,7 +490,7 @@ This assumption is similar in spirit to the one in~\citep{harikandeh2015stopwast
 	\end{restatable}
 
 \textit{3) Non-stationarity.} 
-Similarly to what done in SL~\citep{cortes2010learning}, we require the variance of the importance weight to be bounded.
+Similarly to what is done in SL~\citep{cortes2010learning}, we require the variance of the importance weight to be bounded.
 	\begin{restatable}[On the variance of importance weights]{assumption}{varweights}\label{ass:M2}
 		There is a constant $W<\infty$ such that, for each pair of policies encountered in Algorithm~\ref{alg:svrpg} and for each trajectory,
 		\[
@@ -511,7 +511,7 @@ Under Assumptions~\ref{ass:bounded_score}, \ref{ass:REINFORCE} and \ref{ass:M2},
 		\frac{\zeta}{N}
 		+\frac{\xi}{B},
 \end{align*}
-where $\psi,\zeta,\xi$ depend only on $\GRADLOG,\HESSLOG,\VARRF,\VARIS,\alpha$ and $m$.
+where $\vtheta^*$ is a global optimum and $\psi,\zeta,\xi$ depend only on $\GRADLOG,\HESSLOG,\VARRF,\VARIS,\alpha$ and $m$.
 \end{restatable}
 % Specific constants and meta-parameter constraints are provided in the proof of the theorem in Appendix \ref{app:proofs}.
 Refer to Appendix~\ref{app:proofs} for a detailed proof involving the definition of the constants and the meta-parameter constraints.
