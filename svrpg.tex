@@ -17,10 +17,10 @@
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 
 % Use the following line for the initial blind version submitted for review:
-\usepackage{icml2018}
+%\usepackage{icml2018}
 
 % If accepted, instead use the following line for the camera-ready submission:
-%\usepackage[accepted]{icml2018}
+\usepackage[accepted]{icml2018}
 
 %%%USEFUL PACKAGES%%%
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
@@ -29,6 +29,7 @@
 \usepackage{pifont}
 \usepackage[makeroom]{cancel}
 \usepackage{placeins}
+\usepackage{subcaption}
 
 %%Theorems 
 \usepackage{amsthm}
@@ -633,61 +634,65 @@ Concerning importance weighting techniques, RL has made extensive use of them fo
 \section{Experiments}\label{sec:exp}
 \vspace{-0.05in}
 In this section, we evaluate the performance of SVRPG and compare it with policy gradient (PG) on well known continuous RL tasks: Cart-pole balancing and Swimmer~\citep[\eg][]{duan2016benchmarking}.
-We consider G(PO)MDP since has a smaller variance than REINFORCE.
+We consider G(PO)MDP since it has a smaller variance than REINFORCE.
 % This comparison is performed using G(PO)MDP as an estimator of $\score{\vtheta}{\tau}\Reward(\tau)$ in both cases. 
 For our algorithm, we use a batch size $N=100$, a mini-batch size $B=10$, and the jointly adaptive step size $\alpha$ and epoch length $m$ proposed in Section \ref{sec:stopping}. Since the aim of this comparison is to show the improvement that SVRG-flavored variance reduction brings to SG in the policy gradient framework, we set the batch size of the baseline policy gradient algorithm to $B$. In this sense, we measure the improvement yielded by computing snapshot gradients and using them to adjust parameter updates. Since we evaluate on-line performance over the number of sampled trajectories, the cost of computing such snapshot gradients is automatically taken into consideration. To make the comparison fair, we also use Adam in the baseline PG algorithm, which we will denote simply as G(PO)MDP in the following.
-In all the experiments we used deep Gaussian policies with adaptive standard deviation (details on network architecture in Appendix \ref{app:exp}).
+In all the experiments, we use deep Gaussian policies with adaptive standard deviation (details on network architecture in Appendix \ref{app:exp}).
 Each experiment is run $10$ times with a random policy initialization and seed, but this initialization is shared among the algorithms under comparison.
 The length of the experiment, \ie the total number of trajectories, is fixed for each task. Performance is evaluated by using test-trajectories on a subset of the policies considered during the learning process. We provide average performance with 90\% bootstrap confidence intervals.  
-Task implementations are from the \textit{rllab} library \cite{duan2016benchmarking}, on which our agents are also based.\footnote{rllab can be found at \url{https://github.com/rll/rllab}, while the link to our implementation is not reported for blindness, but it is already publically available.}
+Task implementations are from the \textit{rllab} library \cite{duan2016benchmarking}, on which our agents are also based.\footnote{Code available at \url{github.com/Dam930/rllab}.}
 More details on meta-parameters and exhaustive task descriptions are provided in Appendix \ref{app:exp}.
 
 \begin{figure*}[t]
-    \begin{minipage}[t]{0.32\textwidth}
+    \begin{subfigure}[b]{0.49\textwidth}
 	\includegraphics[width=.98\textwidth]{images/cart_pole_SVRPG_vs_GPOMDP_tex.pdf}
 	\vspace{-0.1in}
-	\caption{On-line performance over sampled trajectories of SVRPG vs G(PO)MDP in the Cart-pole task, with 90\% confidence intervals.}
+	\caption{SVRPG vs G(PO)MDP on Cart-pole.}
 	\label{fig:cartpole}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.32\textwidth}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.49\textwidth}
 	\includegraphics[width=0.98\textwidth]{swimmer_self_normalized_SVRPG_vs_SVRPG_tex.pdf}
 	\vspace{-0.1in}
-	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs unbiased SVRPG in the Swimmer task, with 90\% confidence intervals.}
+	\caption{Self-Normalized SVRPG vs SVRPG on Swimmer.}
 	\label{fig:swimmertwo}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{.32\textwidth}
+    \end{subfigure}
+    
+    \begin{subfigure}[b]{.49\textwidth}
 	\includegraphics[width=0.98\textwidth]{swimmer_self_normalized_SVRPG_vs_GPOMDP_tex.pdf}
 	\vspace{-0.1in}
-	\caption{On-line performance over sampled trajectories of self-Normalized SVRPG vs G(PO)MDP in the Swimmer task, with 90\% confidence intervals}
+	\caption{Self-Normalized SVRPG vs G(PO)MDP on Swimmer.}
 	\label{fig:swimmerone}
-    \end{minipage}
-    \vspace{-0.15in}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{.49\textwidth}
+    	\includegraphics[width=0.98\textwidth]{half_cheetah_Self_Normalized_SVRPG_vs_GPOMDP.pdf}
+    	\vspace{-0.1in}
+    	\caption{Self-Normalized SVRPG vs G(PO)MDP on Half-Cheetah.}
+    	\label{fig:cheetah}
+    \end{subfigure}
+    \caption{Comparison of on-line performance over sampled trajectories, with 90\% confidence intervals.}
 \end{figure*}
 
-
-
-\begin{table*}[t]
-	\caption{
-		\label{tab:1}
-		Comparison between G(PO)MDP and SVRPG on different tasks. Average return over the whole learning process is reported, together with normalized standard deviation and 90\% confidence intervals. Results denoted with $\dagger$ are taken from \cite{duan2016benchmarking}.}
-	\centering
-	\begin{tabular}{@{}lccccccc@{}} 
-		\toprule
-		\phantom{abc} & \multicolumn{3}{c}{G(PO)MDP} & \phantom{abc} & \multicolumn{3}{c}{SVRPG} \\
-		\cmidrule{2-4} \cmidrule{6-8}
-		\phantom{abc} & Avg Return & Norm. Std & C.I. & \phantom{abc}
-		& Avg Return & Norm. Std & C.I.
-		\\\cmidrule{2-8}
-		Cart-pole & $618.49$ & $21.09$ & $[579.82, 657.16]$ & \phantom{abc} 
-		& $736.31$ & $16.51$ & $[706.04, 766.57]$ \\
-		Swimmer & $39.86$ & $3.84$ & $[32.82, 46.89]$ & \phantom{abc} & $49.60$ & $3.27$ & $[43.60, 55.60]$\\
-		Half-cheetah & $1183.1^\dagger$ & $69.20^\dagger$ & $[1035.58, 1330.62]^\dagger$ & \phantom{abc} & $1480.95$ & $73.21$ & $[1324.87, 1637.03]$\\
-		\bottomrule
-	\end{tabular}
-    \vspace{-0.05in}
-\end{table*}
+%
+%\begin{table*}[t]
+%	\caption{
+%		\label{tab:1}
+%		Comparison between G(PO)MDP and SVRPG on different tasks. Average return over the whole learning process is reported, together with normalized standard deviation and 90\% confidence intervals. Results denoted with $\dagger$ are taken from \cite{duan2016benchmarking}.}
+%	\centering
+%	\begin{tabular}{@{}lccccccc@{}} 
+%		\toprule
+%		\phantom{abc} & \multicolumn{3}{c}{G(PO)MDP} & \phantom{abc} & \multicolumn{3}{c}{SVRPG} \\
+%		\cmidrule{2-4} \cmidrule{6-8}
+%		\phantom{abc} & Avg Return & Norm. Std & C.I. & \phantom{abc}
+%		& Avg Return & Norm. Std & C.I.
+%		\\\cmidrule{2-8}
+%		Cart-pole & $618.49$ & $21.09$ & $[579.82, 657.16]$ & \phantom{abc} 
+%		& $736.31$ & $16.51$ & $[706.04, 766.57]$ \\
+%		Swimmer & $39.86$ & $3.84$ & $[32.82, 46.89]$ & \phantom{abc} & $49.60$ & $3.27$ & $[43.60, 55.60]$\\
+%		Half-cheetah & $1183.1^\dagger$ & $69.20^\dagger$ & $[1035.58, 1330.62]^\dagger$ & \phantom{abc} & $1480.95$ & $73.21$ & $[1324.87, 1637.03]$\\
+%		\bottomrule
+%	\end{tabular}
+%    \vspace{-0.05in}
+%\end{table*}
 
 Figure \ref{fig:cartpole} compares SVRPG with G(PO)MDP on a continuous variant of the classical Cart-pole task, which is a 2D balancing task. Despite using more trajectories on average for each parameter update, our algorithm shows faster convergence, which can be ascribed to the better quality of updates due to variance reduction.
 
@@ -695,13 +700,13 @@ The Swimmer task is a 3D continuous-control locomotion task. This task is more d
 % Although the confidence intervals are never disjoint, the average of the self-normalized version is always higher, which we consider enough to employ the variant in the next comparison. 
 Figure \ref{fig:swimmerone} shows self-normalized SVRPG against G(PO)MDP. Our algorithm outperforms G(PO)MDP for almost the entire learning process. Also here, we note an increase of speed in early iterations, and, toward the end of the learning process, the improvement becomes statistically significant.
 
-Table \ref{tab:1} compares G(PO)MDP and SVRPG in terms of the average return computed on the whole learning process, which is a common metric for online learning since it is related to an average regret~\citep[\eg][]{duan2016benchmarking}. This metric is related to the area below the curves. Note that the convergence result in Theorem \ref{theo:convergence} is precisely about the average return. We also report normalized standard deviations and 90\% $t$-confidence intervals.
-In both tasks, our algorithm has higher average return and lower normalized standard deviation.
-In Cart-pole, disjoint confidence intervals show that the advantage is statistically significant. 
+%Table \ref{tab:1} compares G(PO)MDP and SVRPG in terms of the average return computed on the whole learning process, which is a common metric for online learning since it is related to an average regret~\citep[\eg][]{duan2016benchmarking}. This metric is related to the area below the curves. Note that the convergence result in Theorem \ref{theo:convergence} is precisely about the average return. We also report normalized standard deviations and 90\% $t$-confidence intervals.
+%In both tasks, our algorithm has higher average return and lower normalized standard deviation.
+%In Cart-pole, disjoint confidence intervals show that the advantage is statistically significant. 
 
 \textbf{Preliminary results on actor-critic.} %As mentioned, 
-Another variance-reduction technique in policy gradient consists of using baselines or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without the baseline. To move towards a more general understanding of the variance issue in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we consider the more challenging MuJoCo~\citep{todorov2012mujoco} Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Table \ref{tab:1} also reports the comparison between SVRPG and G(PO)MDP\footnote{\citet{duan2016benchmarking} report results on REINFORCE. However, inspection on \textit{rllab} code and documentation reveals that it is actually PGT \cite{sutton2000policy}, which is equivalent to G(PO)MDP \citep[shown by][]{peters2008reinforcement}. Using the name REINFORCE in a general way is inaccurate, but widespread.} on Half-cheetah using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of the baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve.
-
+Another variance-reduction technique in policy gradient consists of using baselines or \textit{critics}. This tool is orthogonal to the methods described in this paper, and the theoretical results of Section \ref{sec:conv} are general in this sense. In the experiments described so far, we compared against the so-called \textit{actor-only} G(PO)MDP, \ie without the baseline. To move towards a more general understanding of the variance issue in policy gradient, we also test SVRPG in an \textit{actor-critic} scenario. To do so, we consider the more challenging MuJoCo~\citep{todorov2012mujoco} Half-cheetah task, a 3D locomotion task that has a larger state-action space than Swimmer. Figure \ref{fig:cheetah} compares self-normalized SVRPG and G(PO)MDP on Half-cheetah, using the critic suggested in \cite{duan2016benchmarking} for both algorithms. Results are promising, showing that a combination of the baseline usage and SVRG-like variance reduction can yield an improvement that the two techniques alone are not able to achieve. Moreover, SVRPG presents a noticeably lower variance. The performance of actor-critic G(PO)MDP\footnote{\citet{duan2016benchmarking} report results on REINFORCE. However, inspection on \textit{rllab} code and documentation reveals that it is actually PGT \cite{sutton2000policy}, which is equivalent to G(PO)MDP \citep[shown by][]{peters2008reinforcement}. Using the name REINFORCE in a general way is inaccurate, but widespread.} on Half-Cheetah is coherent with the one reported in \cite{duan2016benchmarking}. Other results are not comparable since we did not use the critic. 
+ 
 
 \vspace{-0.05in}
 \section{Conclusion}
