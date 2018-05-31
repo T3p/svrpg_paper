@@ -437,7 +437,7 @@ and let $\vtheta^* \in \argmin_{\vtheta} \{J(\vtheta)\}$. Then, the SVRG estimat
 \left[\blacktriangledown J(\vtheta)\right] = \gradJ{\vtheta}.
 \end{equation}
 and regardless of the mini-batch size $B$:\footnote{
-For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of the covariance matrix, \ie $\Tr\EVV[]{(\mathbf{x}-\EVV[]{\mathbf{x}})(\mathbf{x}-\EVV[]{\mathbf{x}})^T}$.}
+For any vector $\mathbf{x}$, we use $\Var[\mathbf{x}]$ to denote the trace of the covariance matrix, \ie $\Tr(\EVV[]{(\mathbf{x}-\EVV[]{\mathbf{x}})(\mathbf{x}-\EVV[]{\mathbf{x}})^T})$.}
 \begin{equation}\label{eq:zerovar}
 	\Var\left[\gradBlack{\vtheta^*}\right] = 
     \Var\left[\wh{\nabla}_N J(\vtheta^*)\right].
@@ -517,7 +517,7 @@ where $\vtheta^*$ is a global optimum and $\psi,\zeta,\xi$ depend only on $\GRAD
 % Specific constants and meta-parameter constraints are provided in the proof of the theorem in Appendix \ref{app:proofs}.
 Refer to Appendix~\ref{app:proofs} for a detailed proof involving the definition of the constants and the meta-parameter constraints.
 %The theoretical settings may be too conservative.
-By analysing the upper-bound in Theorem~\ref{theo:convergence} we observe that: I) the $\mathcal{O}(\nicefrac{1}{T})$ term is coherent with results on non-concave SVRG~\citep[\eg][]{reddi2016stochastic}; II) the $\mathcal{O}(\nicefrac{1}{N})$ term is due to the FG approximation and is analogous to the one in~\citep{harikandeh2015stopwasting}; III) the $\mathcal{O}(\nicefrac{1}{B})$ term is due to importance weighting.
+By analysing the upper-bound in Theorem~\ref{theo:convergence} we observe that: I) the $O(\nicefrac{1}{T})$ term is coherent with results on non-concave SVRG~\citep[\eg][]{reddi2016stochastic}; II) the $O(\nicefrac{1}{N})$ term is due to the FG approximation and is analogous to the one in~\citep{harikandeh2015stopwasting}; III) the $O(\nicefrac{1}{B})$ term is due to importance weighting.
 To achieve asymptotic convergence, the batch size $N$ and the mini-batch size $B$ should increase over time. 
 In practice, it is enough to choose $N$ and $B$ large enough to make the second and the third term negligible, \ie to mitigate the variance introduced by FG approximation and importance sampling, respectively.
 Once the last two terms can be neglected, the number of trajectories needed to achieve $\norm[2]{\gradJ{\vtheta}}^2\leq\epsilon$ is $O(\frac{B+\nicefrac{N}{m}}{\epsilon})$. In this sense, an advantage over batch gradient ascent can be achieved with properly selected meta-parameters. In Section~\ref{sec:stopping} we propose a joint selection of step size $\alpha$ and epoch size $m$.

@@ -42,10 +42,10 @@ order=1
 
 [item:svrpg.tex]
 archive=true
-column=19
+column=89
 encoding=UTF-8
 highlight=LaTeX
-line=974
+line=519
 mode=LaTeX
 open=true
 order=0
@@ -57,7 +57,7 @@ JumpList=
 ViMarks=.,2,49,[,2,49,],2,49
 
 [view-settings,view=0,item:svrpg.tex]
-CursorColumn=19
-CursorLine=974
+CursorColumn=89
+CursorLine=519
 JumpList=
-ViMarks=.,208,74,[,208,74,],208,74
+ViMarks=.,519,89,[,519,89,],519,89
