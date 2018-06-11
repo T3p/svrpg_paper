@@ -1,0 +1,354 @@
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+\documentclass[portrait,a0paper,fontscale=0.312]{baposter}
+
+% For graphs
+\usepackage{graphicx}
+
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{eso-pic}
+\usepackage{layout}
+\usepackage{fancybox}
+
+
+\usepackage{calc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{relsize}
+\usepackage{multirow}
+\usepackage{rotating}
+\usepackage{bm}
+\usepackage{url}
+\usepackage{xfrac}
+\usepackage{natbib}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{paralist}
+\usepackage{nicefrac}
+\usepackage[export]{adjustbox} % loads also graphicx
+\usepackage{caption}
+\usepackage{xfrac}
+
+% \usepackage[centering,includeheadfoot,margin=2cm]{geometry}
+
+\usepackage{multicol}
+
+% \usepackage[linesnumbered,ruled,vlined,noend]{algorithm2e}
+% % \usepackage{algorithmicx}
+% % \usepackage{algpseudocode}
+% \newlength\figureheight
+% \newlength\figurewidth
+% \setlength{\algomargin}{2em}
+% \SetKwComment{Comment}{$\blacktriangleright$\ }{}
+% 
+% \providecommand{\SetAlgoLined}{\SetLine}
+% \providecommand{\DontPrintSemicolon}{\dontprintsemicolon}
+
+\newcommand{\figurewidth}{7cm}
+\newcommand{\figureheight}{3cm}
+
+%\usepackage{times}
+%\usepackage{helvet}
+%\usepackage{bookman}
+\usepackage{palatino}
+
+%\newcommand{\captionfont}{\footnotesize}
+
+\usetikzlibrary{calc}
+
+% \newcommand{\SET}[1]  {\ensuremath{\mathcal{#1}}}
+% \newcommand{\MAT}[1]  {\ensuremath{\boldsymbol{#1}}}
+% \newcommand{\VEC}[1]  {\ensuremath{\boldsymbol{#1}}}
+% \newcommand{\Video}{\SET{V}}
+% \newcommand{\video}{\VEC{f}}
+% \newcommand{\track}{x}
+% \newcommand{\Track}{\SET T}
+% \newcommand{\LMs}{\SET L}
+% \newcommand{\lm}{l}
+% \newcommand{\PosE}{\SET P}
+% \newcommand{\posE}{\VEC p}
+% \newcommand{\negE}{\VEC n}
+% \newcommand{\NegE}{\SET N}
+% \newcommand{\Occluded}{\SET O}
+% \newcommand{\occluded}{o}
+
+\renewcommand{\sfdefault}{lmss}
+\sffamily
+
+\newcommand{\listhead}[1] {\textsc{\underline{#1}}}
+
+\definecolor{rouge1}{RGB}{226,0,38}  % red P
+\definecolor{orange1}{RGB}{243,154,38}  % orange P
+\definecolor{jaune}{RGB}{254,205,27}  % jaune P
+\definecolor{blanc}{RGB}{255,255,255} % blanc P
+
+\definecolor{rouge2}{RGB}{230,68,57}  % red S
+\definecolor{orange2}{RGB}{236,117,40}  % orange S
+\definecolor{taupe}{RGB}{134,113,127} % taupe S
+\definecolor{gris}{RGB}{91,94,111} % gris S
+\definecolor{bleu1}{RGB}{38,109,131} % bleu S
+\definecolor{bleu2}{RGB}{28,50,114} % bleu S
+\definecolor{vert1}{RGB}{133,146,66} % vert S
+\definecolor{vert3}{RGB}{20,200,66} % vert S
+\definecolor{vert2}{RGB}{157,193,7} % vert S
+\definecolor{darkyellow}{RGB}{233,165,0}  % orange S
+\definecolor{lightgray}{rgb}{0.9,0.9,0.9}
+\definecolor{darkgray}{rgb}{0.6,0.6,0.6}
+
+\definecolor{blue900}{HTML}{0D47A1}
+\definecolor{blue800}{HTML}{1565C0}
+
+\definecolor{green1}{RGB}{217,255,250}
+\definecolor{orange1}{RGB}{250,245,217}
+
+\newcommand{\rcol}[1]{\textcolor{red}{\textit{#1}}}
+\newcommand{\gcol}[1]{\textcolor{vert3}{\textit{#1}}}
+\newcommand{\bcol}[1]{\textcolor{blue}{\textit{#1}}}
+\newcommand{\ycol}[1]{\textcolor{darkyellow}{\textit{#1}}}
+
+\newcommand{\rcolb}[1]{\textcolor{red}{\textit{\textbf{#1}}}}
+\newcommand{\gcolb}[1]{\textcolor{vert3}{\textit{\textbf{#1}}}}
+\newcommand{\bcolb}[1]{\textcolor{blue}{\textit{\textbf{#1}}}}
+\newcommand{\ycolb}[1]{\textcolor{darkyellow}{\textit{\textbf{#1}}}}
+
+\newcommand{\otoprule}{\midrule[\heavyrulewidth]}
+\newcommand{\dbacks}[1]{\textbf{\textcolor{red!80!black}{{#1}}}}
+
+
+\usepackage{tikz,pgfplots}
+\pgfplotsset{compat=newest}
+\tikzstyle{every picture}+=[remember picture]
+\tikzstyle{na} = [baseline=-.5ex]
+\everymath{\displaystyle}
+\usetikzlibrary{arrows,shapes}
+\usetikzlibrary{positioning}
+
+\usepackage{wasysym}
+
+\usepackage{tcolorbox}
+
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\usepackage{xspace}
+\DeclareRobustCommand{\eg}{e.g.,\@\xspace}
+\DeclareRobustCommand{\ie}{i.e.,\@\xspace}
+\DeclareRobustCommand{\wrt}{w.r.t.\@\xspace}
+\DeclareRobustCommand{\wp}{w.p.\@\xspace}
+
+%=============================================
+% General commands
+%---------------------------------------------
+\newcommand{\transpose}[1]{{#1}^\texttt{T}}
+\DeclareMathOperator*{\EV}{\mathbb{E}}
+\DeclareMathOperator*{\argmax}{\arg\,\max}
+\DeclareMathOperator*{\argmin}{\arg\,\min}
+\DeclareMathOperator*{\arginf}{\arg\,\inf}
+\newcommand{\EVV}[2][x]{\EV_{#1}\left[{#2}\right]}
+\newcommand{\norm}[2][\infty]{\left\|#2\right\|_{#1}}
+\newcommand{\indfun}[1]{\mathds{1}\left(#1\right)}
+
+\newcommand{\realspace}{\mathbb R}		% realspace
+\newcommand{\natspace}{\mathbb N}		% naturalspace
+\newcommand{\pdfunc}[1]{p\left(#1\right)}	% density function
+\newcommand{\prob}[1]{Pr\left(#1\right)}	% probability
+\newcommand{\funoper}[1]{\left[#1\right]}	% function operator
+\newcommand{\apx}[1]{\widetilde{#1}}		% approximation symbol
+\newcommand{\e}{\boldsymbol{e}} 		% unit vector
+
+\newcommand{\texsub}[1]{\textsc{\tiny #1}}
+
+%=============================================
+% RL Commands
+%---------------------------------------------
+%%% MDPs
+\newcommand{\mdp}{\mathcal{M}}				% MDP
+\newcommand{\statespace}{\mathcal S}			% state space
+\newcommand{\actionspace}{\mathcal A}			% action space
+\newcommand{\pmodel}{\mathcal P}			% transition function
+\newcommand{\pmodelfun}[1]{\pmodel\left(#1\right)}	% transition function
+\newcommand{\rmodel}{\mathcal R}			% reward function
+\newcommand{\rmodelfun}[1]{\rmodel\left(#1\right)}	% reward function
+\newcommand{\initD}{\mu}					% initial distribution
+
+%% Policy Gradient
+\newcommand{\vtheta}{\boldsymbol{\theta}}
+\newcommand{\gradJ}[1]{\nabla_{#1}J_\mu(\vtheta)}
+\newcommand{\vphi}{\boldsymbol{\phi}}
+\newcommand{\DeltaJ}{J(\vtheta') - J(\vtheta)}
+\newcommand{\gradApp}[1]{\widehat{\nabla}_{#1}J(\vtheta)}
+\newcommand{\gradSim}[1]{\tilde{\nabla}_{#1}J(\vtheta)}
+\newcommand{\gradRF}[1]{\hat{\nabla}_{#1}J^{RF}(\vtheta)}
+\newcommand{\gradPGT}[1]{\hat{\nabla}_{#1}J^{PGT}(\vtheta)}
+\newcommand{\gradGPOMDP}[1]{\hat{\nabla}_{#1}J^{G(PO)MDP}(\vtheta)}
+\newcommand{\gradDown}[1]{\underline{\hat{\nabla}_{#1}J}(\vtheta)}
+\newcommand{\gradUp}[1]{\overline{\hat{\nabla}_{#1}J}(\vtheta)}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Some math symbols used in the text
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Multicol Settings
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setlength{\columnsep}{1.5em}
+\setlength{\columnseprule}{0mm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Save space in lists. Use this after the opening of the list
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\compresslist}{%
+\setlength{\itemsep}{1pt}%
+\setlength{\parskip}{0pt}%
+\setlength{\parsep}{0pt}%
+}
+
+\captionsetup{justification=raggedright,singlelinecheck=false}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Begin of Document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Here starts the poster
+%%%---------------------------------------------------------------------------
+%%% Format it to your taste with the options
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Define some colors
+
+%\definecolor{lightblue}{cmyk}{0.83,0.24,0,0.12}
+\definecolor{lightblue}{rgb}{0.145,0.6666,1}
+
+% % Draw a video
+% \newlength{\FSZ}
+% \newcommand{\drawvideo}[3]{% [0 0.25 0.5 0.75 1 1.25 1.5]
+%    \noindent\pgfmathsetlength{\FSZ}{\linewidth/#2}
+%    \begin{tikzpicture}[outer sep=0pt,inner sep=0pt,x=\FSZ,y=\FSZ]
+%    \draw[color=lightblue!50!black] (0,0) node[outer sep=0pt,inner sep=0pt,text width=\linewidth,minimum height=0] (video) {\noindent#3};
+%    \path [fill=lightblue!50!black,line width=0pt] 
+%      (video.north west) rectangle ([yshift=\FSZ] video.north east) 
+%     \foreach \x in {1,2,...,#2} {
+%       {[rounded corners=0.6] ($(video.north west)+(-0.7,0.8)+(\x,0)$) rectangle +(0.4,-0.6)}
+%     }
+% ;
+%    \path [fill=lightblue!50!black,line width=0pt] 
+%      ([yshift=-1\FSZ] video.south west) rectangle (video.south east) 
+%     \foreach \x in {1,2,...,#2} {
+%       {[rounded corners=0.6] ($(video.south west)+(-0.7,-0.2)+(\x,0)$) rectangle +(0.4,-0.6)}
+%     }
+% ;
+%    \foreach \x in {1,...,#1} {
+%      \draw[color=lightblue!50!black] ([xshift=\x\linewidth/#1] video.north west) -- ([xshift=\x\linewidth/#1] video.south west);
+%    }
+%    \foreach \x in {0,#1} {
+%      \draw[color=lightblue!50!black] ([xshift=\x\linewidth/#1,yshift=1\FSZ] video.north west) -- ([xshift=\x\linewidth/#1,yshift=-1\FSZ] video.south west);
+%    }
+%    \end{tikzpicture}
+% }
+% 
+% \hyphenation{resolution occlusions}
+% %%
+\begin{poster}%
+  % Poster Options
+  {
+  % Show grid to help with alignment
+  columns=6,
+  grid=false,
+  % Column spacing
+  colspacing=1em,
+  % Color style
+  bgColorOne=white,
+  bgColorTwo=white,
+  borderColor=blue900,
+  headerColorOne=blue800,
+  headerColorTwo=blue800,
+  headerFontColor=white,
+  boxColorOne=white,
+  boxColorTwo=lightblue,
+  % Format of textbox
+  textborder=roundedleft,
+  % Format of text header
+  eyecatcher=true,
+  headerborder=closed,
+  headerheight=0.095\textheight,
+%  textfont=\sc, An example of changing the text font
+  headershape=roundedright,
+  headershade=shadelr,
+  headerfont=\large\bf\textsc, %Sans Serif
+  textfont={\setlength{\parindent}{1.5em}},
+  boxshade=plain,
+%  background=shade-tb,
+  background=plain,
+  linewidth=2pt
+  }
+  % Eye Catcher
+  % {\includegraphics[height=9em]{./pics/airlab_logo_reflect.png}} 
+  {\includegraphics[height=9.0em]{./pics/polilogo/logoPoliBlue_poster.png}}
+%   {\hspace{3.5cm}}
+  % Title
+  {\bf\textsc{Stochastic Variance-Reduced Policy Gradient}\vspace{0.1em}}
+  % Authors
+  {\textsc{M. Papini, D. Binaghi, G. Canonaco, M. Pirotta and M. Restelli}\\ 
+  {\normalsize \texttt{matteo.papini@polimi.it}}
+  %{\normalsize \texttt{\{matteo.papini, marcello.restelli\}@polimi.it}},
+  %{\normalsize \texttt{\{damiano.binaghi, giuseppe.canonaco\}@mail.polimi.it}}  %{\normalsize \texttt{\{matteo.pirotta\}@inria.fr}}
+  }
+  % University logo
+  {% The makebox allows the title to flow into the logo, this is a hack because of the L shaped logo.
+    %\includegraphics[height=9.0em]{./pics/PoliMI.pdf}%\hspace{.5cm}
+    \includegraphics[height=4em]{./pics/inria_sc}
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Now define the boxes that make up the poster
+%%%---------------------------------------------------------------------------
+%%% Each box has a name and can be placed absolutely or relatively.
+%%% The only inconvenience is that you can only specify a relative position 
+%%% towards an already declared box. So if you have a box attached to the 
+%%% bottom, one to the top and a third one which should be in between, you 
+%%% have to specify the top and bottom boxes before you specify the middle 
+%%% box.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %
+    % A coloured circle useful as a bullet with an adjustably strong filling
+    \newcommand{\colouredcircle}{%
+      \tikz{\useasboundingbox (-0.2em,-0.32em) rectangle(0.2em,0.32em); \draw[draw=black,fill=lightblue,line width=0.03em] (0,0) circle(0.18em);}}
+
+\newcommand{\HL}[1]{\textcolor{blue}{\textbf{#1}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \headerbox{Problem}{name=problem,column=0,row=0,span=3}{
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \headerbox{Contributions}{name=contributions,column=3,row=0, span=3,bottomaligned=problem}{
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \headerbox{SVRPG}{name=svrpg,column=0,span=6,row=1,below=problem}{
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+}
+
+\headerbox{Convergence rate}{name=convergence,column=0,span=3,row=2,below=svrpg}{
+
+}
+
+\headerbox{Heuristics}{name=heuristics,column=3,span=3,row=2,below=svrpg}{
+	
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\headerbox{Empirical Results}{name=emp,column=0,row=3,span=6,below=heuristics,above=bottom}{
+
+}
+ 
+\end{poster}
+
+\end{document}
