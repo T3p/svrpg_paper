@@ -1,5 +1,5 @@
 \PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
-\documentclass[portrait,a0paper,fontscale=0.312]{baposter}
+\documentclass[landscape,a0paper,fontscale=0.312]{baposter}
 
 % For graphs
 \usepackage{graphicx}
@@ -158,6 +158,7 @@
 
 \newcommand{\texsub}[1]{\textsc{\tiny #1}}
 
+
 %=============================================
 % RL Commands
 %---------------------------------------------
@@ -183,6 +184,33 @@
 \newcommand{\gradGPOMDP}[1]{\hat{\nabla}_{#1}J^{G(PO)MDP}(\vtheta)}
 \newcommand{\gradDown}[1]{\underline{\hat{\nabla}_{#1}J}(\vtheta)}
 \newcommand{\gradUp}[1]{\overline{\hat{\nabla}_{#1}J}(\vtheta)}
+
+%Specific
+\newcommand{\Ets}[2][t]{\mathbb{E}_{#1\vert s}\left[#2\right]}
+\newcommand{\Es}[1]{\mathbb{E}_{s}\left[#1\right]}
+\newcommand{\Covts}[3][t]{{\mathbb{C}\text{ov}}_{#1\vert s}\left(#2,#3\right)}
+\newcommand{\Covs}[2]{{\mathbb{C}\text{ov}}_{s}\left(#1,#2\right)}
+\newcommand{\Varts}[2][t]{{\mathbb{V}\text{ar}}_{#1\vert s}\left[#2\right]}
+\newcommand{\Vars}[1]{{\mathbb{V}\text{ar}}_{s}\left[#1\right]}
+\newcommand{\gradBlack}[1]{\blacktriangledown J(#1)}
+\newcommand{\gradIdeal}[1]{\dnabla J(#1)}
+\newcommand{\VARRF}{V}
+\newcommand{\GRADLOG}{G}
+\newcommand{\VARIS}{W}
+\newcommand{\HESSLOG}{F}
+% short forms 
+\newcommand{\wt}[1]{\widetilde{#1}}
+\newcommand{\wh}[1]{\widehat{#1}}
+\newcommand{\wo}[1]{\overline{#1}}
+\newcommand{\wb}[1]{\overline{#1}}
+
+%Colors
+\definecolor{crimson}{rgb}{0.86, 0.08, 0.24}
+\definecolor{myblue}{rgb}{0.0, 0.44, 1.0}
+\definecolor{amber2}{rgb}{1.0, 0.49, 0.0}
+\newcommand{\chall}[1]{\textcolor{amber2}{\textbf{#1}}}
+\newcommand{\bad}[1]{\textcolor{crimson}{\textbf{#1}}}
+\newcommand{\enhance}[1]{\textcolor{myblue}{\textbf{#1}}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% Some math symbols used in the text
@@ -254,7 +282,7 @@
   % Poster Options
   {
   % Show grid to help with alignment
-  columns=6,
+  columns=4,
   grid=false,
   % Column spacing
   colspacing=1em,
@@ -285,15 +313,14 @@
   }
   % Eye Catcher
   % {\includegraphics[height=9em]{./pics/airlab_logo_reflect.png}} 
-  {\includegraphics[height=9.0em]{./pics/polilogo/logoPoliBlue_poster.png}}
+  {\includegraphics[height=7.0em]{./pics/polilogo/logoPoliBlue_poster.png}}
 %   {\hspace{3.5cm}}
   % Title
   {\bf\textsc{Stochastic Variance-Reduced Policy Gradient}\vspace{0.1em}}
   % Authors
   {\textsc{M. Papini, D. Binaghi, G. Canonaco, M. Pirotta and M. Restelli}\\ 
-  {\normalsize \texttt{matteo.papini@polimi.it}}
-  %{\normalsize \texttt{\{matteo.papini, marcello.restelli\}@polimi.it}},
-  %{\normalsize \texttt{\{damiano.binaghi, giuseppe.canonaco\}@mail.polimi.it}}  %{\normalsize \texttt{\{matteo.pirotta\}@inria.fr}}
+  {\normalsize \texttt{\{matteo.papini, marcello.restelli\}@polimi.it}},
+  {\normalsize \texttt{\{damiano.binaghi, giuseppe.canonaco\}@mail.polimi.it}},  {\normalsize \texttt{\{matteo.pirotta\}@inria.fr}}
   }
   % University logo
   {% The makebox allows the title to flow into the logo, this is a hack because of the L shaped logo.
@@ -319,36 +346,201 @@
 \newcommand{\HL}[1]{\textcolor{blue}{\textbf{#1}}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \headerbox{Problem}{name=problem,column=0,row=0,span=3}{
+  \headerbox{Motivation}{name=motiv,column=0,row=0,span=1}{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \headerbox{Contributions}{name=contributions,column=3,row=0, span=3,bottomaligned=problem}{
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \headerbox{SVRPG}{name=svrpg,column=0,span=6,row=1,below=problem}{
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
-}
-
-\headerbox{Convergence rate}{name=convergence,column=0,span=3,row=2,below=svrpg}{
-
-}
-
-\headerbox{Heuristics}{name=heuristics,column=3,span=3,row=2,below=svrpg}{
+	\noindent We want to solve \textbf{continuous} Markov Decision Processes (MDPs), \eg robot locomotion
 	
+	\vspace{2mm}
+	
+	\noindent\textbf{Policy Gradient} (PG): optimize a parametric policy $\pi_{\vtheta}$ via \textbf{gradient ascent} on performance $J(\vtheta)$.
+	
+	\vspace{2mm}
+	
+	\noindent Two main strategies for gradient computation:
+	
+	\begin{itemize}
+	\item \textbf{Full Gradient (FG)}: \bad{sample infefficient} \\$\longrightarrow O(\nicefrac{N}{\epsilon})$
+	\item \textbf{Stochastic Gradient (SG)}: \bad{slow convergence} \\$\longrightarrow O(\nicefrac{1}{\epsilon^2})$
+	\end{itemize}
+
+	\noindent Sample efficiency is crucial in Reinforcement Learning (RL), where collecting samples is extremely expensive $\implies$ \textbf{FG} often unfeasible.
+
+	\vspace{2mm}
+
+	\noindent Slower convergence of \textbf{SG} due to \bad{gradient variance}.
+	\\A solution from the Supervised Learning (SL) literature (finite-sum optimization):
+	\begin{itemize}
+		\item \textbf{Stochastic Variance-Reduced Gradient (SVRG)} $\longrightarrow O(N+\nicefrac{N^{\nicefrac{2}{3}}}{\epsilon})$
+	\end{itemize}
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\headerbox{Problem}{name=problem,column=0,row=1, span=1,below=motiv}{
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\noindent Can we apply \textbf{SVRG} to policy optimization?\\
+	Compared to SL, RL has three additional challenges:
+	\begin{enumerate}
+		\item \chall{Non-concavity}: policy performance $J(\vtheta)$ is typically a non-concave objective
+		\item \chall{Infinite dataset}: expectation over all possible trajectories cannot be expressed as a finite sum  
+		\item \chall{Non-stationarity}: the data-generating distribution changes as we learn
+	\end{enumerate}
+}
+
+
+\headerbox{Related Work}{name=related,column=0,row=1, span=1,below=problem,above=bottom}{
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\noindent From the \textbf{SL} literature, \textit{separate} study of: 
+	\begin{itemize}
+		\item \chall{Non-concavity}~\citep{du2017svrgpe,reddi2016stochastic}
+		\item \chall{Infinite dataset}~\citep{harikandeh2015stopwasting,bietti2017stochastic}
+	\end{itemize}
+
+	\noindent From the \textbf{RL} literature:
+	\begin{itemize}
+		\item \textbf{SVRPGE}~\citep{du2017svrgpe}: SVRG for policy \textit{evaluation}
+		\item \textbf{SVRPO}~\cite{xu2017svrgtrpo}: direct application of SVRG to TRPO
+	\end{itemize}
+
+\chall{Nonstationarity} never addressed explicitly!
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\headerbox{Empirical Results}{name=emp,column=0,row=3,span=6,below=heuristics,above=bottom}{
-
+\headerbox{Contributions}{name=contrib,column=1,row=0, span=2}{
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\begin{itemize}
+		\item We design \enhance{SVRPG}, a variant of SVRG for the PG framework that explicitly addresses the \chall{challenges} of RL.
+		\item We study the \textbf{convergence} properties of SVRPG
+		\item  We devise \textbf{heuristics} for meta-parameter selection in order to develop a practical algorithm.
+		\item We evaluate SVRPG on simulated \textbf{continuous control tasks}. 
+	\end{itemize}
 }
- 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \headerbox{SVRPG}{name=svrpg,column=1,span=2,row=1,below=contrib}{
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{itemize}
+	\item Take any \textbf{unbiased} policy gradient estimator $g(\tau|\vtheta)$ (\eg REINFORCE)
+	\item \textbf{SVRG} idea: combine frequent, inaccurate \textbf{SG} estimations with rare, accurate \textbf{FG} computations.
+	\item Manage \chall{non-concavity} with \textbf{smooth} policies (\eg Gaussian)
+	\item Approximate \chall{infinite dataset} with a large \textbf{batch size} $N$
+	\item Correct \chall{nonstationarity} with \textbf{importance weighting}
+	\item At each \textbf{iteration}, update policy parameter as $\vtheta\gets\vtheta+\alpha\gradBlack{\vtheta}$ with the following \enhance{SVRPG estimator}:	
+\end{itemize}
+%
+\vspace{1cm}
+%
+\begin{center}
+	\tikz[overlay]{
+		\node[draw=myblue, inner sep=20pt, ultra thick] {
+			\Large{$
+			\blacktriangledown J(\vtheta) = \wh{\nabla}_N J(\wt{\vtheta}) + \wh{\nabla}_B J({\vtheta}) - \omega(\vtheta, \wt{\vtheta}) \wh{\nabla}_B J({\wt{\vtheta}})
+			$}
+		};
+	}
+\end{center} 
+%
+\vspace{1.5cm}
+\fbox{
+\begin{minipage}[t]{.3\textwidth}
+\begin{center}
+	\textbf{FG term}
+	
+	\begin{equation*}
+	\frac{1}{N}\sum_{i=1}^{N} g(\tau_i|\wt{\vtheta})
+	\end{equation*}\\
+	
+	\begin{itemize}
+		\item Trajectories sampled with \textbf{snapshot} policy $\pi_{\wt{\vtheta}}$
+		\item Accurate FG approximation with $N$ samples \\$\longrightarrow$ \bad{expensive!}
+		\item Updated once every $m$ iterations (one \textbf{epoch})
+		to save sample efficiency
+	\end{itemize}
+\end{center}
+\end{minipage}
+}
+%
+\hfill\fbox{
+\begin{minipage}[t]{.3\textwidth}
+	\begin{center}
+		\textbf{SG term}
+		
+		\begin{equation*}
+		\frac{1}{B}\sum_{i=1}^{B} g(\tau_i|\vtheta)
+		\end{equation*}
+		
+		\begin{itemize}
+			\item Trajectories sampled with current policy $\pi_{\vtheta}$ (\textbf{online})
+			\item Gradient estimation with $B<<N$ samples\\
+			$\longrightarrow$ \bad{high variance!}
+			\item Stabilized by the low-variance FG term
+		\end{itemize}
+	\end{center}
+\end{minipage}
+}
+%
+\hfill\fbox{
+\begin{minipage}[t]{.25\textwidth}
+	\begin{center}
+			\textbf{Correction term}
+			
+			\begin{equation*}
+			\frac{1}{B}\sum_{i=1}^{B}\underbrace{\omega(\tau_i|\vtheta,\wt{\vtheta})}_{\frac{p(\tau_i|\wt{\vtheta})}{p(\tau_i|\vtheta)}} g(\tau_i|\vtheta)
+			\end{equation*}
+			
+			\begin{itemize}
+				\item Same trajectories as the SG term
+				\item But evaluated in the snapshot parameter!
+				\item \textbf{Importance weighting}
+		\end{itemize}
+	\end{center}
+\end{minipage}
+}
+%
+}
+
+\headerbox{Convergence}{name=convergence,column=1,span=2,row=2, below=svrpg, above=bottom}{
+\begin{align*}
+&\EVV[]
+{\norm[2]{\nabla J(\vtheta_A)}^2} 
+\leq
+\frac{J(\vtheta^*)-J(\vtheta_0)}{\psi T} +
+\frac{\zeta}{N}
++\frac{\xi}{B},
+\end{align*}
+
+Serve piu' spazio, ma l'organizzazione del box sopra e' tutta da vedere. Mancano anche le due basic properties
+}
+
+\headerbox{Heuristics}{name=heuristics,column=3,span=1,row=0,height=0.5,height=0.32}{
+	\begin{itemize}
+		\item Adaptive step size
+		\item Adaptive epoch size
+		\item Normalized Importance Weighting
+		\item Critic (baseline)
+	\end{itemize}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\headerbox{Empirical Results}{name=emp,column=3,row=1,span=1,below=heuristics,height=0.45}{
+	Direi che ci stanno 2 grafici, ma devo pensare a quali mettere 
+	
+	Eventualmente saltano Related Work e le References
+}
+
+\headerbox{References}{name=ref,column=3,row=1,span=1,below=emp,above=bottom}{
+        \tiny
+\bibliographystyle{plainnat}
+\begingroup
+\renewcommand{\section}[2]{}%
+\bibliography{../svrpg.bib}
+\endgroup
+}
+
+
 \end{poster}
+
+
 
 \end{document}

@@ -24,6 +24,7 @@
 *.synctex.gz
 svrpg.pdf
 paper.pdf
+poster/poster.pdf
 theorem1.pdf
 
 #Vim
