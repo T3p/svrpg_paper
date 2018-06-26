@@ -130,6 +130,10 @@
 \usepackage{algorithm}
 \usepackage{algorithmic}
 
+\usepackage{multirow}
+
+\usepackage{tabu}
+
 \usepackage{xspace}
 \DeclareRobustCommand{\eg}{e.g.,\@\xspace}
 \DeclareRobustCommand{\ie}{i.e.,\@\xspace}
@@ -174,7 +178,7 @@
 
 %% Policy Gradient
 \newcommand{\vtheta}{\boldsymbol{\theta}}
-\newcommand{\gradJ}[1]{\nabla_{#1}J_\mu(\vtheta)}
+\newcommand{\gradJ}[1]{\nabla J({#1})}
 \newcommand{\vphi}{\boldsymbol{\phi}}
 \newcommand{\DeltaJ}{J(\vtheta') - J(\vtheta)}
 \newcommand{\gradApp}[1]{\widehat{\nabla}_{#1}J(\vtheta)}
@@ -190,6 +194,7 @@
 \newcommand{\Es}[1]{\mathbb{E}_{s}\left[#1\right]}
 \newcommand{\Covts}[3][t]{{\mathbb{C}\text{ov}}_{#1\vert s}\left(#2,#3\right)}
 \newcommand{\Covs}[2]{{\mathbb{C}\text{ov}}_{s}\left(#1,#2\right)}
+\newcommand{\Var}[1]{{\mathbb{V}\text{ar}}\left[#1\right]}
 \newcommand{\Varts}[2][t]{{\mathbb{V}\text{ar}}_{#1\vert s}\left[#2\right]}
 \newcommand{\Vars}[1]{{\mathbb{V}\text{ar}}_{s}\left[#1\right]}
 \newcommand{\gradBlack}[1]{\blacktriangledown J(#1)}
@@ -211,6 +216,9 @@
 \newcommand{\chall}[1]{\textcolor{amber2}{\textbf{#1}}}
 \newcommand{\bad}[1]{\textcolor{crimson}{\textbf{#1}}}
 \newcommand{\enhance}[1]{\textcolor{myblue}{\textbf{#1}}}
+
+%Fake items
+\newcommand{\tabitem}[1]{~~\llap{\textbullet}~~ #1 \hfill\mbox{}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% Some math symbols used in the text
@@ -406,98 +414,116 @@
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\headerbox{Contributions}{name=contrib,column=1,row=0, span=2}{
-	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	\begin{itemize}
-		\item We design \enhance{SVRPG}, a variant of SVRG for the PG framework that explicitly addresses the \chall{challenges} of RL.
-		\item We study the \textbf{convergence} properties of SVRPG
-		\item  We devise \textbf{heuristics} for meta-parameter selection in order to develop a practical algorithm.
-		\item We evaluate SVRPG on simulated \textbf{continuous control tasks}. 
-	\end{itemize}
-}
+%\headerbox{Contributions}{name=contrib,column=1,row=0, span=2}{
+%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%	\begin{itemize}
+%		\item We design \enhance{SVRPG}, a variant of SVRG for the PG framework that explicitly addresses the \chall{challenges} of RL.
+%		\item We study the \textbf{convergence} properties of SVRPG
+%		\item  We devise \textbf{heuristics} for meta-parameter selection in order to develop a practical algorithm.
+%		\item We evaluate SVRPG on simulated \textbf{continuous control tasks}. 
+%	\end{itemize}
+%}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \headerbox{SVRPG}{name=svrpg,column=1,span=2,row=1,below=contrib}{
+  \headerbox{SVRPG}{name=svrpg,column=1,span=2,
+  	row=0,%1
+  	%below=contrib
+  }{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\noindent
+We design an \textbf{SVRG}-like algorithm for the \textbf{PG} framework.
+
+\vspace{0.2cm}
+
+\begin{minipage}[t]{.45\textwidth}
+The easy part:
 \begin{itemize}
 	\item Take any \textbf{unbiased} policy gradient estimator $g(\tau|\vtheta)$ (\eg REINFORCE)
-	\item \textbf{SVRG} idea: combine frequent, inaccurate \textbf{SG} estimations with rare, accurate \textbf{FG} computations.
+	\item \textbf{SVRG} idea: combine frequent \textbf{SG} with rare \textbf{FG} into a corrected gradient estimator $\gradBlack{\vtheta}$
+	\item Two time scales: $1$ \textbf{epoch} $=m$ \textbf{iterations}
+\end{itemize}
+\end{minipage}
+\hfill%
+\begin{minipage}[t]{.45\textwidth}
+Solving the RL challenges:
+\begin{enumerate}
 	\item Manage \chall{non-concavity} with \textbf{smooth} policies (\eg Gaussian)
 	\item Approximate \chall{infinite dataset} with a large \textbf{batch size} $N$
-	\item Correct \chall{nonstationarity} with \textbf{importance weighting}
-	\item At each \textbf{iteration}, update policy parameter as $\vtheta\gets\vtheta+\alpha\gradBlack{\vtheta}$ with the following \enhance{SVRPG estimator}:	
-\end{itemize}
-%
-\vspace{1cm}
-%
+	\item Correct \chall{nonstationarity} with \textbf{importance weighting}	
+\end{enumerate}
+\end{minipage}
+
 \begin{center}
-	\tikz[overlay]{
-		\node[draw=myblue, inner sep=20pt, ultra thick] {
-			\Large{$
-			\blacktriangledown J(\vtheta) = \wh{\nabla}_N J(\wt{\vtheta}) + \wh{\nabla}_B J({\vtheta}) - \omega(\vtheta, \wt{\vtheta}) \wh{\nabla}_B J({\wt{\vtheta}})
-			$}
-		};
-	}
-\end{center} 
-%
-\vspace{1.5cm}
-\fbox{
-\begin{minipage}[t]{.3\textwidth}
-\begin{center}
-	\textbf{FG term}
-	
-	\begin{equation*}
-	\frac{1}{N}\sum_{i=1}^{N} g(\tau_i|\wt{\vtheta})
-	\end{equation*}\\
-	
-	\begin{itemize}
-		\item Trajectories sampled with \textbf{snapshot} policy $\pi_{\wt{\vtheta}}$
-		\item Accurate FG approximation with $N$ samples \\$\longrightarrow$ \bad{expensive!}
-		\item Updated once every $m$ iterations (one \textbf{epoch})
-		to save sample efficiency
-	\end{itemize}
+	Introducing the \enhance{SVRPG} estimator:
 \end{center}
+
+\noindent\dotfill
+\begin{tabu} to \textwidth{X[c]X[2c]X[c]}
+	\multirow{2}{*}{
+		\shortstack{
+			\textbf{FG term}\\
+			$\frac{1}{N}\sum_{i=1}^{N} g(\tau_i|\wt{\vtheta})$\\
+			$\tau_i\sim\wt{\vtheta}$\\
+			$N$ trajectories\\
+			Accurate but \bad{expensive}\\
+			$\downarrow$\\
+			Updated once per \textbf{epoch}
+		}
+	}	 
+	&\tikz[baseline]{ 
+		\node[draw=myblue, very thick, inner sep=5pt]{\Large{$\wh{\nabla}_N J(\wt{\vtheta}) + \wh{\nabla}_B J({\vtheta}) - \omega(\vtheta, \wt{\vtheta}) \wh{\nabla}_B J({\wt{\vtheta}})$}
+		};
+	}  
+	\vspace{0.5cm} 
+	& \multirow{2}{*}{
+		\shortstack{
+			\textbf{Correction term}\\
+			$\frac{1}{B}\sum_{i=1}^{B}\underbrace{\omega(\tau_i|\vtheta,\wt{\vtheta})}_{\textbf{imp. weight}}g(\tau_i|\wt{\vtheta})$\\
+			Trajectories from SG term \\
+			Ensures SVRG properties\\
+			\bad{Distribution mismatch}\\
+			$\downarrow$\\
+			\textbf{importance weighting}\\
+			$\downarrow$\\
+			\bad{new source of variance}
+		}
+	} \\
+	& \shortstack{
+		\textbf{SG term}\\
+		$\frac{1}{B}\sum_{i=1}^{B} g(\tau_i|\vtheta)$\\
+		$\tau_i\sim\vtheta$\\
+		$B<<N$ trajectories\\
+		Computed at each iteration\\
+		\\Cheap but \bad{high-variance}\\
+		$\downarrow$\\
+		Stabilized by other terms
+	}
+\end{tabu}
+
+\vspace{0.5cm}
+
+\begin{minipage}[t]{.55\textwidth}
+	Fundamental \textbf{SVRG} properties:
+	\begin{enumerate}
+		\item Unbiasedness: $\EVV[]{\gradBlack{\vtheta}} = \gradJ{\vtheta}$
+		\item Vanishing variance: $\Var{\gradBlack{\vtheta}}\to0$ as $\vtheta\to\vtheta^*$
+	\end{enumerate}
+\vfill
 \end{minipage}
-}
-%
-\hfill\fbox{
-\begin{minipage}[t]{.3\textwidth}
-	\begin{center}
-		\textbf{SG term}
-		
-		\begin{equation*}
-		\frac{1}{B}\sum_{i=1}^{B} g(\tau_i|\vtheta)
-		\end{equation*}
-		
-		\begin{itemize}
-			\item Trajectories sampled with current policy $\pi_{\vtheta}$ (\textbf{online})
-			\item Gradient estimation with $B<<N$ samples\\
-			$\longrightarrow$ \bad{high variance!}
-			\item Stabilized by the low-variance FG term
-		\end{itemize}
-	\end{center}
+\hfill%
+\begin{minipage}[t]{.4\textwidth}
+\textbf{Importance weighting}
+
+Use samples from $\vtheta$ as taken with $\wt{\vtheta}$:
+\vspace{-0.2cm}
+\begin{equation*}
+	w(\tau|\vtheta,\wt{\vtheta}) = \frac{p(\tau|\wt\vtheta)}{p(\tau|\vtheta)}
+	\quad
+	\genfrac{}{}{0pt}{}{\leftarrow \textit{target distribution}}
+		{\leftarrow \textit{source distribution}}
+\end{equation*}
 \end{minipage}
-}
-%
-\hfill\fbox{
-\begin{minipage}[t]{.25\textwidth}
-	\begin{center}
-			\textbf{Correction term}
-			
-			\begin{equation*}
-			\frac{1}{B}\sum_{i=1}^{B}\underbrace{\omega(\tau_i|\vtheta,\wt{\vtheta})}_{\frac{p(\tau_i|\wt{\vtheta})}{p(\tau_i|\vtheta)}} g(\tau_i|\vtheta)
-			\end{equation*}
-			
-			\begin{itemize}
-				\item Same trajectories as the SG term
-				\item But evaluated in the snapshot parameter!
-				\item \textbf{Importance weighting}
-		\end{itemize}
-	\end{center}
-\end{minipage}
-}
-%
 }
 
 \headerbox{Convergence}{name=convergence,column=1,span=2,row=2, below=svrpg, above=bottom}{
