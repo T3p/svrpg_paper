@@ -1,5 +1,5 @@
 \PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
-\documentclass[landscape,a0paper,fontscale=0.312]{baposter}
+\documentclass[landscape,a0paper,fontscale=0.32]{baposter}
 
 % For graphs
 \usepackage{graphicx}
@@ -114,6 +114,25 @@
 \newcommand{\otoprule}{\midrule[\heavyrulewidth]}
 \newcommand{\dbacks}[1]{\textbf{\textcolor{red!80!black}{{#1}}}}
 
+\colorlet{redp}{red!20} % vert S
+\colorlet{greenp}{vert3!20} % vert S\usepackage[framemethod=tikz]{mdframed}
+\colorlet{bluep}{blue!20} % vert S
+\colorlet{blueg}{blue!70!green!90!white}
+
+\newcommand{\hl}[3][\fboxsep1pt]{{#1\colorbox{#2}{#3}}}%
+%\newcommand{\hl}[2]{{\adjustbox{bgcolor=#1}{#2}}}%
+
+\newcommand{\hlr}[1]{\hl{redp}{#1}}
+\newcommand{\hlg}[1]{\hl{greenp}{#1}}
+\newcommand{\hlb}[1]{\hl{bluep}{#1}}
+\newcommand{\hlo}[1]{\hl{orange!50}{#1}}
+\newcommand{\hly}[1]{\hl{yellow!70!black!50!white}{#1}}
+\newcommand{\hlblg}[1]{\hl{blue!75!green!20!white}{#1}}
+\newcommand{\tikzhlblg}[1]{\tikz[baseline]{\node[inner sep=2pt, anchor=base,fill=blue!75!green!20!white]{{#1}};}}
+\newcommand{\tikzhly}[1]{  \tikz[baseline]{\node[inner sep=2pt, anchor=base,fill=yellow!70!black!50!white]{{#1}};}}
+\newcommand{\tikzhlr}[1]{  \tikz[baseline]{\node[inner sep=2pt, anchor=base,fill=redp]{{#1}};}}
+\newcommand{\tikzhlg}[1]{  \tikz[baseline]{\node[inner sep=2pt, anchor=base,fill=greenp]{{#1}};}}
+\newcommand{\tikzhlb}[1]{  \tikz[baseline]{\node[inner sep=2pt, anchor=base,fill=bluep]{{#1}};}}
 
 \usepackage{tikz,pgfplots}
 \pgfplotsset{compat=newest}
@@ -356,61 +375,68 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   \headerbox{Motivation}{name=motiv,column=0,row=0,span=1}{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	\noindent We want to solve \textbf{continuous} Markov Decision Processes (MDPs), \eg robot locomotion
+          \noindent $\blacktriangleright$~We want to solve \hlb{continuous} Markov Decision Processes (\hlb{MDPs}), \eg robot locomotion
 	
 	\vspace{2mm}
 	
-	\noindent\textbf{Policy Gradient} (PG): optimize a parametric policy $\pi_{\vtheta}$ via \textbf{gradient ascent} on performance $J(\vtheta)$.
+    \noindent $\blacktriangleright$~\hlg{\textbf{Policy Gradient} (PG)}: optimize a parametric policy $\pi_{\vtheta}$ via \textbf{gradient ascent} on performance $J(\vtheta)$.
 	
 	\vspace{2mm}
 	
-	\noindent Two main strategies for gradient computation:
+	\noindent $\blacktriangleright$~Two main strategies for gradient computation:
 	
-	\begin{itemize}
+	\begin{itemize}\compresslist
 	\item \textbf{Full Gradient (FG)}: \bad{sample infefficient} \\$\longrightarrow O(\nicefrac{N}{\epsilon})$
 	\item \textbf{Stochastic Gradient (SG)}: \bad{slow convergence} \\$\longrightarrow O(\nicefrac{1}{\epsilon^2})$
 	\end{itemize}
 
-	\noindent Sample efficiency is crucial in Reinforcement Learning (RL), where collecting samples is extremely expensive $\implies$ \textbf{FG} often unfeasible.
+    \begin{minipage}{.85\textwidth}
+    \noindent \hly{Sample efficiency} is crucial in Reinforcement Learning (RL), where collecting samples is extremely expensive\\ 
+    \hspace*{.3cm} $\implies$ \textbf{FG} often \underline{unfeasible}
 
 	\vspace{2mm}
-
-	\noindent Slower convergence of \textbf{SG} due to \bad{gradient variance}.
-	\\A solution from the Supervised Learning (SL) literature (finite-sum optimization):
-	\begin{itemize}
+	\noindent Slower convergence of \textbf{SG} due to high \hly{gradient variance}.
+    \end{minipage}
+	
+    
+    \vspace{.3cm}
+    \noindent $\blacktriangleright$~ \hlr{Solution:} from finite-sum optimization in Supervise Learning:
+	\begin{itemize}\compresslist
 		\item \textbf{Stochastic Variance-Reduced Gradient (SVRG)} $\longrightarrow O(N+\nicefrac{N^{\nicefrac{2}{3}}}{\epsilon})$
 	\end{itemize}
 }
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\headerbox{Problem}{name=problem,column=0,row=1, span=1,below=motiv}{
+\headerbox{SVRG in RL: challenges}{name=problem,column=0,row=1, span=1,below=motiv}{
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	\noindent Can we apply \textbf{SVRG} to policy optimization?\\
-	Compared to SL, RL has three additional challenges:
+%	\noindent Can we apply \textbf{SVRG} to policy optimization?\\
+        \noindent \hlb{\textbf{Goal:}} replace SG in RL with SVRG\\[.1cm]
+        \hspace*{2cm}\underline{RL introduces three challenges}
+%	Compared to SL, RL has three additional challenges:
 	\begin{enumerate}
 		\item \chall{Non-concavity}: policy performance $J(\vtheta)$ is typically a non-concave objective
 		\item \chall{Infinite dataset}: expectation over all possible trajectories cannot be expressed as a finite sum  
-		\item \chall{Non-stationarity}: the data-generating distribution changes as we learn
+        \item \chall{Non-stationarity}: the data-generating distribution changes as we learn (policy changes)
 	\end{enumerate}
 }
 
 
-\headerbox{Related Work}{name=related,column=0,row=1, span=1,below=problem,above=bottom}{
+\headerbox{What is out there?}{name=related,column=0,row=1, span=1,below=problem,above=bottom}{
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	\noindent From the \textbf{SL} literature, \textit{separate} study of: 
-	\begin{itemize}
+        \noindent From the \hlb{\textbf{SL}} literature, \textit{separate} study of: 
+	\begin{itemize}\compresslist
 		\item \chall{Non-concavity}~\citep{du2017svrgpe,reddi2016stochastic}
 		\item \chall{Infinite dataset}~\citep{harikandeh2015stopwasting,bietti2017stochastic}
 	\end{itemize}
 
-	\noindent From the \textbf{RL} literature:
-	\begin{itemize}
+    \noindent From the \hlb{\textbf{RL}} literature:
+	\begin{itemize}\compresslist
 		\item \textbf{SVRPGE}~\citep{du2017svrgpe}: SVRG for policy \textit{evaluation}
-		\item \textbf{SVRPO}~\cite{xu2017svrgtrpo}: direct application of SVRG to TRPO
+		\item \textbf{SVRPO}~\citep{xu2017svrgtrpo}: direct application of SVRG to TRPO
 	\end{itemize}
 
-\chall{Nonstationarity} never addressed explicitly!
+\chall{Non-stationarity} never addressed explicitly!
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -423,7 +449,6 @@
 %		\item We evaluate SVRPG on simulated \textbf{continuous control tasks}. 
 %	\end{itemize}
 %}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   \headerbox{SVRPG}{name=svrpg,column=1,span=2,
