@@ -116,17 +116,18 @@
 
 \colorlet{redp}{red!20} % vert S
 \colorlet{greenp}{vert3!20} % vert S\usepackage[framemethod=tikz]{mdframed}
-\colorlet{bluep}{blue!20} % vert S
+\colorlet{bluep}{blue!12} % vert S
 \colorlet{blueg}{blue!70!green!90!white}
-
+\definecolor{yellowp}{rgb}{0.99, 0.99, 0.59}
+\colorlet{orangep}{orange!40}
 \newcommand{\hl}[3][\fboxsep1pt]{{#1\colorbox{#2}{#3}}}%
 %\newcommand{\hl}[2]{{\adjustbox{bgcolor=#1}{#2}}}%
 
 \newcommand{\hlr}[1]{\hl{redp}{#1}}
 \newcommand{\hlg}[1]{\hl{greenp}{#1}}
 \newcommand{\hlb}[1]{\hl{bluep}{#1}}
-\newcommand{\hlo}[1]{\hl{orange!50}{#1}}
-\newcommand{\hly}[1]{\hl{yellow!70!black!50!white}{#1}}
+\newcommand{\hlo}[1]{\hl{orangep}{#1}}
+\newcommand{\hly}[1]{\hl{yellow!70!black!40!white}{#1}}
 \newcommand{\hlblg}[1]{\hl{blue!75!green!20!white}{#1}}
 \newcommand{\tikzhlblg}[1]{\tikz[baseline]{\node[inner sep=2pt, anchor=base,fill=blue!75!green!20!white]{{#1}};}}
 \newcommand{\tikzhly}[1]{  \tikz[baseline]{\node[inner sep=2pt, anchor=base,fill=yellow!70!black!50!white]{{#1}};}}
@@ -144,7 +145,7 @@
 
 \usepackage{wasysym}
 
-\usepackage{tcolorbox}
+%\usepackage{tcolorbox}
 
 \usepackage{algorithm}
 \usepackage{algorithmic}
@@ -152,6 +153,7 @@
 \usepackage{multirow}
 
 \usepackage{tabu}
+\usepackage{schemata}
 
 \usepackage{xspace}
 \DeclareRobustCommand{\eg}{e.g.,\@\xspace}
@@ -281,6 +283,75 @@
 \par\medskip\noindent
 \framebox[0.99\textwidth]{
 \begin{minipage}{0.97\dimexpr\textwidth-\parindent\relax} {#1} \end{minipage} } \par\medskip }
+
+%Reduce linespace in biblio
+\setlength{\bibsep}{2pt}
+
+\usepackage[many]{tcolorbox}
+\usetikzlibrary{decorations.pathreplacing}
+%\tcbset{%
+%	enhanced,
+%	coltitle=black, 
+%	detach title,
+%	left=10mm,
+%	overlay={
+%		\node[rotate=90, minimum width=1cm, anchor=south,yshift=-0.8cm] at (frame.east) {\tcbtitle};
+%	}
+%}
+\newtcolorbox{rightbrace1}{%
+	boxsep=0cm,
+	left=.05cm,
+	top=.05cm,
+	bottom=.05cm,
+	grow to left by=-.35cm,
+	colback=black!10,
+	enhanced jigsaw, 
+	breakable, % allow page breaks
+	frame hidden, % hide the default frame
+	width=6.1cm,
+	overlay={%
+		\draw [
+		fill=none, % fill paper
+		decoration={brace,amplitude=0.5em},
+		decorate,
+		ultra thick,
+		darkgray,
+		]
+		% right line
+		(frame.north east)--(frame.south east);
+		\node[rotate=270, minimum width=1cm, anchor=south,yshift=0.35cm] at (frame.east) {iteration};
+	},
+	% paragraph skips obeyed within tcolorbox
+	parbox=false,
+}
+%
+\newtcolorbox{rightbrace2}{%
+	boxsep=0cm,
+	left=.05cm,
+	top=.05cm,
+	bottom=.05cm,
+	grow to left by=-.35cm,
+	colback=black!5!white,
+	enhanced jigsaw, 
+	breakable, % allow page breaks
+	frame hidden, % hide the default frame
+	width=7.6cm,
+	overlay={%
+		\draw [
+		fill=none, % fill paper
+		decoration={brace,amplitude=0.5em},
+		decorate,
+		ultra thick,
+		darkgray,
+		]
+		% right line
+		(frame.north east)--(frame.south east);
+		\node[rotate=270, minimum width=1cm, anchor=south,yshift=0.3cm] at (frame.east) {epoch};
+	},
+	% paragraph skips obeyed within tcolorbox
+	parbox=false,
+}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Begin of Document
@@ -413,16 +484,16 @@
 	\end{itemize}
 
     \begin{minipage}{.85\textwidth}
-    \noindent \hly{Sample efficiency} is crucial in Reinforcement Learning (RL), where collecting samples is extremely expensive\\ 
+    \noindent \hlr{Sample efficiency} is crucial in Reinforcement Learning (RL), where collecting samples is extremely expensive\\ 
     \hspace*{.3cm} $\implies$ \textbf{FG} often \underline{unfeasible}
 
 	\vspace{2mm}
-	\noindent Slower convergence of \textbf{SG} due to high \hly{gradient variance}.
+	\noindent Slower convergence of \textbf{SG} due to high \hlr{gradient variance}.
     \end{minipage}
 	
     
     \vspace{.3cm}
-    \noindent $\blacktriangleright$~ \hlr{Solution:} from finite-sum optimization in Supervise Learning:
+    \noindent $\blacktriangleright$~ \hly{Solution} from finite-sum optimization in Supervised Learning (SL):
 	\begin{itemize}\compresslist
 		\item \textbf{Stochastic Variance-Reduced Gradient (SVRG)} $\longrightarrow O(N+\nicefrac{N^{\nicefrac{2}{3}}}{\epsilon})$
 	\end{itemize}
@@ -448,13 +519,13 @@
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         \noindent From the \hlb{\textbf{SL}} literature, \textit{separate} study of: 
 	\begin{itemize}\compresslist
-		\item \chall{Non-concavity}~\citep{du2017svrgpe,reddi2016stochastic}
+		\item \chall{Non-concavity}~\citep{allen2016variance,reddi2016stochastic}
 		\item \chall{Infinite dataset}~\citep{harikandeh2015stopwasting,bietti2017stochastic}
 	\end{itemize}
 
     \noindent From the \hlb{\textbf{RL}} literature:
 	\begin{itemize}\compresslist
-		\item \textbf{SVRPGE}~\citep{du2017svrgpe}: SVRG for policy \textit{evaluation}
+		\item \textbf{SVRPGE}~\citep{du2017svrgpe}: policy \textit{evaluation}
 		\item \textbf{SVRPO}~\citep{xu2017svrgtrpo}: direct application of SVRG to TRPO
 	\end{itemize}
 
@@ -483,39 +554,25 @@ We design an \textbf{SVRG}-like algorithm for the \textbf{PG} framework.
 
 \vspace{0.2cm}
 
-\noindent\begin{minipage}[t]{.32\textwidth}
-        \hlg{The easy part:}\\[.2cm]
+\noindent\begin{minipage}[t]{.48\textwidth}
+\begin{tcolorbox}[left=0cm,right=0cm,top=0cm,bottom=0cm,colback=white, boxsep=.1cm, colframe=yellow!70!black!40!white, grow to left by=0cm, grow to right by=0cm]
+\vspace*{-.11cm}\hspace*{-.11cm}\hlb{The easy part:}\\[.2cm]
 %\begin{itemize}\compresslist
         $\bullet$~Take any \textbf{unbiased} policy gradient estimator $g(\tau|\vtheta)$ (\eg REINFORCE)\\[.15cm]
-    $\bullet$~\textbf{SVRG} idea: combine \hly{frequent \textbf{SG}} with \hly{rare \textbf{FG}} into a corrected gradient estimator $\gradBlack{\vtheta}$\\[.15cm]
-    $\bullet$~Two-time scales:\\ \hspace*{.8cm} $1$ \textbf{epoch} $=m$ \textbf{iterations}
+    $\bullet$~\textbf{SVRG} idea: combine \hlr{frequent \textbf{SG}} with \\\hlg{rare \textbf{FG}} into a corrected gradient estimator $\gradBlack{\vtheta}$\\[.15cm]
+    $\bullet$~Two-time scales: $1$ \textbf{epoch} $=m$ \textbf{iterations}
 %\end{itemize}
-\end{minipage}
-\hfill%
-\begin{minipage}[t]{.33\textwidth}
-        \hlo{Solving the RL challenges:}\\[.2cm]
+\end{tcolorbox}
+\end{minipage}\hfill%
+\begin{minipage}[t]{.48\textwidth}
+\begin{tcolorbox}[left=0cm,right=0cm,top=0cm,bottom=0cm,colback=white, boxsep=.1cm, colframe=orangep, grow to left by=0cm, grow to right by=0cm]
+\vspace*{-.11cm}\hspace*{-.11cm}\hlo{Solving the RL challenges:}\\[.2cm]
 %\begin{enumerate}\compresslist
     $\bullet$~Manage \chall{non-concavity} with \textbf{smooth} policies (\eg Gaussian)\\[.15cm]
     $\bullet$~Approximate \chall{infinite dataset} with a large \textbf{batch size} $N$\\[.15cm]
 	$\bullet$~Correct \chall{nonstationarity} with \textbf{importance weighting}	
 %\end{enumerate}
-\end{minipage}
-\hfill%
-\begin{minipage}[t]{.31\textwidth}
-        \vspace*{-.4cm}
-        \hspace*{1.8cm} \emph{Algorithm}
-        \vspace*{-.2cm}
-        \bookboxx{
-                \small
-                \textbf{For} $s = 1,\ldots$\\
-                \hspace*{.2cm} Sample $N$ trajectories using $\theta^s$\\
-                \hspace*{.2cm} Compute FG $\wh{\nabla}_N J(\theta^S)$\\
-                \hspace*{.2cm} \textbf{For} $t = 1, \ldots, m-1$\\
-                \hspace*{.4cm} Sample $B$ trajectories using $\theta^{s+1}_t$\\
-                \hspace*{.4cm} Compute SG $\wh{\nabla}_B J(\theta^{s+1}_t)$ and \\
-                \hspace*{.6cm} $c_t^{s+1} = \omega(\theta^{s+1}_t, \theta^s)\wh{\nabla}_B J(\theta^{s+1}_t)$\\
-                \hspace*{.4cm} Compute $\theta^{s+1}_{t+1}$ using $\gradBlack{\theta^{s+1}_t}$
-        }
+\end{tcolorbox}
 \end{minipage}
 
 \begin{center}
@@ -538,13 +595,13 @@ We design an \textbf{SVRG}-like algorithm for the \textbf{PG} framework.
 	&\tikz[overlay]{ 
     \node[inner sep=5pt, xshift=-.2cm]{\large{$\gradBlack{\vtheta} := \tikz[baseline]{\node[anchor=base, fill=greenp](FG){$\wh{\nabla}_N J(\wt{\vtheta})$};} + 
             \tikz[baseline]{\node[anchor=base, fill=redp](SG){$\wh{\nabla}_B J({\vtheta})$};} - 
-    \tikz[baseline]{\node[anchor=base, fill=yellow](C){$\omega(\vtheta, \wt{\vtheta}) \wh{\nabla}_B J({\wt{\vtheta}})$};}$}
+    \tikz[baseline]{\node[anchor=base, fill=yellowp](C){$\omega(\vtheta, \wt{\vtheta}) \wh{\nabla}_B J({\wt{\vtheta}})$};}$}
 		};
 	}  
 	\vspace{0.9cm} 
 	& \multirow{2}{*}{
 		\shortstack{
-            \tikz[baseline]{\node[anchor=base, fill=yellow, inner sep=2pt](Ctext){$\textbf{Correction term}$};}\\
+            \tikz[baseline]{\node[anchor=base, fill=yellowp, inner sep=2pt](Ctext){$\textbf{Correction term}$};}\\
 			$\frac{1}{B}\sum_{i=1}^{B}\underbrace{\omega(\tau_i|\vtheta,\wt{\vtheta})}_{\textbf{imp. weight}}g(\tau_i|\wt{\vtheta})$\\
 			Trajectories from SG term \\
 			Ensures SVRG properties\\
@@ -568,23 +625,28 @@ We design an \textbf{SVRG}-like algorithm for the \textbf{PG} framework.
 \end{tabu}
 \tikz[overlay]{
         \path[->, greenp, thick] (FG.north west) edge[bend right] (FGtext.east);
-        \path[->, yellow, thick] (C.east) edge[bend left] (Ctext.west);
+        \path[->, yellowp, thick] (C.east) edge[bend left] (Ctext.west);
         \draw[->, redp, thick] (SG.south) -- (SGtext.north);
 }
 
-\vspace{0.5cm}
-
-\begin{minipage}[t]{.55\textwidth}
-	Fundamental \textbf{SVRG} properties:
+\vspace{0.2cm}
+\noindent
+\begin{minipage}[t]{.48\textwidth}
+	\begin{tcolorbox}[left=0cm,right=0cm,top=0cm,bottom=0cm,colback=white, boxsep=.1cm, colframe=bluep, grow to left by=0cm, grow to right by=0cm]
+		\vspace*{-.11cm}\hspace*{-.2cm}
+		\hlb{Fundamental SVRG properties:}
+		
 	\begin{enumerate}
-            \item \textcolor{myblue}{\textbf{Unbiasedness:}} $\EVV[]{\gradBlack{\vtheta}} = \gradJ{\vtheta}$
-            \item \textcolor{myblue}{\textbf{Vanishing variance:}} $\Var{\gradBlack{\vtheta}}\to0$ as $\vtheta\to\vtheta^*$
+	\item \textcolor{myblue}{\textbf{Unbiasedness:}} $\EVV[]{\gradBlack{\vtheta}} = \gradJ{\vtheta}$
+	\item \textcolor{myblue}{\textbf{Vanishing variance:}} $\Var{\gradBlack{\vtheta}}\to0\:\:$ as $\:\:\vtheta\to\vtheta^*$
 	\end{enumerate}
-\vfill
+	\end{tcolorbox}
 \end{minipage}
 \hfill%
-\begin{minipage}[t]{.4\textwidth}
-        \hly{\textbf{Importance weighting}}
+\begin{minipage}[t]{.48\textwidth}
+\begin{tcolorbox}[left=0cm,right=0cm,top=0cm,bottom=0cm,colback=white, boxsep=.1cm, colframe=yellow!70!black!40!white, grow to left by=0cm, grow to right by=0cm]
+\vspace*{-.11cm}\hspace*{-.2cm}
+\hly{Importance weighting}
 
 Use samples from $\vtheta$ as taken with $\wt{\vtheta}$:
 \vspace{-0.2cm}
@@ -594,23 +656,81 @@ Use samples from $\vtheta$ as taken with $\wt{\vtheta}$:
 	\genfrac{}{}{0pt}{}{\leftarrow \textit{target distribution}}
 		{\leftarrow \textit{source distribution}}
 \end{equation*}
+\end{tcolorbox}
 \end{minipage}
 }
 
-\headerbox{Convergence}{name=convergence,column=1,span=2,row=2, below=svrpg, above=bottom}{
+\headerbox{Convergence}{name=convergence,column=2,span=1,row=2, below=svrpg, above=bottom}{
+\noindent
+\chall{Non-concavity }$\longrightarrow$\textit{ local} maximum
+
+\noindent\hlb{Linear} rate under increasing batch sizes:
 \begin{align*}
 &\EVV[]
-{\norm[2]{\nabla J(\vtheta_A)}^2} 
-\leq
-\frac{J(\vtheta^*)-J(\vtheta_0)}{\psi T} +
-\frac{\zeta}{N}
-+\frac{\xi}{B},
+{\norm[]{\nabla J(\vtheta)}^2} \leq
+\tikz[baseline]{\node[anchor=base, fill=bluep,inner sep=5](Nterm){$\frac{J(\vtheta^*)-J(\vtheta_0)}{\psi T}$};}
++
+\tikz[baseline]{\node[anchor=base, fill=orangep,inner sep=5](Nterm){$\frac{\zeta}{N}$};} + 
+\tikz[baseline]{\node[anchor=base, fill=orangep,inner sep=5](Bterm){$\frac{\xi}{B}$};}
 \end{align*}
 
-Serve piu' spazio, ma l'organizzazione del box sopra e' tutta da vedere. Mancano anche le due basic properties
+\vspace*{1cm}
+
+\noindent
+\begin{tabular}{cc}
+\shortstack{ \tikz[baseline]{\node[anchor=base, inner sep=2](Ntext){\chall{Infinite-dataset} error};}\\ 
+from FG approximation\\
+$\downarrow$ 
+\\take \textit{large} $N$
+}&
+\hfill%
+\shortstack{
+\vspace*{-.1cm}
+\tikz[baseline]{\node[anchor=base, inner sep=2](Btext){\chall{Non-stationarity} error};}\\ 
+from importance weighting\\
+	$\downarrow$ 
+	\\take \textit{large} $B$ (still $<<N$)
+}
+\end{tabular}
+
+\tikz[overlay]{
+	\draw[orangep, thick,->] plot[smooth,tension=.3] coordinates{(Nterm.south) ($(Nterm.south) + (0,-.5cm)$) ($(Ntext.north) + (0,.5cm)$)
+	 (Ntext.north)};
+	\draw[orangep, thick,->] plot[smooth,tension=.3] coordinates{(Bterm.south) ($(Bterm.south) + (0,-.7cm)$) ($(Btext.north) + (0,.5cm)$)
+		(Btext.north)};
 }
 
-\headerbox{Heuristics}{name=heuristics,column=3,span=1,row=0,height=0.5,height=0.32}{
+
+\begin{itemize}
+\item Constants ($\psi,\zeta,\xi$) depend only on \hlg{step size $\alpha$} and \hlg{epoch size $m$}
+\item Theory dictates \hlr{very conservative} meta-parameters ($\alpha,m,N,B)$  to guarantee convergence
+\end{itemize}
+}
+
+\headerbox{Algorithm}{name=algo,column=1,span=1,row=1,below=svrpg}{
+\noindent
+\small
+%\begin{minipage}[t]{.7\textwidth}
+\textbf{For} $s = 1,\ldots$
+\vspace*{-.2cm}
+\begin{rightbrace2}
+	Sample $N$ trajectories using $\wt{\theta}$\\
+	Compute FG $=\wh{\nabla}_N J(\wt{\theta})$\\
+	\textbf{For} $t = 1, \ldots, m$
+	\vspace*{-.15cm}
+	\begin{rightbrace1}
+	Sample $B$ trajectories using $\theta$\\
+	Compute SG $=\wh{\nabla}_B J(\theta)$\\
+	Compute correction $=\omega(\theta, \wt{\theta})\wh{\nabla}_B J(\wt{\theta})$\\
+	Update $\theta\gets\theta+\alpha\gradBlack{\theta}$
+	\end{rightbrace1}
+	\vspace*{-.15cm}
+	\hspace*{-.5cm}Update $\wt{\theta}\gets\theta$
+\end{rightbrace2}
+\vspace*{-.2cm}
+}
+
+\headerbox{Heuristics}{name=heuristics,column=3,span=1,row=0}{
 	\begin{itemize}
 		\item Adaptive step size
 		\item Adaptive epoch size
@@ -620,18 +740,18 @@ Serve piu' spazio, ma l'organizzazione del box sopra e' tutta da vedere. Mancano
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\headerbox{Empirical Results}{name=emp,column=3,row=1,span=1,below=heuristics,height=0.45}{
+\headerbox{Empirical Results}{name=emp,column=3,row=1,span=1,below=heuristics}{
 	Direi che ci stanno 2 grafici, ma devo pensare a quali mettere 
 	
 	Eventualmente saltano Related Work e le References
 }
 
-\headerbox{References}{name=ref,column=3,row=1,span=1,below=emp,above=bottom}{
+\headerbox{References}{name=ref,column=1,row=2,span=1,below=algo,above=bottom}{
         \tiny
 \bibliographystyle{plainnat}
 \begingroup
 \renewcommand{\section}[2]{}%
-\bibliography{../svrpg.bib}
+\bibliography{poster.bib}
 \endgroup
 }
 
