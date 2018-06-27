@@ -153,7 +153,6 @@
 \usepackage{multirow}
 
 \usepackage{tabu}
-\usepackage{schemata}
 
 \usepackage{xspace}
 \DeclareRobustCommand{\eg}{e.g.,\@\xspace}
@@ -352,6 +351,12 @@
 	parbox=false,
 }
 
+\usepackage{stackengine}
+\usepackage{scalerel}
+\newcommand\dangersign[1][2ex]{%
+	\renewcommand\stacktype{L}%
+	\scaleto{\stackon[1.5pt]{\color{crimson}$\triangle$}{\tiny \bfseries{!}}}{#1}%
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Begin of Document
@@ -555,7 +560,7 @@ We design an \textbf{SVRG}-like algorithm for the \textbf{PG} framework.
 \vspace{0.2cm}
 
 \noindent\begin{minipage}[t]{.48\textwidth}
-\begin{tcolorbox}[left=0cm,right=0cm,top=0cm,bottom=0cm,colback=white, boxsep=.1cm, colframe=yellow!70!black!40!white, grow to left by=0cm, grow to right by=0cm]
+\begin{tcolorbox}[left=0cm,right=0cm,top=0cm,bottom=0cm,colback=white, boxsep=.1cm, colframe=bluep, grow to left by=0cm, grow to right by=0cm]
 \vspace*{-.11cm}\hspace*{-.11cm}\hlb{The easy part:}\\[.2cm]
 %\begin{itemize}\compresslist
         $\bullet$~Take any \textbf{unbiased} policy gradient estimator $g(\tau|\vtheta)$ (\eg REINFORCE)\\[.15cm]
@@ -731,19 +736,42 @@ from importance weighting\\
 }
 
 \headerbox{Heuristics}{name=heuristics,column=3,span=1,row=0}{
+\noindent
+Heuristics can improve performance in practice
 	\begin{itemize}
-		\item Adaptive step size
-		\item Adaptive epoch size
-		\item Normalized Importance Weighting
-		\item Critic (baseline)
+		\item \hlb{Step size:} \textbf{ADAM} to counteract gradient variance\\
+		\dangersign \hspace*{.05cm} FG and SG variance have completely different magnitude $\rightarrow$ use two separate annealing schedules $\alpha_{FG}$ and $\alpha_{SG}$
+		\item \hlb{Epoch size:} cut epoch when the effective step size becomes too small
+		\begin{equation*}
+			\frac{\alpha_{FG}}{N} > \frac{\alpha_{SG}}{B} \implies \textbf{new epoch}
+		\end{equation*}
+		\item \hlb{Normalized importance weights:} reduce variance at the price of introducing a small bias
+		\item \hlb{Critic:} an orthogonal variance reduction technique from the \textbf{PG} literature
 	\end{itemize}
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \headerbox{Empirical Results}{name=emp,column=3,row=1,span=1,below=heuristics}{
-	Direi che ci stanno 2 grafici, ma devo pensare a quali mettere 
-	
-	Eventualmente saltano Related Work e le References
+
+\noindent
+\begin{tikzpicture}
+	\node[inner sep=0pt] (picture1) {\includegraphics[width=.98\textwidth]{images/cartpole.pdf}};
+	\node[above left] at ($(picture1.north west) + (2.7cm,-.6cm)$) {\textbf{Cart-Pole}};
+\end{tikzpicture}%
+
+\noindent
+\begin{tikzpicture}
+\node[inner sep=0pt] (picture2) {\includegraphics[width=0.98\textwidth]{images/swimmer.pdf}};
+\node[above left] at ($(picture2.north west) + (2.8cm,-.5cm)$) {\textbf{Swimmer}};
+\end{tikzpicture}%
+
+\vspace*{-.3cm}
+
+\noindent
+\begin{tikzpicture}
+\node[inner sep=0pt] (picture3) {\includegraphics[width=0.98\textwidth]{images/cheetah.pdf}};
+\node[above left] at ($(picture3.north west) + (3.4cm,-.8cm)$) {\textbf{Half-Cheetah}};
+\end{tikzpicture}%
 }
 
 \headerbox{References}{name=ref,column=1,row=2,span=1,below=algo,above=bottom}{
