@@ -260,6 +260,28 @@
 
 \captionsetup{justification=raggedright,singlelinecheck=false}
 
+
+% box for algorithms
+\newlength{\minipagewidth}
+\newlength{\minipagewidthx}
+\setlength{\minipagewidth}{0.99\textwidth}
+\setlength{\minipagewidthx}{0.99\textwidth}
+\setlength{\fboxsep}{1.5mm}
+\addtolength{\minipagewidth}{-\fboxrule}
+\addtolength{\minipagewidth}{-\fboxrule}
+\addtolength{\minipagewidth}{-\fboxsep}
+\addtolength{\minipagewidth}{-\fboxsep}
+\addtolength{\minipagewidthx}{+\fboxsep}
+\newcommand{\bookbox}[1]{
+\par\medskip\noindent
+\framebox[\columnwidth]{
+\begin{minipage}{\minipagewidth} {#1} \end{minipage} } \par\medskip }
+
+\newcommand{\bookboxx}[1]{\small
+\par\medskip\noindent
+\framebox[0.99\textwidth]{
+\begin{minipage}{0.97\dimexpr\textwidth-\parindent\relax} {#1} \end{minipage} } \par\medskip }
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Begin of Document
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -347,7 +369,7 @@
   % Authors
   {\textsc{M. Papini, D. Binaghi, G. Canonaco, M. Pirotta and M. Restelli}\\ 
   {\normalsize \texttt{\{matteo.papini, marcello.restelli\}@polimi.it}},
-  {\normalsize \texttt{\{damiano.binaghi, giuseppe.canonaco\}@mail.polimi.it}},  {\normalsize \texttt{\{matteo.pirotta\}@inria.fr}}
+  {\normalsize \texttt{\{damiano.binaghi, giuseppe.canonaco\}@mail.polimi.it}},  {\normalsize \texttt{matteo.pirotta@inria.fr}}
   }
   % University logo
   {% The makebox allows the title to flow into the logo, this is a hack because of the L shaped logo.
@@ -451,7 +473,7 @@
 %}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \headerbox{SVRPG}{name=svrpg,column=1,span=2,
+  \headerbox{SVRPG: stochastic variance-reduced policy gradient}{name=svrpg,column=1,span=2,
   	row=0,%1
   	%below=contrib
   }{
@@ -461,33 +483,50 @@ We design an \textbf{SVRG}-like algorithm for the \textbf{PG} framework.
 
 \vspace{0.2cm}
 
-\begin{minipage}[t]{.45\textwidth}
-The easy part:
-\begin{itemize}
-	\item Take any \textbf{unbiased} policy gradient estimator $g(\tau|\vtheta)$ (\eg REINFORCE)
-	\item \textbf{SVRG} idea: combine frequent \textbf{SG} with rare \textbf{FG} into a corrected gradient estimator $\gradBlack{\vtheta}$
-	\item Two time scales: $1$ \textbf{epoch} $=m$ \textbf{iterations}
-\end{itemize}
+\noindent\begin{minipage}[t]{.32\textwidth}
+        \hlg{The easy part:}\\[.2cm]
+%\begin{itemize}\compresslist
+        $\bullet$~Take any \textbf{unbiased} policy gradient estimator $g(\tau|\vtheta)$ (\eg REINFORCE)\\[.15cm]
+    $\bullet$~\textbf{SVRG} idea: combine \hly{frequent \textbf{SG}} with \hly{rare \textbf{FG}} into a corrected gradient estimator $\gradBlack{\vtheta}$\\[.15cm]
+    $\bullet$~Two-time scales:\\ \hspace*{.8cm} $1$ \textbf{epoch} $=m$ \textbf{iterations}
+%\end{itemize}
 \end{minipage}
 \hfill%
-\begin{minipage}[t]{.45\textwidth}
-Solving the RL challenges:
-\begin{enumerate}
-	\item Manage \chall{non-concavity} with \textbf{smooth} policies (\eg Gaussian)
-	\item Approximate \chall{infinite dataset} with a large \textbf{batch size} $N$
-	\item Correct \chall{nonstationarity} with \textbf{importance weighting}	
-\end{enumerate}
+\begin{minipage}[t]{.33\textwidth}
+        \hlo{Solving the RL challenges:}\\[.2cm]
+%\begin{enumerate}\compresslist
+    $\bullet$~Manage \chall{non-concavity} with \textbf{smooth} policies (\eg Gaussian)\\[.15cm]
+    $\bullet$~Approximate \chall{infinite dataset} with a large \textbf{batch size} $N$\\[.15cm]
+	$\bullet$~Correct \chall{nonstationarity} with \textbf{importance weighting}	
+%\end{enumerate}
+\end{minipage}
+\hfill%
+\begin{minipage}[t]{.31\textwidth}
+        \vspace*{-.4cm}
+        \hspace*{1.8cm} \emph{Algorithm}
+        \vspace*{-.2cm}
+        \bookboxx{
+                \small
+                \textbf{For} $s = 1,\ldots$\\
+                \hspace*{.2cm} Sample $N$ trajectories using $\theta^s$\\
+                \hspace*{.2cm} Compute FG $\wh{\nabla}_N J(\theta^S)$\\
+                \hspace*{.2cm} \textbf{For} $t = 1, \ldots, m-1$\\
+                \hspace*{.4cm} Sample $B$ trajectories using $\theta^{s+1}_t$\\
+                \hspace*{.4cm} Compute SG $\wh{\nabla}_B J(\theta^{s+1}_t)$ and \\
+                \hspace*{.6cm} $c_t^{s+1} = \omega(\theta^{s+1}_t, \theta^s)\wh{\nabla}_B J(\theta^{s+1}_t)$\\
+                \hspace*{.4cm} Compute $\theta^{s+1}_{t+1}$ using $\gradBlack{\theta^{s+1}_t}$
+        }
 \end{minipage}
 
 \begin{center}
-	Introducing the \enhance{SVRPG} estimator:
+        Introducing the \enhance{SVRPG} estimator $\gradBlack{\vtheta}$:
 \end{center}
 
 \noindent\dotfill
 \begin{tabu} to \textwidth{X[c]X[2c]X[c]}
 	\multirow{2}{*}{
 		\shortstack{
-			\textbf{FG term}\\
+                \tikz[baseline]{\node[anchor=base,fill=greenp, inner sep=2pt](FGtext){$\textbf{FG term}$};}\\
 			$\frac{1}{N}\sum_{i=1}^{N} g(\tau_i|\wt{\vtheta})$\\
 			$\tau_i\sim\wt{\vtheta}$\\
 			$N$ trajectories\\
@@ -496,14 +535,16 @@ Solving the RL challenges:
 			Updated once per \textbf{epoch}
 		}
 	}	 
-	&\tikz[baseline]{ 
-		\node[draw=myblue, very thick, inner sep=5pt]{\Large{$\wh{\nabla}_N J(\wt{\vtheta}) + \wh{\nabla}_B J({\vtheta}) - \omega(\vtheta, \wt{\vtheta}) \wh{\nabla}_B J({\wt{\vtheta}})$}
+	&\tikz[overlay]{ 
+    \node[inner sep=5pt, xshift=-.2cm]{\large{$\gradBlack{\vtheta} := \tikz[baseline]{\node[anchor=base, fill=greenp](FG){$\wh{\nabla}_N J(\wt{\vtheta})$};} + 
+            \tikz[baseline]{\node[anchor=base, fill=redp](SG){$\wh{\nabla}_B J({\vtheta})$};} - 
+    \tikz[baseline]{\node[anchor=base, fill=yellow](C){$\omega(\vtheta, \wt{\vtheta}) \wh{\nabla}_B J({\wt{\vtheta}})$};}$}
 		};
 	}  
-	\vspace{0.5cm} 
+	\vspace{0.9cm} 
 	& \multirow{2}{*}{
 		\shortstack{
-			\textbf{Correction term}\\
+            \tikz[baseline]{\node[anchor=base, fill=yellow, inner sep=2pt](Ctext){$\textbf{Correction term}$};}\\
 			$\frac{1}{B}\sum_{i=1}^{B}\underbrace{\omega(\tau_i|\vtheta,\wt{\vtheta})}_{\textbf{imp. weight}}g(\tau_i|\wt{\vtheta})$\\
 			Trajectories from SG term \\
 			Ensures SVRG properties\\
@@ -515,7 +556,7 @@ Solving the RL challenges:
 		}
 	} \\
 	& \shortstack{
-		\textbf{SG term}\\
+    \tikz[baseline]{\node[anchor=base, fill=redp, inner sep=2pt](SGtext){$\textbf{SG term}$};}\\
 		$\frac{1}{B}\sum_{i=1}^{B} g(\tau_i|\vtheta)$\\
 		$\tau_i\sim\vtheta$\\
 		$B<<N$ trajectories\\
@@ -525,20 +566,25 @@ Solving the RL challenges:
 		Stabilized by other terms
 	}
 \end{tabu}
+\tikz[overlay]{
+        \path[->, greenp, thick] (FG.north west) edge[bend right] (FGtext.east);
+        \path[->, yellow, thick] (C.east) edge[bend left] (Ctext.west);
+        \draw[->, redp, thick] (SG.south) -- (SGtext.north);
+}
 
 \vspace{0.5cm}
 
 \begin{minipage}[t]{.55\textwidth}
 	Fundamental \textbf{SVRG} properties:
 	\begin{enumerate}
-		\item Unbiasedness: $\EVV[]{\gradBlack{\vtheta}} = \gradJ{\vtheta}$
-		\item Vanishing variance: $\Var{\gradBlack{\vtheta}}\to0$ as $\vtheta\to\vtheta^*$
+            \item \textcolor{myblue}{\textbf{Unbiasedness:}} $\EVV[]{\gradBlack{\vtheta}} = \gradJ{\vtheta}$
+            \item \textcolor{myblue}{\textbf{Vanishing variance:}} $\Var{\gradBlack{\vtheta}}\to0$ as $\vtheta\to\vtheta^*$
 	\end{enumerate}
 \vfill
 \end{minipage}
 \hfill%
 \begin{minipage}[t]{.4\textwidth}
-\textbf{Importance weighting}
+        \hly{\textbf{Importance weighting}}
 
 Use samples from $\vtheta$ as taken with $\wt{\vtheta}$:
 \vspace{-0.2cm}
