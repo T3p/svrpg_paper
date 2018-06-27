@@ -118,7 +118,7 @@
 \colorlet{greenp}{vert3!20} % vert S\usepackage[framemethod=tikz]{mdframed}
 \colorlet{bluep}{blue!12} % vert S
 \colorlet{blueg}{blue!70!green!90!white}
-\definecolor{yellowp}{rgb}{0.99, 0.99, 0.59}
+\definecolor{yellowp}{rgb}{0.93, 0.93, 0.42}
 \colorlet{orangep}{orange!40}
 \newcommand{\hl}[3][\fboxsep1pt]{{#1\colorbox{#2}{#3}}}%
 %\newcommand{\hl}[2]{{\adjustbox{bgcolor=#1}{#2}}}%
@@ -127,7 +127,7 @@
 \newcommand{\hlg}[1]{\hl{greenp}{#1}}
 \newcommand{\hlb}[1]{\hl{bluep}{#1}}
 \newcommand{\hlo}[1]{\hl{orangep}{#1}}
-\newcommand{\hly}[1]{\hl{yellow!70!black!40!white}{#1}}
+\newcommand{\hly}[1]{\hl{yellowp}{#1}}
 \newcommand{\hlblg}[1]{\hl{blue!75!green!20!white}{#1}}
 \newcommand{\tikzhlblg}[1]{\tikz[baseline]{\node[inner sep=2pt, anchor=base,fill=blue!75!green!20!white]{{#1}};}}
 \newcommand{\tikzhly}[1]{  \tikz[baseline]{\node[inner sep=2pt, anchor=base,fill=yellow!70!black!50!white]{{#1}};}}
@@ -284,7 +284,7 @@
 \begin{minipage}{0.97\dimexpr\textwidth-\parindent\relax} {#1} \end{minipage} } \par\medskip }
 
 %Reduce linespace in biblio
-\setlength{\bibsep}{2pt}
+\setlength{\bibsep}{1.5pt}
 
 \usepackage[many]{tcolorbox}
 \usetikzlibrary{decorations.pathreplacing}
@@ -564,7 +564,7 @@ We design an \textbf{SVRG}-like algorithm for the \textbf{PG} framework.
 \vspace*{-.11cm}\hspace*{-.11cm}\hlb{The easy part:}\\[.2cm]
 %\begin{itemize}\compresslist
         $\bullet$~Take any \textbf{unbiased} policy gradient estimator $g(\tau|\vtheta)$ (\eg REINFORCE)\\[.15cm]
-    $\bullet$~\textbf{SVRG} idea: combine \hlr{frequent \textbf{SG}} with \\\hlg{rare \textbf{FG}} into a corrected gradient estimator $\gradBlack{\vtheta}$\\[.15cm]
+    $\bullet$~\textbf{SVRG} idea: combine \hlr{frequent \textbf{SG}} with \\\hlg{rare \textbf{FG}} into a \hly{corrected} gradient estimator $\gradBlack{\vtheta}$\\[.15cm]
     $\bullet$~Two-time scales: $1$ \textbf{epoch} $=m$ \textbf{iterations}
 %\end{itemize}
 \end{tcolorbox}
@@ -581,7 +581,7 @@ We design an \textbf{SVRG}-like algorithm for the \textbf{PG} framework.
 \end{minipage}
 
 \begin{center}
-        Introducing the \enhance{SVRPG} estimator $\gradBlack{\vtheta}$:
+        Introducing the \large{\enhance{SVRPG}} estimator $\gradBlack{\vtheta}$:
 \end{center}
 
 \noindent\dotfill
@@ -642,14 +642,14 @@ We design an \textbf{SVRG}-like algorithm for the \textbf{PG} framework.
 		\hlb{Fundamental SVRG properties:}
 		
 	\begin{enumerate}
-	\item \textcolor{myblue}{\textbf{Unbiasedness:}} $\EVV[]{\gradBlack{\vtheta}} = \gradJ{\vtheta}$
-	\item \textcolor{myblue}{\textbf{Vanishing variance:}} $\Var{\gradBlack{\vtheta}}\to0\:\:$ as $\:\:\vtheta\to\vtheta^*$
+	\item \textbf{Unbiasedness:} $\EVV[]{\gradBlack{\vtheta}} = \gradJ{\vtheta}$
+	\item \textbf{Vanishing variance:} $\Var{\gradBlack{\vtheta}}\to0\:\:$ as $\:\:\vtheta\to\vtheta^*$
 	\end{enumerate}
 	\end{tcolorbox}
 \end{minipage}
 \hfill%
 \begin{minipage}[t]{.48\textwidth}
-\begin{tcolorbox}[left=0cm,right=0cm,top=0cm,bottom=0cm,colback=white, boxsep=.1cm, colframe=yellow!70!black!40!white, grow to left by=0cm, grow to right by=0cm]
+\begin{tcolorbox}[left=0cm,right=0cm,top=0cm,bottom=0cm,colback=white, boxsep=.1cm, colframe=yellowp, grow to left by=0cm, grow to right by=0cm]
 \vspace*{-.11cm}\hspace*{-.2cm}
 \hly{Importance weighting}
 
@@ -707,7 +707,7 @@ from importance weighting\\
 
 
 \begin{itemize}
-\item Constants ($\psi,\zeta,\xi$) depend only on \hlg{step size $\alpha$} and \hlg{epoch size $m$}
+\item Constants ($\psi,\zeta,\xi$) depend only on \hlg{step size $\alpha$} and \hly{epoch size $m$}
 \item Theory dictates \hlr{very conservative} meta-parameters ($\alpha,m,N,B)$  to guarantee convergence
 \end{itemize}
 }
@@ -739,14 +739,14 @@ from importance weighting\\
 \noindent
 Heuristics can improve performance in practice
 	\begin{itemize}
-		\item \hlb{Step size:} \textbf{ADAM} to counteract gradient variance\\
+		\item \hlg{Step size:} \textbf{ADAM} to counteract gradient variance\\
 		\dangersign \hspace*{.05cm} FG and SG variance have completely different magnitude $\rightarrow$ use two separate annealing schedules $\alpha_{FG}$ and $\alpha_{SG}$
-		\item \hlb{Epoch size:} cut epoch when the effective step size becomes too small
+		\item \hly{Epoch size:} cut epoch when the effective step size becomes too small
 		\begin{equation*}
 			\frac{\alpha_{FG}}{N} > \frac{\alpha_{SG}}{B} \implies \textbf{new epoch}
 		\end{equation*}
 		\item \hlb{Normalized importance weights:} reduce variance at the price of introducing a small bias
-		\item \hlb{Critic:} an orthogonal variance reduction technique from the \textbf{PG} literature
+		\item \hlr{Critic:} an orthogonal variance reduction technique from the \textbf{PG} literature
 	\end{itemize}
 }
 
