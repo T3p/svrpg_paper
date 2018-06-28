@@ -1,0 +1,170 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+
+\newcommand{\enb}[1]{\textcolor{poliblue1}{\textbf{#1}}}
+\definecolor{softblue}{cmyk}{.2, .1, .1, .2}
+\newcommand{\soft}[1]{\textcolor{softblue}{#1}}
+
+\title{Stochastic Variance-Reduced Policy Gradient}
+\date[ICML 2018]{\small{35\textsuperscript{th} International Conference on Machine Learning, Stockholm, Sweden}}
+\author[Papini et al.]{\textbf{Matteo Papini} \\
+						\small{Damiano Binaghi \quad Giuseppe Canonaco \\
+								Matteo Pirotta \quad Marcello Restelli}}
+
+\usetheme{polimithx}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% BIBLIOGRAPHY
+\usepackage{natbib}
+\bibliographystyle{apalike}
+% make bibliography entries smaller
+\renewcommand\bibfont{\scriptsize}
+% If you have more than one page of references, you want to tell beamer
+% to put the continuation section label from the second slide onwards
+\setbeamertemplate{frametitle continuation}[from second]
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame} 
+\frametitle{Outline} 
+
+\begin{center}
+	\Large{\enb{S}\soft{tochastic}
+		\enb{V}\soft{ariance-}}\enb{R}\soft{educed}
+	\soft{(}\enb{P}\soft{olicy}\soft{)}
+	\enb{G}\soft{radient}
+\end{center}
+
+
+\begin{itemize}
+	\item \enb{SVRG} for Continuous Reinforcement Learning
+		\begin{itemize}
+		\item Motivation
+		\item Challenges
+	\end{itemize}
+	\item \enb{SVRPG}
+	\begin{itemize}
+		\item Convergence Properties
+		\item Heuristics
+		\item Experiments
+	\end{itemize}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame} 
+\frametitle{Policy Gradient} 
+An effective Reinforcement Learning solution to \enb{continuous} control problems.
+
+\textit{Examples: pictures + references}
+
+Mostly based on \enb{Stochastic Gradient Ascent} 
+
+\end{frame}
+
+\begin{frame} 
+\frametitle{Full vs Stochastic Gradient} 
+
+\textit{Plot: visualizing rates of convergence}
+
+\Large{\enb{Can we do better?}}
+
+\end{frame}
+
+\begin{frame} 
+\frametitle{SVRG} 
+\framesubtitle{Stochastic Variance-Reduced Gradient}
+
+\end{frame}
+
+\begin{frame} 
+\frametitle{SVRG for Reinforcement Learning} 
+
+\end{frame}
+
+\begin{frame} 
+\frametitle{SVRPG} 
+\framesubtitle{Stochastic Variance-Reduced \textbf{Policy} Gradient}
+
+\end{frame}
+
+\begin{frame} 
+\frametitle{Convergence Properties} 
+
+\end{frame}
+
+\begin{frame} 
+\frametitle{Heuristics} 
+
+\end{frame}
+
+\begin{frame} 
+\frametitle{Results} 
+
+
+\end{frame}
+
+\begin{frame} 
+\frametitle{Conclusions} 
+
+
+\end{frame}
+
+
+\begin{frame} 
+\frametitle{Thank You} 
+\begin{center}
+	\Large{\enb{Thank you for your attention}}
+\end{center}
+
+Link/QR
+
+Poster info
+
+Contact information
+
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[allowframebreaks,fragile]
+\frametitle{References}
+\bibliography{../svrpg.bib}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%Backup Slides
+\begin{frame} 
+\frametitle{Adaptive Step Size} 
+
+
+\end{frame}
+
+\begin{frame} 
+\frametitle{Adaptive Epoch Size} 
+
+
+\end{frame}
+
+\begin{frame} 
+\frametitle{Normalized Importance Weights} 
+
+
+\end{frame}
+
+\begin{frame} 
+\frametitle{Actor-Critic SVRPG} 
+
+
+\end{frame}
+
+\begin{frame} 
+\frametitle{The Full Comparison} 
+
+
+\end{frame}
+
+\end{document}
