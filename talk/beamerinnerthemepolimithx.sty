@@ -21,18 +21,19 @@
 \setbeamertemplate{background}{
 	\begin{tikzpicture}
 	\useasboundingbox (0,0) rectangle(\the\paperwidth,\the\paperheight);
-%	\draw[draw=none] (0,0.8\paperwidth) rectangle (\the\paperwidth,0.2\paperheight)
-%			      node[pos=0.5]{\includegraphics[width=\paperwidth]{./style_img/stockholm.jpg}};
+%	\draw[draw=none] (0,0.8\paperwidth) rectangle (\the\paperwidth,0\paperheight)
+%			      node[pos=0.5]{\includegraphics[width=\paperwidth]{./style_img/northernlights.jpg}};
 %	 			node[pos=0.5]{\includegraphics[width=\paperwidth]{./style_img/20090511_Politecnico_3190_01.jpg}};
 	\fill[color=poliblue3] (0,0) rectangle (\the\paperwidth,.52\paperheight);
-%	\draw[draw=none] (0,.52\paperwidth) rectangle (\the\paperwidth,.45\paperheight)
-%			      node[pos=0.5]{\includegraphics[width=2.5cm]{./style_img/polimilogotestobianco.pdf}};
+	
+%\draw[draw=none] (0,.52\paperwidth) rectangle (\the\paperwidth,.45\paperheight)
+%node[pos=0.5]{\includegraphics[width=2.5cm]{./style_img/polimilogotestobianco.pdf}};
 
-	\draw[draw=none] (-.4\paperwidth,\paperheight) rectangle (\the\paperwidth,.45\paperheight)
+	\draw[draw=none] (-.4\paperwidth,\paperheight) rectangle (\the\paperwidth,.55\paperheight)
 			      node[pos=0.5]{\includegraphics[width=3cm]{./style_img/logoPoliBlue_nome.pdf}};
 			      
    	\draw[draw=none] (.4\paperwidth,\paperheight) rectangle (\the\paperwidth,.45\paperheight)
-		node[pos=0.5]{\includegraphics[width=3cm]{./style_img/inria_sc.pdf}};
+		node[pos=0.5]{\includegraphics[width=3.5cm]{./style_img/inria_sc.pdf}};
 
 	\node[inner sep=0,outer sep=0,anchor=north west] at (0,.52\paperheight) {\includegraphics[width=\paperwidth]{./style_img/deco_stripes_vert_nobkg_white.pdf}};
 	\ifnum\thepage>1\relax%

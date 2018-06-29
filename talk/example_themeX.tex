@@ -1,9 +1,19 @@
 \documentclass[aspectratio=169]{beamer}
 \usepackage[utf8]{inputenc}
 
+\usepackage{xcolor}
+ \definecolor{redp}{rgb}{0.78, 0.03, 0.08}
+\definecolor{greenp}{rgb}{0.0, 0.51, 0.5}
+\definecolor{yellowp}{rgb}{0.59, 0.44, 0.09}
+
 \newcommand{\enb}[1]{\textcolor{poliblue1}{\textbf{#1}}}
+\newcommand{\eno}[1]{\textcolor{orange}{\textbf{#1}}}
 \definecolor{softblue}{cmyk}{.2, .1, .1, .2}
 \newcommand{\soft}[1]{\textcolor{softblue}{#1}}
+
+\DeclareMathOperator*{\EV}{\mathbb{E}}
+\newcommand{\EVV}[2][\ppvect \in \ppspace]{\EV_{#1}\left[{#2}\right]}
+\newcommand{\norm}[2][\infty]{\left\|#2\right\|_{#1}}
 
 \title{Stochastic Variance-Reduced Policy Gradient}
 \date[ICML 2018]{\small{35\textsuperscript{th} International Conference on Machine Learning, Stockholm, Sweden}}
@@ -22,7 +32,12 @@
 % to put the continuation section label from the second slide onwards
 \setbeamertemplate{frametitle continuation}[from second]
 
+%CUSTOM COMMANDS
+\newcommand{\vtheta}{\boldsymbol{\theta}}
+
 \begin{document}
+
+\setbeamertemplate{caption}{\raggedright\insertcaption\par}
 
 \begin{frame}
 \titlepage
@@ -30,7 +45,6 @@
 
 \begin{frame} 
 \frametitle{Outline} 
-
 \begin{center}
 	\Large{\enb{S}\soft{tochastic}
 		\enb{V}\soft{ariance-}}\enb{R}\soft{educed}
@@ -40,7 +54,7 @@
 
 
 \begin{itemize}
-	\item \enb{SVRG} for Continuous Reinforcement Learning
+	\item \enb{SVRG} for Reinforcement Learning
 		\begin{itemize}
 		\item Motivation
 		\item Challenges
@@ -57,31 +71,76 @@
 
 \begin{frame} 
 \frametitle{Policy Gradient} 
-An effective Reinforcement Learning solution to \enb{continuous} control problems.
+An effective \enb{Reinforcement Learning (RL)} solution to \enb{continuous} control problems:
 
-\textit{Examples: pictures + references}
+\begin{minipage}[t]{.4\paperwidth}
+\begin{figure}
+\includegraphics[width=\textwidth]{images/parkour.jpg}
+\caption{Robotics~\citep{heess2017emergence}}
+\end{figure}
+\end{minipage}
+\hfill%
+\begin{minipage}[t]{.4\paperwidth}
+\begin{figure}
+\includegraphics[width=\textwidth, height=3.6cm]{images/dota.jpg}
+\caption{Video games~\citep{openaifive}}
+\end{figure}	
+\end{minipage}
 
-Mostly based on \enb{Stochastic Gradient Ascent} 
+\vspace*{.5cm}
+
+\large{Mostly based on \enb{Stochastic Gradient Ascent}~\citep{robbins1951stochastic}}
 
 \end{frame}
 
 \begin{frame} 
 \frametitle{Full vs Stochastic Gradient} 
-
 \textit{Plot: visualizing rates of convergence}
 
-\Large{\enb{Can we do better?}}
+\Large{\enb{Can we do something better?}}
 
 \end{frame}
 
 \begin{frame} 
 \frametitle{SVRG} 
 \framesubtitle{Stochastic Variance-Reduced Gradient}
+A solution from \enb{finite-sum optimization}:
 
+\begin{align*}
+	&\Large{
+	\textcolor{poliblue3}{\underbrace{\blacktriangledown J(\vtheta)}_{\text{SVRG estimator}}}
+	= \textcolor{greenp}{\underbrace{\nabla J(\widetilde{\vtheta}) }_{\text{FG in snapshot parameter}}}
+	+ \textcolor{redp}{\underbrace{\nabla J(\vtheta)\rvert_{\tau_i}}_{\text{SG in current parameter}}}
+	- \textcolor{yellowp}{\underbrace{\nabla J(\widetilde{\vtheta})\rvert_{\tau_i}}_{\text{Correction term}}}}
+\end{align*}
+
+\begin{itemize}
+	\item Unbiased
+	\item Linear convergence
+	\item More data-efficient than FG
+	\item Easily applicable to \enb{Supervised Learning (SL)}
+\end{itemize}
 \end{frame}
 
 \begin{frame} 
-\frametitle{SVRG for Reinforcement Learning} 
+\frametitle{SVRG for Reinforcement Learning}
+\framesubtitle{Stochastic Variance-Reduced Gradient} 
+Not trivial! There are three \eno{challenges}:
+
+\vspace*{.5cm}
+\begin{enumerate}
+	\item \eno{Non-concavity} of $J(\vtheta)$
+		\citep{allen2016variance,reddi2016stochastic}
+	\item \eno{Infinite dataset}: we would need \textit{infinite samples} to compute FG~\citep{harikandeh2015stopwasting,bietti2017stochastic}
+	\item \eno{Non-stationarity}: $\tau\sim p_{\textcolor{orange}\vtheta}$ (new!)
+\end{enumerate}
+
+
+RL so far: \textit{policy evaluation}~\citep{du2017svrgpe} and \textit{off-policy control}~\citep{xu2017svrgtrpo}
+
+\vspace*{.5cm}
+
+Our work: \enb{on-policy control}
 
 \end{frame}
 
@@ -89,15 +148,55 @@ Mostly based on \enb{Stochastic Gradient Ascent}
 \frametitle{SVRPG} 
 \framesubtitle{Stochastic Variance-Reduced \textbf{Policy} Gradient}
 
+
+
+\begin{equation*}
+\LARGE{
+	\textcolor{poliblue3}{\underbrace{\blacktriangledown J(\vtheta)}_{\text{SVRPG estimator}}}
+	= \textcolor{greenp}{\underbrace{\widehat{\nabla}_N J(\widetilde{\vtheta}) }_{\text{\shortstack{Large N\\to approximate FG}}}}
+	+ \textcolor{redp}{\underbrace{\widehat{\nabla}_B J(\vtheta)}_{B << N}}
+	- \textcolor{yellowp}{\underbrace{\omega(\vtheta,\widetilde{\vtheta})\widehat{\nabla}_B J(\widetilde{\vtheta})}_{\text{\shortstack{Importance weighting\\for non-stationarity}}}}}
+\end{equation*}
+
+\begin{itemize}
+	\item Unbiased
+	\item More data-efficient than FG
+\end{itemize}
+
 \end{frame}
 
 \begin{frame} 
 \frametitle{Convergence Properties} 
+Convergence to \eno{local} optimum:
+
+\Large{
+\begin{equation*}
+	\EVV[]
+	{\norm[]{\nabla J(\vtheta)}^2} 
+	\leq
+	\frac{J(\vtheta^*)-J(\vtheta_0)}{\psi T} +
+	\textcolor{orange}{\underbrace{\frac{\zeta}{N}}_{\text{Infinite dataset}}}
+	+\textcolor{orange}{\underbrace{\frac{\xi}{B}}_{\text{Nonstationarity}}}
+\end{equation*}
+}
+
+\begin{itemize}
+	\item Linear convergence $+$ error
+\end{itemize}
 
 \end{frame}
 
 \begin{frame} 
 \frametitle{Heuristics} 
+Meta-parameter selection
+
+\begin{itemize}
+	\item Adaptive step size: two ADAM annealing schedules $\alpha_{FG}$, $\alpha_{SG}$
+	\item Adaptive epoch size: take new snapshot when the effective step size becomes too small
+	\begin{equation*}
+		\frac{\alpha_{SG}}{B} < \frac{\alpha_{FG}}{N} \implies \textbf{snapshot}
+	\end{equation*}
+\end{itemize}
 
 \end{frame}
 
@@ -132,7 +231,7 @@ Contact information
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}[allowframebreaks,fragile]
 \frametitle{References}
-\bibliography{../svrpg.bib}
+\bibliography{talk.bib}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
