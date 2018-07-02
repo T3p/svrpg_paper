@@ -22,6 +22,7 @@
 								Matteo Pirotta \quad Marcello Restelli}}
 
 \usetheme{polimithx}
+\usetikzlibrary{calc}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% BIBLIOGRAPHY
 \usepackage{natbib}
@@ -181,7 +182,7 @@ Convergence to \eno{local} optimum:
 }
 
 \begin{itemize}
-	\item Linear convergence $+$ error
+	\item Linear convergence $+$ error~\citep [similar to][]{harikandeh2015stopwasting}
 \end{itemize}
 
 \end{frame}
@@ -191,8 +192,11 @@ Convergence to \eno{local} optimum:
 Meta-parameter selection
 
 \begin{itemize}
-	\item Adaptive step size: two ADAM annealing schedules $\alpha_{FG}$, $\alpha_{SG}$
-	\item Adaptive epoch size: take new snapshot when the effective step size becomes too small
+	\item \enb{Adaptive step size}: two ADAM annealing schedules
+	 \begin{equation*}
+	 	\underbrace{\alpha_{FG}}_{\text{used at the snapshot}} \qquad \underbrace{\alpha_{SG}}_{\text{used inside epoch}}
+	 \end{equation*}
+	\item \enb{Adaptive epoch size}: take new snapshot when the effective step size becomes too small
 	\begin{equation*}
 		\frac{\alpha_{SG}}{B} < \frac{\alpha_{FG}}{N} \implies \textbf{snapshot}
 	\end{equation*}
@@ -203,12 +207,54 @@ Meta-parameter selection
 \begin{frame} 
 \frametitle{Results} 
 
+%\begin{tikzpicture}
+
+\begin{minipage}[t]{.28\paperwidth}
+\begin{center}
+	\textbf{Cart-Pole}
+\end{center}
+\includegraphics[width=\textwidth]{images/cartpole.pdf}
+\end{minipage}
+%
+\begin{minipage}[t]{.28\paperwidth}
+\begin{center}
+	\textbf{Swimmer}
+\end{center}
+\includegraphics[width=\textwidth]{images/swimmer.pdf}
+\end{minipage}
+%
+\begin{minipage}[t]{.28\paperwidth}
+\begin{center}
+	\textbf{Half-Cheetah}
+\end{center}
+\includegraphics[width=\textwidth]{images/swimmer.pdf}
+\end{minipage}
+
+%\node[inner sep=0pt] (picture1) {\includegraphics[width=.32\textwidth]{images/cartpole.pdf}};
+%\node[above left] at ($(picture1.north) + (1.3cm,0)$) {\textbf{Cart-Pole}};
+%\end{tikzpicture}
+%%
+%\begin{tikzpicture}
+%\node[inner sep=0pt] (picture2) {\includegraphics[width=0.32\textwidth]{images/swimmer.pdf}};
+%\node[above left] at ($(picture1.north) + (1.3cm,0)$) {\textbf{Swimmer}};
+%\end{tikzpicture}
+%%
+%\begin{tikzpicture}
+%\node[inner sep=0pt] (picture3) {\includegraphics[width=0.32\textwidth]{images/cheetah.pdf}};
+%\node[above left] at ($(picture1.north) + (1.3cm,0)$) {\textbf{Half-Cheetah}};
+%\end{tikzpicture}%
 
 \end{frame}
 
 \begin{frame} 
 \frametitle{Conclusions} 
 
+\begin{itemize}
+	\item Efficient policy optimization is challenging
+	\item \enb{SVRPG}: on-policy control based on SVRG
+	\item Meta-parameters still crucial to tame different sources of variance
+	\item Future work: adaptive batch size, natural gradient, actor-critic
+\end{itemize}
 
 \end{frame}
 
@@ -219,11 +265,17 @@ Meta-parameter selection
 	\Large{\enb{Thank you for your attention}}
 \end{center}
 
-Link/QR
-
-Poster info
-
-Contact information
+\begin{minipage}[]{.6\paperwidth}
+\begin{itemize}
+	\item Poster: today 06:15 -- 09:00 PM @ \enb{Hall B \#65} 
+	\item Contact: \texttt{matteo.papini@polimi.it}
+	\item Online resources: \texttt{t3p.github.io}
+	\end{itemize}
+\end{minipage}
+\hfill%
+\begin{minipage}[]{.2\paperwidth}
+\includegraphics[width=.2\paperwidth]{../qrcode.pdf}
+\end{minipage}
 
 \end{frame}
 
