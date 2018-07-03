@@ -35,6 +35,65 @@
 
 %CUSTOM COMMANDS
 \newcommand{\vtheta}{\boldsymbol{\theta}}
+\newcommand{\gradBlack}[1]{\blacktriangledown J(#1)}
+
+\usepackage[many]{tcolorbox}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{arrows,shapes}
+\usetikzlibrary{positioning}
+\newtcolorbox{rightbrace1}{%
+	boxsep=0cm,
+	left=.05cm,
+	top=.05cm,
+	bottom=.05cm,
+	grow to left by=-.35cm,
+	colback=black!10,
+	enhanced jigsaw, 
+	breakable, % allow page breaks
+	frame hidden, % hide the default frame
+	width=7.1cm,
+	overlay={%
+		\draw [
+		fill=none, % fill paper
+		decoration={brace,amplitude=0.5em},
+		decorate,
+		ultra thick,
+		darkgray,
+		]
+		% right line
+		(frame.north east)--(frame.south east);
+		\node[minimum width=1cm, anchor=south,yshift=-0.25cm,xshift=1.25cm] at (frame.east) {iteration};
+	},
+	% paragraph skips obeyed within tcolorbox
+	parbox=false,
+}
+%
+\newtcolorbox{rightbrace2}{%
+	boxsep=0cm,
+	left=.05cm,
+	top=.05cm,
+	bottom=.05cm,
+	grow to left by=-.35cm,
+	colback=black!5!white,
+	enhanced jigsaw, 
+	breakable, % allow page breaks
+	frame hidden, % hide the default frame
+	width=10cm,
+	overlay={%
+		\draw [
+		fill=none, % fill paper
+		decoration={brace,amplitude=0.5em},
+		decorate,
+		ultra thick,
+		darkgray,
+		]
+		% right line
+		(frame.north east)--(frame.south east);
+		\node[minimum width=1cm, anchor=south,yshift=-0.35cm,xshift=1.25cm] at (frame.east) {epoch};
+	},
+	% paragraph skips obeyed within tcolorbox
+	parbox=false,
+}
 
 \begin{document}
 
@@ -108,7 +167,7 @@ An effective \enb{Reinforcement Learning (RL)} solution to \enb{continuous} cont
 \begin{frame} 
 \frametitle{SVRG} 
 \framesubtitle{Stochastic Variance-Reduced Gradient}
-A solution from \enb{finite-sum optimization}:
+A solution from \enb{finite-sum optimization}~\citep{johnson2013accelerating}:
 
 \begin{align*}
 	&\Large{
@@ -165,6 +224,7 @@ Our work: \enb{on-policy control}
 \begin{itemize}
 	\item Unbiased
 	\item More data-efficient than FG
+	\item \enb{On-policy}: only the correction term is weighted
 \end{itemize}
 
 \end{frame}
@@ -195,7 +255,7 @@ Convergence to \eno{local} optimum:
 Meta-parameter selection
 
 \begin{itemize}
-	\item \enb{Adaptive step size}: two ADAM annealing schedules
+	\item \enb{Adaptive step size}: two ADAM~\citep{kingma2014adam} annealing schedules
 	 \begin{equation*}
 	 	\underbrace{\alpha_{FG}}_{\text{used at the snapshot}} \qquad \underbrace{\alpha_{SG}}_{\text{used inside epoch}}
 	 \end{equation*}
@@ -230,7 +290,7 @@ Meta-parameter selection
 \begin{center}
 	\textbf{Half-Cheetah}
 \end{center}
-\includegraphics[width=\textwidth]{images/swimmer.pdf}
+\includegraphics[width=\textwidth]{images/cheetah.pdf}
 \end{minipage}
 
 %\node[inner sep=0pt] (picture1) {\includegraphics[width=.32\textwidth]{images/cartpole.pdf}};
@@ -291,33 +351,147 @@ Meta-parameter selection
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%Backup Slides
+
+\begin{frame} 
+\frametitle{SVRPG} 
+\framesubtitle{Pseudo-code}
+
+\textbf{For} $s = 1,\ldots$
+\vspace*{-.2cm}
+\begin{rightbrace2}
+	Sample $N$ trajectories using $\widetilde{\theta}$\\
+	Compute FG $=\widehat{\nabla}_N J(\widetilde{\theta})$\\
+	\textbf{For} $t = 1, \ldots, m$
+	\vspace*{-.15cm}
+	\begin{rightbrace1}
+		Sample $B$ trajectories using $\theta$\\
+		Compute SG $=\widehat{\nabla}_B J(\theta)$\\
+		Compute correction $=\omega(\theta, \widetilde{\theta})\widehat{\nabla}_B J(\widetilde{\theta})$\\
+		Update $\theta\gets\theta+\alpha\gradBlack{\theta}$
+	\end{rightbrace1}
+	\vspace*{-.15cm}
+	Update $\widetilde{\theta}\gets\theta$
+\end{rightbrace2}
+\vspace*{-.2cm}
+
+\end{frame}
+
 \begin{frame} 
 \frametitle{Adaptive Step Size} 
+ADAM~\citep{kingma2014adam}:
+\begin{itemize}
+	\item adapts to gradient variance
+	\item can manage different batch sizes
+	\item \eno{has memory of past gradients (momentum)}
+\end{itemize}
+\vfill
 
+\eno{Problem:} FG and SG updates have very different variance magnitudes \\
+$\quad\implies$ spurious momentum
+\vfill
+
+We use two \textit{separate} annealing schedules:
+\begin{align*}
+&\widetilde{\vtheta} \gets \widetilde{\vtheta} + \alpha_{FG}\widehat{\nabla}_NJ(\widetilde{\vtheta})\quad\text{at the snapshot}\\ 
+&\vtheta \gets \vtheta + \alpha_{SG}\gradBlack{\vtheta}\quad\text{otherwise}
+\end{align*}
+\vfill
+
+Note that $\widehat{\nabla}_NJ(\widetilde{\vtheta})\equiv\gradBlack{\vtheta}$ at the snapshot
 
 \end{frame}
 
 \begin{frame} 
 \frametitle{Adaptive Epoch Size} 
+Epoch size $m$ trade-off:
+\begin{itemize}
+	\item Large $m$ $\implies$ policy very far from snapshot $\implies$ importance weighting introduces more variance than it reduces $\implies$ instability
+	\item Small $m$ $\implies$ frequent snapshot $\implies$ data-inefficient
+\end{itemize}
+\vfill
 
+Idea: ADAM already relates gradient variance and efficiency\\
+\vfill
+
+Our stopping criterion:
+\begin{equation*}
+\frac{\alpha_{SG}}{B} < \frac{\alpha_{FG}}{N} \implies \textbf{snapshot}
+\end{equation*}
+\vfill
+
+When going on with the current snapshot is not \textit{convenient}, take a new one
+\end{frame}
+
+\begin{frame} 
+\frametitle{Normalized Importance Weighting} 
+
+\begin{minipage}[]{.45\paperwidth}
+Regular importance weighting (unbiased):
+\begin{equation*}
+	\omega(\vtheta,\widetilde{\vtheta})\widehat{\nabla}_B J(\widetilde{\vtheta}) = \frac{1}{B}\sum_{i=1}^B\frac{p(\tau_i\vert\widetilde{\vtheta})}{p(\tau_i\vert\vtheta)}g(\tau_i\vert\widetilde{\vtheta})
+\end{equation*}
+\vfill
+
+Normalized importance weighting:
+\begin{equation*}
+\omega(\vtheta,\widetilde{\vtheta})\widehat{\nabla}_B J(\widetilde{\vtheta}) = \frac{\sum_{i=1}^B\frac{p(\tau_i\vert\widetilde{\vtheta})}{p(\tau_i\vert\vtheta)}g(\tau_i\vert\widetilde{\vtheta})}
+	{\sum_{i=1}^B\frac{p(\tau_i\vert\widetilde{\vtheta})}{p(\tau_i\vert\vtheta)}}
+\end{equation*}
+\vfill
+
+\begin{itemize}
+	\item Reduces variance at the price of introducing a small bias
+	\item Only affects the correction term
+	\item Effectiveness is task-dependent
+\end{itemize}
+\end{minipage}
+\hfill%
+\begin{minipage}[]{.35\paperwidth}
+	\begin{center}
+		\textbf{Swimmer}
+	\end{center}
+	\vspace*{-.25cm}
+	\includegraphics[width=\textwidth]{images/normalization.pdf}
+\end{minipage}
 
 \end{frame}
 
 \begin{frame} 
-\frametitle{Normalized Importance Weights} 
+\frametitle{Actor-Critic SVRPG}
+\framesubtitle{Preliminary results}
 
+\enb{Critic} (or \textit{baseline}): an orthogonal variance-reduction technique
+\begin{equation*}
+	g(\tau_i\vert\vtheta) = \sum_{t=1}^{H}\left(\sum_{k=1}^t\nabla\log\pi_{\vtheta}(a_t\vert s_t)\right)(\gamma^tr_t - \underbrace{\mathbf{b}}_{\text{baseline}})\qquad\text{\citep{peters2008reinforcement}}
+\end{equation*}
+\vfill
+\eno{Not trivial} to combine SVRG with critic: variance reductions are not additive\\
+\vfill
+We combine SVRG with a simple critic suggested in~\citet{duan2016benchmarking} on the \textbf{Half-Cheetah} task\\
+\vfill
+Ad-hoc critic left for future work
 
 \end{frame}
 
 \begin{frame} 
-\frametitle{Actor-Critic SVRPG} 
+\frametitle{The Full Story} 
 
-
-\end{frame}
-
-\begin{frame} 
-\frametitle{The Full Comparison} 
-
+\begin{minipage}[]{.45\paperwidth}
+	\begin{itemize}
+		\item For Swimmer, we employ normalized weights in our final result
+		\item For Half-Cheetah, we employ both normaized weights and critic in our final result
+		\item We compare SVRPG with GPOMDP~\citep{baxter2001infinite} with batch size $=B$
+		\item This is a natural comparison since we want to evaluate the \textit{convenience} of 	correcting the SG update
+		\item However, GPOMDP with batch~size~$=N$ is even worse
+	\end{itemize}
+\end{minipage}
+\hfill%
+\begin{minipage}[]{.35\paperwidth}
+	\begin{center}
+	\textbf{Half-Cheetah}
+\end{center}
+\includegraphics[width=.9\textwidth]{images/cheetah100.pdf}
+\end{minipage}
 
 \end{frame}
 
