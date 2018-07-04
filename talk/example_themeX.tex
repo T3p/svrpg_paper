@@ -1,6 +1,7 @@
 \documentclass[aspectratio=169]{beamer}
 \usepackage[utf8]{inputenc}
 
+\usepackage{empheq}
 \usepackage{xcolor}
  \definecolor{redp}{rgb}{0.78, 0.03, 0.08}
 \definecolor{greenp}{rgb}{0.0, 0.51, 0.5}
@@ -121,7 +122,7 @@
 	\end{itemize}
 	\item \enb{SVRPG}
 	\begin{itemize}
-		\item Convergence Properties
+		\item Properties
 		\item Heuristics
 		\item Experiments
 	\end{itemize}
@@ -168,14 +169,38 @@ An effective \enb{Reinforcement Learning (RL)} solution to \enb{continuous} cont
 \frametitle{SVRG} 
 \framesubtitle{Stochastic Variance-Reduced Gradient}
 A solution from \enb{finite-sum optimization}~\citep{johnson2013accelerating}:
+%
+%\begin{align*}
+%	&\Large{
+%	\textcolor{poliblue3}{\underbrace{\blacktriangledown J(\vtheta)}_{\text{SVRG estimator}}}
+%	= 
+%	\
+%	\textcolor{greenp}{\underbrace{\nabla J(\widetilde{\vtheta}) }_{\text{FG in snapshot parameter}}}
+%	+ \textcolor{redp}{\underbrace{\nabla J(\vtheta)\rvert_{\tau_i}}_{\text{SG in current parameter}}}
+%	- \textcolor{yellowp}{\underbrace{\nabla J(\widetilde{\vtheta})\rvert_{\tau_i}}_{\text{Correction term}}}}
+%\end{align*}
 
-\begin{align*}
-	&\Large{
+\begin{equation*}
+\Large{
 	\textcolor{poliblue3}{\underbrace{\blacktriangledown J(\vtheta)}_{\text{SVRG estimator}}}
-	= \textcolor{greenp}{\underbrace{\nabla J(\widetilde{\vtheta}) }_{\text{FG in snapshot parameter}}}
-	+ \textcolor{redp}{\underbrace{\nabla J(\vtheta)\rvert_{\tau_i}}_{\text{SG in current parameter}}}
-	- \textcolor{yellowp}{\underbrace{\nabla J(\widetilde{\vtheta})\rvert_{\tau_i}}_{\text{Correction term}}}}
-\end{align*}
+	= 
+	\tikz[baseline]{
+		\node[anchor=base, fill=black!4!white, inner sep=15pt]{$
+			\textcolor{greenp}{\underbrace{\nabla J(\widetilde{\vtheta}) }_{\text{FG (snapshot)}}}
+			+ 
+			\tikz[baseline]{
+				\node[anchor=base, fill=black!8!white, inner sep=20pt]{$
+					\textcolor{redp}{\underbrace{\nabla J(\vtheta)\rvert_{\tau_i}}_{\text{SG in current parameter}}}
+					- \textcolor{yellowp}{\underbrace{\nabla J(\widetilde{\vtheta})\rvert_{\tau_i}}_{\text{Correction term}}}
+					$};
+				\node[xshift=-3cm,yshift=.75cm]{\small{\textcolor{black!60}{iteration}}};
+			}
+			$};
+		\node[xshift=-5.25cm,yshift=1.75cm]{\small{\textcolor{black!40}{epoch}}};
+	}	
+}
+\end{equation*}
+
 
 \begin{itemize}
 	\item Unbiased
@@ -211,14 +236,25 @@ Our work: \enb{on-policy control}
 \frametitle{SVRPG} 
 \framesubtitle{Stochastic Variance-Reduced \textbf{Policy} Gradient}
 
-
-
 \begin{equation*}
-\LARGE{
+\Large{
 	\textcolor{poliblue3}{\underbrace{\blacktriangledown J(\vtheta)}_{\text{SVRPG estimator}}}
-	= \textcolor{greenp}{\underbrace{\widehat{\nabla}_N J(\widetilde{\vtheta}) }_{\text{\shortstack{Large N\\to approximate FG}}}}
-	+ \textcolor{redp}{\underbrace{\widehat{\nabla}_B J(\vtheta)}_{B << N}}
-	- \textcolor{yellowp}{\underbrace{\omega(\vtheta,\widetilde{\vtheta})\widehat{\nabla}_B J(\widetilde{\vtheta})}_{\text{\shortstack{Importance weighting\\for non-stationarity}}}}}
+	= 
+	\tikz[baseline]{
+	\node[anchor=base, fill=black!4!white, inner sep=15pt]{$
+	\textcolor{greenp}{\underbrace{\widehat{\nabla}_N J(\widetilde{\vtheta}) }_{\text{\shortstack{Large N\\to approximate FG}}}}
+	+ 
+	\tikz[baseline]{
+		\node[anchor=base, fill=black!8!white, inner sep=20pt]{$
+		\textcolor{redp}{\underbrace{\widehat{\nabla}_B J(\vtheta)}_{B << N}}
+		- \textcolor{yellowp}{\underbrace{\omega(\vtheta,\widetilde{\vtheta})\widehat{\nabla}_B J(\widetilde{\vtheta})}_{\text{\shortstack{Importance weighting\\for non-stationarity}}}}
+		$};
+		\node[xshift=-2.5cm,yshift=.75cm]{\small{\textcolor{black!60}{iteration}}};
+	}
+	$};
+	\node[xshift=-5cm,yshift=1.75cm]{\small{\textcolor{black!40}{epoch}}};
+	}
+	}
 \end{equation*}
 
 \begin{itemize}
@@ -245,7 +281,7 @@ Convergence to \eno{local} optimum:
 }
 
 \begin{itemize}
-	\item Linear convergence $+$ error~\citep [similar to][]{harikandeh2015stopwasting}
+	\item Linear convergence $+$ \eno{error}~\citep [similar to][]{harikandeh2015stopwasting}
 \end{itemize}
 
 \end{frame}
@@ -259,7 +295,7 @@ Meta-parameter selection
 	 \begin{equation*}
 	 	\underbrace{\alpha_{FG}}_{\text{used at the snapshot}} \qquad \underbrace{\alpha_{SG}}_{\text{used inside epoch}}
 	 \end{equation*}
-	\item \enb{Adaptive epoch size}: take new snapshot when the effective step size becomes too small
+	\item \enb{Adaptive epoch size}: new snapshot when effective step size becomes too small
 	\begin{equation*}
 		\frac{\alpha_{SG}}{B} < \frac{\alpha_{FG}}{N} \implies \textbf{snapshot}
 	\end{equation*}
@@ -386,7 +422,7 @@ ADAM~\citep{kingma2014adam}:
 \end{itemize}
 \vfill
 
-\eno{Problem:} FG and SG updates have very different variance magnitudes \\
+\eno{Problem:} FG and SG have very different variance magnitudes \\
 $\quad\implies$ spurious momentum
 \vfill
 
@@ -403,10 +439,10 @@ Note that $\widehat{\nabla}_NJ(\widetilde{\vtheta})\equiv\gradBlack{\vtheta}$ at
 
 \begin{frame} 
 \frametitle{Adaptive Epoch Size} 
-Epoch size $m$ trade-off:
+Epoch size $(m)$ trade-off:
 \begin{itemize}
-	\item Large $m$ $\implies$ policy very far from snapshot $\implies$ importance weighting introduces more variance than it reduces $\implies$ instability
-	\item Small $m$ $\implies$ frequent snapshot $\implies$ data-inefficient
+	\item Large $m$ $\implies$ large importance-weighting variance $\implies$ unstable
+	\item Small $m$ $\implies$ frequent snapshots $\implies$ data-inefficient
 \end{itemize}
 \vfill
 
@@ -419,7 +455,7 @@ Our stopping criterion:
 \end{equation*}
 \vfill
 
-When going on with the current snapshot is not \textit{convenient}, take a new one
+When going on is not \textit{convenient}, take new snapshot
 \end{frame}
 
 \begin{frame} 
@@ -440,9 +476,9 @@ Normalized importance weighting:
 \vfill
 
 \begin{itemize}
-	\item Reduces variance at the price of introducing a small bias
+	\item Less variance at the price of small bias
 	\item Only affects the correction term
-	\item Effectiveness is task-dependent
+	\item Benefits are task-dependent
 \end{itemize}
 \end{minipage}
 \hfill%
@@ -465,11 +501,11 @@ Normalized importance weighting:
 	g(\tau_i\vert\vtheta) = \sum_{t=1}^{H}\left(\sum_{k=1}^t\nabla\log\pi_{\vtheta}(a_t\vert s_t)\right)(\gamma^tr_t - \underbrace{\mathbf{b}}_{\text{baseline}})\qquad\text{\citep{peters2008reinforcement}}
 \end{equation*}
 \vfill
-\eno{Not trivial} to combine SVRG with critic: variance reductions are not additive\\
+\eno{Not trivial} to combine SVRG with critic: variance reduction is not additive\\
 \vfill
-We combine SVRG with a simple critic suggested in~\citet{duan2016benchmarking} on the \textbf{Half-Cheetah} task\\
+We combine SVRG with a simple critic from~\citet{duan2016benchmarking}\\
 \vfill
-Ad-hoc critic left for future work
+Future work: ad hoc critic
 
 \end{frame}
 
@@ -478,11 +514,11 @@ Ad-hoc critic left for future work
 
 \begin{minipage}[]{.45\paperwidth}
 	\begin{itemize}
-		\item For Swimmer, we employ normalized weights in our final result
-		\item For Half-Cheetah, we employ both normaized weights and critic in our final result
-		\item We compare SVRPG with GPOMDP~\citep{baxter2001infinite} with batch size $=B$
-		\item This is a natural comparison since we want to evaluate the \textit{convenience} of 	correcting the SG update
-		\item However, GPOMDP with batch~size~$=N$ is even worse
+		\item For \textbf{Swimmer}, we employ normalized weights in our final result
+		\item For \textbf{Half-Cheetah}, we employ normaized weights \textit{and} critic in our final result
+		\item We compare \enb{SVRPG} with GPOMDP~\citep{baxter2001infinite} with batch size $B = 10$
+		\item This shows the \textit{advantage} of 	correcting SG with more data
+		\item However, GPOMDP with batch~size~$N = 100$ is even worse
 	\end{itemize}
 \end{minipage}
 \hfill%
