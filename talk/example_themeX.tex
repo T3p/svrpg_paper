@@ -1,6 +1,8 @@
 \documentclass[aspectratio=169]{beamer}
 \usepackage[utf8]{inputenc}
 
+\usepackage{multicol}
+
 \usepackage{empheq}
 \usepackage{xcolor}
  \definecolor{redp}{rgb}{0.78, 0.03, 0.08}
@@ -104,31 +106,31 @@
 \titlepage
 \end{frame}
 
-\begin{frame} 
-\frametitle{Outline} 
-\begin{center}
-	\Large{\enb{S}\soft{tochastic}
-		\enb{V}\soft{ariance-}}\enb{R}\soft{educed}
-	\soft{(}\enb{P}\soft{olicy}\soft{)}
-	\enb{G}\soft{radient}
-\end{center}
-
-
-\begin{itemize}
-	\item \enb{SVRG} for Reinforcement Learning
-		\begin{itemize}
-		\item Motivation
-		\item Challenges
-	\end{itemize}
-	\item \enb{SVRPG}
-	\begin{itemize}
-		\item Properties
-		\item Heuristics
-		\item Experiments
-	\end{itemize}
-\end{itemize}
-
-\end{frame}
+%\begin{frame} 
+%\frametitle{Outline} 
+%\begin{center}
+%	\Large{\enb{S}\soft{tochastic}
+%		\enb{V}\soft{ariance-}}\enb{R}\soft{educed}
+%	\soft{(}\enb{P}\soft{olicy}\soft{)}
+%	\enb{G}\soft{radient}
+%\end{center}
+%
+%
+%\begin{itemize}
+%	\item \enb{SVRG} for Reinforcement Learning
+%		\begin{itemize}
+%		\item Motivation
+%		\item Challenges
+%	\end{itemize}
+%	\item \enb{SVRPG}
+%	\begin{itemize}
+%		\item Properties
+%		\item Heuristics
+%		\item Experiments
+%	\end{itemize}
+%\end{itemize}
+%
+%\end{frame}
 
 \begin{frame} 
 \frametitle{Policy Gradient} 
@@ -161,58 +163,60 @@ An effective \enb{Reinforcement Learning (RL)} solution to \enb{continuous} cont
 	\includegraphics[width=.75\paperwidth]{convergence.pdf}
 \end{center}
 
-\vspace*{-.6cm}
+\vspace*{-.3cm}
 \Large{\enb{Can we do something better?}}
+\hfill
+\small{
+Visualization idea from \cite{bachstochastic}
+}
 \end{frame}
 
 \begin{frame} 
 \frametitle{SVRG} 
 \framesubtitle{Stochastic Variance-Reduced Gradient}
 A solution from \enb{finite-sum optimization}~\citep{johnson2013accelerating}:
-%
-%\begin{align*}
-%	&\Large{
-%	\textcolor{poliblue3}{\underbrace{\blacktriangledown J(\vtheta)}_{\text{SVRG estimator}}}
-%	= 
-%	\
-%	\textcolor{greenp}{\underbrace{\nabla J(\widetilde{\vtheta}) }_{\text{FG in snapshot parameter}}}
-%	+ \textcolor{redp}{\underbrace{\nabla J(\vtheta)\rvert_{\tau_i}}_{\text{SG in current parameter}}}
-%	- \textcolor{yellowp}{\underbrace{\nabla J(\widetilde{\vtheta})\rvert_{\tau_i}}_{\text{Correction term}}}}
-%\end{align*}
-
+\begin{equation*}
+	\max_{\vtheta} J(\vtheta) = \sum_{i=1}^{N}f_i(\vtheta)
+\end{equation*}
 \begin{equation*}
 \Large{
 	\textcolor{poliblue3}{\underbrace{\blacktriangledown J(\vtheta)}_{\text{SVRG estimator}}}
 	= 
 	\tikz[baseline]{
-		\node[anchor=base, fill=black!4!white, inner sep=15pt]{$
+		\node[anchor=base, fill=black!4!white, inner sep=10pt]{$
 			\textcolor{greenp}{\underbrace{\nabla J(\widetilde{\vtheta}) }_{\text{FG (snapshot)}}}
 			+ 
 			\tikz[baseline]{
 				\node[anchor=base, fill=black!8!white, inner sep=20pt]{$
-					\textcolor{redp}{\underbrace{\nabla J(\vtheta)\rvert_{\tau_i}}_{\text{SG in current parameter}}}
-					- \textcolor{yellowp}{\underbrace{\nabla J(\widetilde{\vtheta})\rvert_{\tau_i}}_{\text{Correction term}}}
+					\textcolor{redp}{\underbrace{\nabla f_i(\vtheta)}_{\text{SG in current parameter}}}
+					- \textcolor{yellowp}{\underbrace{\nabla f_i(\widetilde{\vtheta})}_{\text{Correction term}}}
 					$};
 				\node[xshift=-3cm,yshift=.75cm]{\small{\textcolor{black!60}{iteration}}};
 			}
 			$};
-		\node[xshift=-5.25cm,yshift=1.75cm]{\small{\textcolor{black!40}{epoch}}};
+		\node[xshift=-5cm,yshift=1.25cm]{\small{\textcolor{black!40}{epoch}}};
 	}	
 }
 \end{equation*}
 
-
+\begin{multicols}{2}
 \begin{itemize}
 	\item Unbiased
 	\item Linear convergence
 	\item More data-efficient than FG
-	\item Easily applicable to \enb{Supervised Learning (SL)}
+	\item \enb{Supervised Learning (SL)}
 \end{itemize}
+\end{multicols}
 \end{frame}
 
 \begin{frame} 
 \frametitle{SVRG for Reinforcement Learning}
 \framesubtitle{Stochastic Variance-Reduced Gradient} 
+
+\begin{equation*}
+		\max_{\vtheta} J(\vtheta) = \int_{\tau} p(\tau\vert\vtheta)R(\tau)
+\end{equation*}
+
 Not trivial! There are three \eno{challenges}:
 
 \vspace*{.5cm}
@@ -464,13 +468,13 @@ When going on is not \textit{convenient}, take new snapshot
 \begin{minipage}[]{.45\paperwidth}
 Regular importance weighting (unbiased):
 \begin{equation*}
-	\omega(\vtheta,\widetilde{\vtheta})\widehat{\nabla}_B J(\widetilde{\vtheta}) = \frac{1}{B}\sum_{i=1}^B\frac{p(\tau_i\vert\widetilde{\vtheta})}{p(\tau_i\vert\vtheta)}g(\tau_i\vert\widetilde{\vtheta})
+	\omega(\vtheta,\widetilde{\vtheta})\widehat{\nabla}_B J(\widetilde{\vtheta}) = \frac{1}{B}\sum_{i=1}^B\frac{p(\tau_i\vert\widetilde{\vtheta})}{p(\tau_i\vert\vtheta)}\nabla\log p(\tau_i\vert\widetilde{\vtheta})R(\tau_i)
 \end{equation*}
 \vfill
 
 Normalized importance weighting:
 \begin{equation*}
-\omega(\vtheta,\widetilde{\vtheta})\widehat{\nabla}_B J(\widetilde{\vtheta}) = \frac{\sum_{i=1}^B\frac{p(\tau_i\vert\widetilde{\vtheta})}{p(\tau_i\vert\vtheta)}g(\tau_i\vert\widetilde{\vtheta})}
+\omega(\vtheta,\widetilde{\vtheta})\widehat{\nabla}_B J(\widetilde{\vtheta}) = \frac{\sum_{i=1}^B\frac{p(\tau_i\vert\widetilde{\vtheta})}{p(\tau_i\vert\vtheta)}\nabla\log p(\tau_i\vert\widetilde{\vtheta})R(\tau_i)}
 	{\sum_{i=1}^B\frac{p(\tau_i\vert\widetilde{\vtheta})}{p(\tau_i\vert\vtheta)}}
 \end{equation*}
 \vfill
@@ -498,7 +502,7 @@ Normalized importance weighting:
 
 \enb{Critic} (or \textit{baseline}): an orthogonal variance-reduction technique
 \begin{equation*}
-	g(\tau_i\vert\vtheta) = \sum_{t=1}^{H}\left(\sum_{k=1}^t\nabla\log\pi_{\vtheta}(a_t\vert s_t)\right)(\gamma^tr_t - \underbrace{\mathbf{b}}_{\text{baseline}})\qquad\text{\citep{peters2008reinforcement}}
+	\text{Gradient sample: } \sum_{t=1}^{H}\left(\sum_{k=1}^t\nabla\log\pi_{\vtheta}(a_t\vert s_t)\right)(\gamma^tr_t - \underbrace{\mathbf{b}}_{\text{baseline}})\quad\text{\citep{peters2008reinforcement}}
 \end{equation*}
 \vfill
 \eno{Not trivial} to combine SVRG with critic: variance reduction is not additive\\
