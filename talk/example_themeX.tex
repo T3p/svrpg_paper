@@ -176,9 +176,9 @@ Visualization idea from \cite{bachstochastic}
 \end{frame}
 
 \begin{frame} 
-\frametitle{SVRG} 
+\frametitle{SVRG~\citep{johnson2013accelerating}} 
 \framesubtitle{Stochastic Variance-Reduced Gradient}
-A solution from \enb{finite-sum optimization}~\citep{johnson2013accelerating}:
+A solution from \enb{finite-sum optimization}:
 \begin{equation*}
 	\max_{\vtheta} J(\vtheta) = \sum_{i=1}^{N}f_i(\vtheta)
 \end{equation*}
@@ -188,7 +188,7 @@ A solution from \enb{finite-sum optimization}~\citep{johnson2013accelerating}:
 	= 
 	\tikz[baseline]{
 		\node[anchor=base, fill=black!4!white, inner sep=10pt]{$
-			\textcolor{greenp}{\underbrace{\nabla J(\widetilde{\vtheta}) }_{\text{FG (snapshot)}}}
+			\textcolor{greenp}{\underbrace{\nabla J(\widetilde{\vtheta}) }_{\text{FG (\textit{snapshot})}}}
 			+ 
 			\tikz[baseline]{
 				\node[anchor=base, fill=black!8!white, inner sep=20pt]{$
@@ -215,29 +215,41 @@ A solution from \enb{finite-sum optimization}~\citep{johnson2013accelerating}:
 
 \begin{frame} 
 \frametitle{SVRG for Reinforcement Learning}
-\framesubtitle{Stochastic Variance-Reduced Gradient} 
+In \enb{Reinforcement Learing (RL)} we maximize \textit{expected return}:
 
 \begin{equation*}
-		\max_{\vtheta} J(\vtheta) = \int_{\tau} p(\tau\vert\vtheta)R(\tau)
+\max_{\vtheta} J(\vtheta) = \int p(\tau\vert\vtheta)R(\tau)d \tau\qquad\text{\citep{peters2008reinforcement}}
 \end{equation*}
 
-Not trivial! There are three \eno{challenges}:
+\vfill
+
+SVRG for RL so far:
+\vspace*{.4cm}
+\begin{itemize}
+	\item \cite{du2017svrgpe} apply SVRG to \textbf{policy evaluation}
+	\vspace*{.2cm}
+	\item \cite{xu2017svrgtrpo} apply SVRG to \textbf{off-line control}	
+\end{itemize}
+
+\vfill
+
+Our work: \enb{on-policy control}
+\end{frame}
+
+\begin{frame} 
+\frametitle{SVRG for On-Policy Control}
+Nontrivial! There are three \eno{challenges}:
 
 \vspace*{.5cm}
+
 \begin{enumerate}
 	\item \eno{Non-concavity} of $J(\vtheta)$
 		\citep{allen2016variance,reddi2016stochastic}
+\vspace*{.5cm}
 	\item \eno{Infinite dataset}: we would need \textit{infinite samples} to compute FG~\citep{harikandeh2015stopwasting,bietti2017stochastic}
+	\vspace*{.3cm}
 	\item \eno{Non-stationarity}: $\tau\sim p_{\textcolor{orange}\vtheta}$ (new!)
 \end{enumerate}
-
-
-RL so far: \textit{policy evaluation}~\citep{du2017svrgpe} and \textit{off-policy control}~\citep{xu2017svrgtrpo}
-
-\vspace*{.5cm}
-
-Our work: \enb{on-policy control}
-
 \end{frame}
 
 \begin{frame} 
@@ -254,7 +266,7 @@ Our work: \enb{on-policy control}
 	+ 
 	\tikz[baseline]{
 		\node[anchor=base, fill=black!8!white, inner sep=20pt]{$
-		\textcolor{redp}{\underbrace{\widehat{\nabla}_B J(\vtheta)}_{B << N}}
+		\textcolor{redp}{\underbrace{\widehat{\nabla}_B J(\vtheta)}_{B \ll N}}
 		- \textcolor{yellowp}{\underbrace{\omega(\vtheta,\widetilde{\vtheta})\widehat{\nabla}_B J(\widetilde{\vtheta})}_{\text{\shortstack{Importance weighting\\for non-stationarity}}}}
 		$};
 		\node[xshift=-2.5cm,yshift=.75cm]{\small{\textcolor{black!60}{iteration}}};
@@ -283,13 +295,14 @@ Convergence to \eno{local} optimum:
 	{\norm[]{\nabla J(\vtheta)}^2} 
 	\leq
 	\frac{J(\vtheta^*)-J(\vtheta_0)}{\psi T} +
-	\textcolor{orange}{\underbrace{\frac{\zeta}{N}}_{\text{Infinite dataset}}}
-	+\textcolor{orange}{\underbrace{\frac{\xi}{B}}_{\text{Nonstationarity}}}
+	\textcolor{orange}{\underbrace{\frac{\zeta}{\mathbf{N}}}_{\text{Infinite dataset}}}
+	+\textcolor{orange}{\underbrace{\frac{\xi}{\mathbf{B}}}_{\text{Nonstationarity}}}
 \end{equation*}
 }
 
 \begin{itemize}
 	\item Linear convergence $+$ \eno{error}~\citep [similar to][]{harikandeh2015stopwasting}
+	\item $\psi,\zeta,\xi$ depend only on \enb{step size} and \enb{epoch size}
 \end{itemize}
 
 \end{frame}
@@ -303,6 +316,7 @@ Meta-parameter selection
 	 \begin{equation*}
 	 	\underbrace{\alpha_{FG}}_{\text{used at the snapshot}} \qquad \underbrace{\alpha_{SG}}_{\text{used inside epoch}}
 	 \end{equation*}
+	 \vspace*{.5cm}
 	\item \enb{Adaptive epoch size}: new snapshot when effective step size becomes too small
 	\begin{equation*}
 		\frac{\alpha_{SG}}{B} < \frac{\alpha_{FG}}{N} \implies \textbf{snapshot}
@@ -316,41 +330,35 @@ Meta-parameter selection
 
 %\begin{tikzpicture}
 
-\begin{minipage}[t]{.28\paperwidth}
+\begin{minipage}[]{.28\paperwidth}
 \begin{center}
 	\textbf{Cart-Pole}
 \end{center}
 \includegraphics[width=\textwidth]{images/cartpole.pdf}
 \end{minipage}
 %
-\begin{minipage}[t]{.28\paperwidth}
+\begin{minipage}[]{.28\paperwidth}
 \begin{center}
 	\textbf{Swimmer}
 \end{center}
 \includegraphics[width=\textwidth]{images/swimmer.pdf}
 \end{minipage}
 %
-\begin{minipage}[t]{.28\paperwidth}
+\begin{minipage}[]{.28\paperwidth}
 \begin{center}
 	\textbf{Half-Cheetah}
 \end{center}
 \includegraphics[width=\textwidth]{images/cheetah.pdf}
 \end{minipage}
 
-%\node[inner sep=0pt] (picture1) {\includegraphics[width=.32\textwidth]{images/cartpole.pdf}};
-%\node[above left] at ($(picture1.north) + (1.3cm,0)$) {\textbf{Cart-Pole}};
-%\end{tikzpicture}
-%%
-%\begin{tikzpicture}
-%\node[inner sep=0pt] (picture2) {\includegraphics[width=0.32\textwidth]{images/swimmer.pdf}};
-%\node[above left] at ($(picture1.north) + (1.3cm,0)$) {\textbf{Swimmer}};
-%\end{tikzpicture}
-%%
-%\begin{tikzpicture}
-%\node[inner sep=0pt] (picture3) {\includegraphics[width=0.32\textwidth]{images/cheetah.pdf}};
-%\node[above left] at ($(picture1.north) + (1.3cm,0)$) {\textbf{Half-Cheetah}};
-%\end{tikzpicture}%
+\vfill
+\small{
+SVRPG: $N=100, B=10$, ADAM 
 
+GPOMDP: $N=10$, ADAM 
+
+Tasks from \textit{rllab}~\citep{duan2016benchmarking}
+}
 \end{frame}
 
 \begin{frame} 

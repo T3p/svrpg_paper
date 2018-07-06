@@ -6,8 +6,8 @@
 \definecolor{color1}{rgb}{0.329411764705882,0.592156862745098,0.772549019607843}
 
 \begin{axis}[
-scaled ticks=base 10:-3,
-width=9cm, height=12cm,
+scaled y ticks=false,
+width=10cm, height=12cm,
 xlabel={Trajectories},
 ylabel={Average Return},
 xmin=-495, xmax=10395,
@@ -18,8 +18,7 @@ x grid style={lightgray!92.02614379084967!black},
 y grid style={lightgray!92.02614379084967!black},
 legend entries={{SVRPG},{GPOMDP}},
 legend cell align={left},
-legend style={at={(0.97,0.03)}, anchor=south east, draw=white!80.0!black},
-font=\small
+legend style={at={(0.97,0.03)}, anchor=south east, draw=white!80.0!black}
 ]
 %\addlegendimage{no markers, color0}
 %\addlegendimage{no markers, color1}
